@@ -1,0 +1,5 @@
+﻿User-agent: *
+Allow: /
+
+# Sitemap Files
+Sitemap: https://www.ayedas.com.tr/site-haritasi
