@@ -2,24 +2,36 @@
 
 Tarih: 2026-09-11
 
-Bu fazda iki iş vardı: dört kaynağın (BEDAŞ, AYEDAŞ, İSKİ, İGDAŞ) verisini nasıl sunduğunu çıkarmak ve boş ama ayağa kalkan bir monorepo kurmak.
+Bu fazda iki iş vardı: dört kaynağın (BEDAŞ, AYEDAŞ, İSKİ, İGDAŞ) verisini nasıl sunduğunu çıkarmak ve boş ama ayağa kalkan bir monorepo kurmak. İlk keşiften sonra kararlar alındı ve su ile doğalgaz için ikinci bir tur keşif yaptım. İkisi de aşağıda.
 
-## Kaynak keşfi
+## Özet ve kararlar
 
-Bütün istekler curl ile, `KesintiHaritasi/0.1 (+https://github.com/agern28/kesinti-haritasi)` User-Agent'ıyla atıldı. Önce robots.txt'e baktım, sonra kaynak başına ana sayfa, kesinti sayfası ve sayfanın kullandığı JS dosyaları. Kayıtlı örnekler `services/collector/src/test/resources/fixtures/<kaynak>/` altında.
+| Kaynak | Tür | Karar | Neden |
+|---|---|---|---|
+| BEDAŞ | Elektrik (Avrupa yakası) | v1'de | Açık JSON endpoint'leri, planlı ve arıza ayrı |
+| İSKİ | Su | v1'de, İBB Açık Veri'den | İSKİ'nin kendi API'si gömülü token istiyor. İBB'deki "Su Kesintileri" dosyası robots.txt'e göre indirilebiliyor, ama geçmiş veri |
+| AYEDAŞ | Elektrik (Anadolu yakası) | v1'de yok | Veri sadece reCAPTCHA'lı adres formunun arkasında |
+| İGDAŞ | Doğalgaz | yok | robots.txt `Disallow: /`, İBB'de İGDAŞ kesinti veri seti yok |
+| Başkentgaz | Doğalgaz (Ankara) | yok | Sitesinde kesinti yayını yok |
+| İzmirgaz | Doğalgaz (İzmir) | yok | Sadece tek sokak için sorgu, liste yok |
 
-Kısa sonuç: kurallarımıza (robots.txt'e uy, captcha ve erişim kontrolü aşma) harfiyen uyarsak v1'de temiz okunabilen tek kaynak BEDAŞ. Diğer üçünde birer engel var, aşağıda ayrıntısı ve önerim var.
+Alınan kararlar (2026-09-11):
+- v1 kaynakları: BEDAŞ ve İSKİ (İBB Açık Veri). AYEDAŞ v1'de yok.
+- İSKİ'nin sitesine gömülü token'ı kullanmıyoruz.
+- Veri modeline `external_id` ve `lat`/`lon` eklendi (hepsi nullable). Tekilleştirmede `external_id` varsa `(source, external_id)`, yoksa hash. Ayrıntı: [veri-modeli.md](veri-modeli.md).
+- Doğalgaz için uygun kaynak bulunamadı, Faz 9'daki madde beklemeye alındı (aşağıda).
 
-| Kaynak | Tür | robots.txt | Veri nasıl geliyor | Durum |
-|---|---|---|---|---|
-| BEDAŞ | Elektrik (Avrupa yakası) | yok (404) | Açık JSON endpoint'leri | v1'e uygun |
-| AYEDAŞ | Elektrik (Anadolu yakası) | her şeye izin | Adres formu + reCAPTCHA | v1'den çıkarılmalı |
-| İSKİ | Su | yok (404) | JSON API, gömülü Bearer token istiyor; harita sitesinde WAF | v1'den çıkarılmalı (ya da senin kararın) |
-| İGDAŞ | Doğalgaz | `Disallow: /` | Bakmadım | robots.txt yüzünden taranamaz |
+## Nasıl istek attım
 
-### BEDAŞ
+İlk turda istekler curl ile, `KesintiHaritasi/0.1 (+https://github.com/agern28/kesinti-haritasi)` User-Agent'ıyla atıldı. Önce robots.txt'e baktım, sonra ana sayfa, kesinti sayfası ve sayfanın kullandığı JS dosyalarına.
 
-İki ayrı kaynak var, ikisi de JSON ve kimlik doğrulaması yok.
+İlk turda bir hata yaptım: İBB Açık Veri'de robots.txt'i aynı script'te çektim ama sonucuna göre durmadım, `Disallow: /api/` olan yola 2 istek gitti. İkinci turda bunun için küçük bir yardımcı yazdım (`polite.py`, repoda değil, keşif için): her istekten önce host'un robots.txt'ini okuyor, `*` ve `$` desteğiyle en uzun eşleşen kuralı uyguluyor, yasaksa isteği hiç atmıyor, `Crawl-delay` varsa istekler arasında o kadar bekliyor. İkinci turdaki bütün istekler bu yardımcıdan geçti. Collector'daki robots kontrolü Faz 2'de aynı mantıkla Java'da yazılacak.
+
+Kayıtlı örnekler `services/collector/src/test/resources/fixtures/<kaynak>/` altında.
+
+## BEDAŞ
+
+İki ayrı kaynak var, ikisi de JSON ve kimlik doğrulaması yok. robots.txt yok (404).
 
 **Planlı kesintiler: `GET https://www.bedas.com.tr/GetItemsData`**
 
@@ -50,69 +62,116 @@ Kısa sonuç: kurallarımıza (robots.txt'e uy, captcha ve erişim kontrolü aş
 
 - Mahalle listesi ayrı alan olarak yok, `message` metninin içinde: `<İL> <İLÇE> ilce <MAHALLE> mah <SOKAK>, <SOKAK> sk / <MAHALLE2> mah ... sk  bölgelerinde`. Mahalleleri bu metinden çıkarmak gerekecek.
 - Saatler saat dilimi bilgisi olmadan geliyor (`2026-09-10 09:00:00`), Europe/Istanbul kabul edilecek.
-- `lat`/`lon` başında boşluk olan string.
+- `lat`/`lon` başında boşluk olan string. Artık `outage.lat`/`lon` kolonlarına gidecek.
 - 218 kayıttan birinde `city2`/`county2` dolu (iki ilçeye yayılan kesinti). Nadir ama parser bunu kaldırmalı.
-- `id` ve `updateDateTime` var, değişiklik takibinde işe yarar.
+- `id` -> `external_id`. `updateDateTime` değişiklik takibinde işe yarar.
 - Fixture: `bedas/planned-getitemsdata.json`, ilçe bazlı sorgunun örneği `bedas/planned-elektrik-getir-arnavutkoy.json`.
 
 **Anlık kesintiler: `GET https://kesintiapi.ckenerji.com.tr/BEDAS/RetrieveOutages`**
 
 `kesinti.bedas.com.tr` bir Vite SPA. Bundle'ın içinde `kesintiapi.ckenerji.com.tr/BEDAS/...` endpoint'leri duruyor.
 
-- Denediğimde 73 satır, 19 farklı `OUTAGE_NO`. Her satır bir trafo, yani aynı kesinti birden fazla satırda tekrar ediyor.
+- Denediğimde 73 satır, 19 farklı `OUTAGE_NO`. Her satır bir trafo, yani aynı kesinti birden fazla satırda tekrar ediyor. `OUTAGE_NO` -> `external_id`, satırlar bununla gruplanacak.
 - Alanlar: `OUTAGE_NO`, `BILDIRIM_TURU` (`Bildirimli` / `Bildirimsiz`), `RPTD_DATE` (ISO, +03:00), `EST_REPAIR_TIME`, `SURE`, `SCADA_INITIATED`, `XFMR_ID`, `CBS_TM_NO`, `MESSAGE`.
 - `Bildirimsiz` arıza demek (7 satır, mesajı "Şebeke arızası, ekip çalışıyor..."). `Bildirimli` şu an devam eden planlı kesinti.
 - En büyük sorun: satırlarda ilçe/mahalle adı yok, sadece trafo numarası (`CBS_TM_NO`) var. Konum için `GET /BEDAS/GetLocation?tmno=<no>` çağrılıyor ve `{"results":[{"ilce":"GAZİOSMANPAŞA","mahalle":"BARBAROS HAYRETTİN PAŞA"}]}` dönüyor. BEDAŞ'ın kendi sitesi her 5 dakikada bütün trafolar için bu çağrıyı 30'arlı paketlerle yapıyor. Biz bunu yapmayacağız: trafo yer değiştirmediği için `trafo -> ilçe/mahalle` eşlemesini Redis'te uzun süreli cache'leyeceğiz, sadece ilk kez görülen trafo için istek atacağız. İlk taramada birkaç düzine istek, sonrasında tarama başına birkaç istek bekliyorum. Bu istekler de sırayla ve aralarında gecikmeyle gidecek.
 - `RetrieveOutageTransformersList` trafo poligonlarını veriyor. v1'de mahalle poligonu yok, kullanmayacağız.
 - Fixture: `bedas/unplanned-retrieve-outages.json`, `bedas/getlocation-28175.json`.
 
-**Planlı/arıza ayrımı ve çakışma:** Şu an devam eden planlı bir kesinti hem `GetItemsData`'da hem `RetrieveOutages`'da (`Bildirimli`) görünüyor, ama iki taraftaki id'ler farklı (`36878730` ile `4851785` gibi), kolayca eşleşmiyor. Faz 2'deki önerim: planlıları sadece `GetItemsData`'dan, arızaları sadece `RetrieveOutages` içindeki `Bildirimsiz` satırlardan almak. Böylece aynı kesinti iki kere sayılmaz.
+**Planlı/arıza ayrımı ve çakışma:** Şu an devam eden planlı bir kesinti hem `GetItemsData`'da hem `RetrieveOutages`'da (`Bildirimli`) görünüyor, ama iki taraftaki id'ler farklı (`36878730` ile `4851785` gibi), kolayca eşleşmiyor. Faz 2'de planlıları sadece `GetItemsData`'dan, arızaları sadece `RetrieveOutages` içindeki `Bildirimsiz` satırlardan alacağım. Böylece aynı kesinti iki kere sayılmaz.
 
 **Zamanlama:** `RetrieveOutages` 5 dakikada, `GetItemsData` 15 dakikada bir.
 
-### AYEDAŞ
+## AYEDAŞ (v1'de yok)
 
 - robots.txt (`www` ve `online` alt alan adları): her şeye izin.
 - Kesinti bilgisinin tek yeri `https://online.ayedas.com.tr/elektrik-kesintisi-sorgulama`. Listeleme yapan bir sayfa yok, site haritasında da başka bir kesinti sayfası çıkmadı.
 - Sayfa bir adres formu: İl, İlçe, Bucak, Belde, Mahalle, Sokak. Gönderince `POST /elektrik-kesintisi-sorgulama` çağrılıyor. Yanıtta `planlananKesintiListe` ve `mevcutKesintiListe` var, kayıtlarda `ilAdi`, `ilceAdi`, `mahalleAdi`, `sokakAdi`, `kesintiTipi`, `polygon` alanları bulunuyor. Aslında yapısı çok iyi.
 - Engel: formda Google reCAPTCHA var (`FormValidation` içinde `CaptchaValueCheck`, sunucu captcha hatasında `state: 3` dönüyor), üstüne `__RequestVerificationToken`. İlçe bazında bile sorgu atmak için captcha çözmek gerekiyor.
-- Captcha, sitenin "otomatik sorgu istemiyorum" demesi. Bunu aşmaya çalışmak (captcha çözme servisi vs.) bu projede yapılacak bir şey değil.
-- **Öneri: AYEDAŞ v1'den çıkarılsın.** Yol olarak AYEDAŞ/Enerjisa'ya yazıp veri erişimi istemek ya da açık veri yayınlarsa eklemek kalıyor.
-- Fixture: `ayedas/elektrik-kesintisi-sorgulama.html` (formun ve JS'in kaydı; bundan parser yazılmaz), `ayedas/robots-www.ayedas.com.tr.txt`.
+- robots.txt izin verse de veri captcha'nın arkasında. Captcha, sitenin "otomatik sorgu istemiyorum" demesi. Onu aşmak (captcha çözme servisi vs.) bu projede yapılacak bir şey değil.
+- Geriye AYEDAŞ/Enerjisa'ya yazıp veri erişimi istemek ya da açık veri yayınlarsa eklemek kalıyor.
+- Fixture: `ayedas/elektrik-kesintisi-sorgulama.html` (formun ve JS'in kaydı; bundan parser yazılmaz; Google Maps anahtarı, reCAPTCHA site key'i ve form token'ı maskelendi), `ayedas/robots-www.ayedas.com.tr.txt`.
 
-### İSKİ
+## İSKİ
+
+### İSKİ'nin kendi sitesi (kullanılmıyor)
 
 - robots.txt: `iski.istanbul` ve `iskiapi.iski.istanbul` için yok (404).
 - Sayfa: `https://iski.istanbul/abone-hizmetleri/ariza-kesinti`. Nuxt SPA, HTML'de veri yok.
 - Sayfanın JS'i veriyi `https://iskiapi.iski.istanbul/api/iski/bolgeselAriza/listesi` ve `.../bolgeselAriza/arizaDetayiFiltreli?ilceKodu=&mahalleKodu=` endpoint'lerinden çekiyor. Şablonda kullanılan alanlar: `ilceKodu`, `mahalleAdi`, `arizaNeviAciklamasi`, `baslamaTarihi`, `tahminiBitisTarihi`.
-- Engel 1: API, `Authorization` başlığı olmadan `403 Forbidden` dönüyor. Sitenin JS'inde sabit bir Bearer token gömülü, axios interceptor'ı her isteğe onu ekliyor.
-- Engel 2: Arıza kayıtlarının link verdiği `harita.iski.gov.tr`'de JS dosyalarına attığım istekler WAF tarafından `Request Rejected` ile reddedildi. Tarayıcı dışı istemcilerin açıkça engellendiğini gösteriyor. Bundan sonra İSKİ'ye istek atmayı bıraktım.
-- Planlı/arıza ayrımı: sadece arıza listesi gördüm, ayrı bir planlı kesinti sayfası bulamadım.
-- Teknik olarak token'ı bundle'dan alıp kullanmak mümkün. Ama bu bize verilmemiş bir kimlik bilgisini kullanmak demek. Token her an değişebilir, WAF da botlara karşı tavırlarını gösteriyor. Token'ı repoya koymak zaten kurallara aykırı.
+- API, `Authorization` başlığı olmadan `403 Forbidden` dönüyor. Sitenin JS'inde sabit bir Bearer token gömülü. Bu token bize verilmedi, kullanmıyoruz (karar).
+- Arıza kayıtlarının link verdiği `harita.iski.gov.tr`'de JS dosyalarına attığım istekler WAF tarafından `Request Rejected` ile reddedildi.
+- Fixture: `iski/bolgeselariza-listesi-403.json`, `iski/ariza-kesinti-page-shell.html`, `iski/harita-waf-rejected.html`.
 
-- Alternatif olarak İBB Açık Veri Portalı'na baktım. "İSKİ Duyuruları" veri seti yıllık XLSX dosyalarından oluşuyor, en son 2024-03'te güncellenmiş. "Su Kesintileri" ve arıza sayısı setleri de geçmişe dönük istatistik. Canlı harita için işe yaramıyorlar, ama v2.1'deki mahalle karnesi için geçmiş veri kaynağı olabilirler.
-- Burada bir hata yaptım: `data.ibb.gov.tr/robots.txt` `Disallow: /api/` ve `Crawl-Delay: 10` diyor. robots.txt'i aynı script'te CKAN API'den önce çektim ama sonucuna göre durmadım, `/api/3/action/...` yoluna 2 istek gitti. Oraya başka istek atmadım. Collector'da robots.txt kontrolü kodla yapılacak (Faz 2), izin yoksa istek hiç çıkmayacak. Keşif script'lerinde de artık önce robots.txt'e bakıp sonra ilerliyorum.
-- **Öneri: İSKİ v1'den çıkarılsın**, İSKİ'ye yazılıp canlı arıza verisi için erişim istensin. Sen token'la devam etmeyi seçersen token Kubernetes Secret'ta durur, repoya girmez, token değişince collector'ın kırılacağını da kabul etmiş oluruz. Bu karar senin.
+### İBB Açık Veri (v1'de kullanılacak)
 
-- Fixture: `iski/bolgeselariza-listesi-403.json` (token'sız yanıt), `iski/ariza-kesinti-page-shell.html`, `iski/harita-waf-rejected.html`.
+`data.ibb.gov.tr/robots.txt`:
+
+```
+User-agent: *
+Disallow: /dataset/rate/
+Disallow: /revision/
+Disallow: /dataset/*/history
+Disallow: /api/
+Crawl-Delay: 10
+```
+
+Veri seti sayfaları (`/dataset/<ad>`) ve dosya indirme linkleri (`/dataset/<uuid>/resource/<uuid>/download/<dosya>`) bu kurallarla izinli. CKAN API'si (`/api/`) yasak. O yüzden dosya listesini API'den değil veri seti sayfasının HTML'inden okuyacağız. İstekler arasında 10 saniye bekleyeceğiz.
+
+İSKİ organizasyonunun altında 18 veri seti var. İki tanesi işimize yarayabilir gibi göründü:
+
+- **İSKİ Duyuruları** (`/dataset/iski-duyurulari`): yıllık XLSX dosyaları, 2019-2023. İndirip baktım: `tarih | link | baslik` kolonları, içerik basın açıklamaları ve etkinlik duyuruları. Kesinti verisi değil, kullanmıyoruz.
+- **İstanbul'da Meydana Gelen Su Kesintileri** (`/dataset/istanbul-da-meydana-gelen-su-kesintileri`): iki XLSX dosyası, 2022-2023 ve 2023-2024. Asıl kaynak bu.
+
+2023-2024 dosyası:
+
+- 6.410 satır, 39 ilçe. Tarih aralığı: 2023-02-18 08:47 - 2024-02-19 11:13.
+- Kolonlar: `ILCE | KESİNTİ SEBEP | ARIZA KESİNTİ TARİHİ | ARIZA BİTİS TARİHİ | CALISMA YERİ | MAHALLE`
+- Örnek: `ADALAR | 100 MM ÇAPLI ŞEBEKE HATTI ARIZASI | 12/02/2024 13:30:10 | 12/02/2024 20:30:00 | BURGAZADA GÖNÜLLÜ CAD.ÜZERINDE | BURGAZADA MAH`
+- Tarih formatı `dd/MM/yyyy HH:mm:ss`, saat dilimi yok, Europe/Istanbul kabul edilecek. Bitiş tarihi her satırda dolu.
+- `MAHALLE` virgülle ayrılmış liste (`MADEN MAH,NİZAM MAH`), "MAH" ekiyle. Normalizasyonda temizlenecek.
+- Kaynak id'si yok, `external_id` null kalacak, tekilleştirme hash ile.
+- Hepsi arıza kaynaklı kesinti, planlı/arıza ayrımı yok. `planned = false`.
+
+**Önemli sınırlama:** Bu veri canlı değil. En yeni kayıt 2024-02-19 tarihli, veri seti 2024-03'ten beri güncellenmemiş. Haritada bugün aktif bir su kesintisi göstermeyecek. v1'de "su" katmanı olacak ama sadece geçmiş kesintiler (ilçe bazında son dönemde kaç kesinti oldu gibi) olarak işe yarar. Canlı su verisi için İSKİ'ye yazıp erişim istemek hâlâ tek yol.
+
+**Zamanlama önerisi:** Dosyalar yılda bir ekleniyor. 5 ya da 15 dakikada bir indirmek anlamsız ve İBB'ye yük. Önerim: veri seti sayfasını günde bir kez okumak, yeni bir dosya linki ya da değişmiş "Son Güncelleme" görürsem sadece o dosyayı indirmek. Bu, CLAUDE.md'deki 5/15 dakika kuralından sapma olduğu için onayını istiyorum (kural arıza ve planlı kesinti sayfaları için yazılmış, burası bir veri seti).
+
+- Fixture: `iski/ibb-su-kesintileri-2023-2024.xlsx`, `iski/ibb-iski-duyurular-2023.xlsx`.
+
+## Doğalgaz
 
 ### İGDAŞ
 
-- `https://www.igdas.istanbul/robots.txt` ve `https://www.igdas.com.tr/robots.txt`: ikisi de `User-agent: *` / `Disallow: /`.
-- Kurallarımızda robots.txt kontrolü var, bu yüzden kesinti sayfasına hiç istek atmadım. Web aramasında İGDAŞ'ın adres bazlı bir sorgulama ekranı olduğu görünüyor, ama taramak robots.txt'e aykırı olur.
-- İBB Açık Veri Portalı'nda İGDAŞ'ın tüketim ve abone sayısı veri setleri var, kesinti veri seti yok.
-- **Öneri: İGDAŞ taranamaz.** Faz 9'daki "İGDAŞ collector'ı" maddesi bu haliyle yapılamıyor. Seçenekler: İGDAŞ'tan izin/erişim istemek ya da doğalgaz için robots.txt'i izin veren başka bir dağıtım şirketiyle (plan'daki v1.2 listesinde Başkentgaz, İzmirgaz var) başlamak.
+- `https://www.igdas.istanbul/robots.txt` ve `https://www.igdas.com.tr/robots.txt`: ikisi de `User-agent: *` / `Disallow: /`. Kesinti sayfasına hiç istek atmadım.
+- İBB Açık Veri'de İGDAŞ organizasyonunun altındaki veri setleri: bina bilgileri, gaz birim fiyatı ve miktarı, gaz tüketimi, ilçe bazında aylık tüketim, ilçelere göre abone sayıları, kullanım sınıfı bazında tüketim, yatırım türü ve uzunluk bilgileri. Hiçbiri kesinti verisi değil. Linkler robots.txt'e göre izinli, ama indirecek bir kesinti dosyası yok.
 - Fixture: `igdas/robots-www.igdas.istanbul.txt`, `igdas/robots-www.igdas.com.tr.txt`.
 
-### Kaç istek attım
+### Başkentgaz (Ankara)
 
-Kaynak başına: BEDAŞ 9 (robots ve API'ler dahil), AYEDAŞ 5, İSKİ 10 civarı (JS dosyalarıyla, WAF'a takılınca durdum), İGDAŞ 2 (sadece robots.txt), İBB Açık Veri 3 (robots.txt ve yukarıda anlattığım 2 API isteği).
+- Alan adı `www.baskentdogalgaz.com.tr` (`baskentgaz.com.tr` DNS'te yok).
+- robots.txt: `User-agent: *` / `Disallow:` (boş), her şeye izin. API alt alan adı `bskapiv1.baskentdogalgaz.com.tr`'de robots.txt yok (404).
+- TLS: sunucu ara sertifikayı göndermiyor (GoDaddy G2), curl ve Python doğrulamada düşüyor. `-k` ile doğrulamayı kapatmak yerine sertifikadaki AIA adresinden ara sertifikayı alıp ayrı bir CA paketiyle bağlandım. Collector'da kullanılsaydı Java truststore'una aynı ara sertifika eklenmesi gerekirdi.
+- Site bir React SPA, içeriği `https://bskapiv1.baskentdogalgaz.com.tr/api/` altındaki bir CMS API'sinden alıyor. Bundle'da kesinti ile ilgili bir endpoint yok. Bütün menü ağacını (`menus/ByDomainMenus/1`, 460 öğe) tarayınca "kesinti" kelimesi sadece "kesintisiz doğal gaz" gibi tanıtım metinlerinde geçiyor. Duyurular fiyat tarifesi ve ihale duyuruları.
+- Sonuç: Başkentgaz planlı ya da arıza kaynaklı kesintileri sitesinde yayınlamıyor, okunacak veri yok.
+- Fixture: `baskentgaz/api-menus-bydomainmainmenus-1.json`, `baskentgaz/api-parameters.json`, `baskentgaz/robots-www.baskentdogalgaz.com.tr.txt`.
 
-### Veri modeli için not
+### İzmirgaz
 
-Plan'daki `outage` tablosu BEDAŞ için yetiyor. İki ek öneriyorum, Faz 3'te onayınla eklerim:
-- `external_id`: kaynağın kendi id'si (`plannedOutage.id`, `OUTAGE_NO`). Kaynak id veriyorsa dedup için hash'ten daha sağlam.
-- `lat`, `lon`: BEDAŞ planlılarda koordinat veriyor, ileride mahalle poligonu gelene kadar nokta olarak gösterilebilir.
+- robots.txt yok (404), kısıt yok.
+- TLS: Başkentgaz'la aynı sorun (Sectigo DV R36 ara sertifikası gönderilmiyor), aynı yöntemle bağlandım.
+- Kesinti bilgisi "Sokağımda Gaz Var mı?" sayfasında (`/SokagimdaGazVarmi.php`). Sayfa içeriği `pages/islemler/SokagimdaGazVarmi.php` parçasından yükleniyor. Parça bir form: ilçe seç, mahalle seç, sokak seç. Sokak seçilince `POST gaz.php` ile sadece sokak kodu gönderiliyor ve o sokak için cevap geliyor. Captcha yok.
+- Sorun: liste yok. Bütün kesintileri görmek için İzmir'deki her sokağı tek tek sorgulamak gerekiyor. İzmir'de on binlerce sokak var, 15 dakikalık bir tarama bunu kaldıramaz, siteye de ciddi yük olur. "Kaynak sitelere nazik ol" kuralıyla bağdaşmıyor.
+- Fixture: `izmirgaz/pages-islemler-sokagimdagazvarmi.html`, `izmirgaz/robots-www.izmirgaz.com.tr.txt`.
+
+### Doğalgaz sonucu
+
+Karar "İBB'deki İGDAŞ verisi izinliyse onu, değilse Başkentgaz ya da İzmirgaz'dan verisi daha düzgün olanı" idi. İBB'de İGDAŞ kesinti verisi yok. Başkentgaz hiç kesinti yayınlamıyor. İzmirgaz sadece sokak bazında sorgu veriyor. Üçünden de nazik bir collector çıkmıyor, bu yüzden birini seçmedim. Faz 9'daki doğalgaz maddesini "kaynak bulunana kadar beklemede" olarak güncelledim. Seçenekler aşağıda.
+
+## Kaç istek attım
+
+- İlk tur: BEDAŞ 9, AYEDAŞ 5, İSKİ 10 civarı (WAF'a takılınca durdum), İGDAŞ 2 (robots.txt), İBB 3 (robots.txt ve robots'a aykırı 2 API isteği).
+- İkinci tur (hepsi robots kontrollü): İBB 7 (robots.txt, 4 sayfa, 2 XLSX), Başkentgaz 7 (2 robots.txt, ana sayfa, JS bundle, 3 API çağrısı), İzmirgaz 5 (robots.txt, ana sayfa, sorgu sayfası, form parçası, yanlış yoldan istediğim için 404 dönen bir JS). Ayrıca iki ara sertifika CA'ların kendi sunucularından (GoDaddy, Sectigo) indirildi.
 
 ## İskelet
 
@@ -120,7 +179,7 @@ Plan'daki `outage` tablosu BEDAŞ için yetiyor. İki ek öneriyorum, Faz 3'te o
 
 - `services/collector` ve `services/api`: Spring Boot 4.1.1 (şu anki son kararlı sürüm), Java 21, Maven. Şimdilik sadece `spring-boot-starter-webmvc`, actuator ve Prometheus registry var. Liveness/readiness probe'ları açık (`/actuator/health/liveness`, `/actuator/health/readiness`), `/actuator/prometheus` açık. Her serviste bu üç endpoint'i gerçek HTTP ile kontrol eden bir test var.
 - `frontend`: React 19 + Vite 8. Şimdilik sadece başlık ve köşede sürüm/ortam etiketi var (`VITE_APP_VERSION`, `VITE_APP_ENV` build argümanından geliyor). nginx `/api/` isteklerini api servisine proxy'liyor. `/api/stream` için buffering kapalı, SSE Faz 3'te buna ihtiyaç duyacak.
-- `docker-compose.yml`: postgres 18, redis 8, collector, api, frontend. Her birinde healthcheck ve `mem_limit` var. Servisler bağımlılıkları healthy olmadan başlamıyor.
+- `docker-compose.yml`: postgres 18, redis 8, collector, api, frontend. Her birinde healthcheck ve `mem_limit` var. Servisler bağımlılıkları healthy olmadan başlamıyor. Veritabanı kullanıcı adı ve parolası `.env` dosyasından geliyor. Repoda sadece `.env.example` var, `.env` yoksa compose açık bir hata mesajıyla duruyor.
 - Boş klasörler (`helm/*`, `gitops/*`, `infra/*`, `loadtest`, `.github/workflows`) `.gitkeep` ile duruyor.
 - `.gitignore` içinde `.env`, `*.tfvars`, `*.tfstate`, `kubeconfig*`, `*secret*.yaml` baştan dışarıda. Sadece `*.example` olanlar girebiliyor.
 
@@ -135,21 +194,19 @@ Plan'daki `outage` tablosu BEDAŞ için yetiyor. İki ek öneriyorum, Faz 3'te o
 
 - `mvn verify`: collector 3/3, api 3/3 test yeşil.
 - `npm run build` (node:24-alpine container'ında): yeşil.
-
 - `docker compose up --build`: beş container da healthy. collector ve api `/actuator/health` için `{"status":"UP"}` dönüyor, frontend 3000'de sayfayı veriyor, `localhost:3000/api/...` isteği nginx üzerinden api'ye gidiyor (henüz endpoint olmadığı için 404, beklenen bu).
 - Boştayken bellek: collector 129 MiB / 384, api 131 MiB / 512, postgres 41 MiB, redis 7 MiB, frontend 13 MiB. Toplam 320 MiB civarı, 4 GB'lık sunucu için rahat bir başlangıç.
 
 ### Nerede takıldım
 
 - Frontend container'ı ilk seferde `unhealthy` çıktı, halbuki `/healthz` hosttan cevap veriyordu. Health log'da `wget: can't connect to remote host: Connection refused` vardı. Alpine'da `localhost` önce `::1`'e çözülüyor. nginx-unprivileged image'ı normalde `default.conf`'a IPv6 listen ekliyor, ama ben o dosyayı kendi config'imle ezdiğim için nginx sadece IPv4'te dinliyordu. Healthcheck'i `127.0.0.1` yapınca düzeldi.
-
 - Windows tarafından `wsl.exe -- bash -c '...'` ile komut çalıştırınca `$DEGISKEN`'ler boş genişliyordu, çünkü wsl.exe komut satırını bir kabuktan daha geçiriyor. İlk robots.txt denemesi `https://robots.txt/` adresine gitti. Çözüm: komutları script dosyasına yazıp `wsl.exe -- bash script.sh` ile çalıştırmak.
 - WSL'de Node kurulu değil. Frontend'in `package-lock.json`'ını ve build'ini `node:24-alpine` container'ında yaptım. Bilgisayara ayrıca Node kurmak gerekmiyor.
 - İSKİ sunucusu yavaş cevap veriyor, 100 KB'lık bir JS dosyası birkaç dakika sürdü.
+- İlk commit'lerde `docker-compose.yml` ve README'de lokal bir Postgres parolası duruyordu. Sadece lokal de olsa CLAUDE.md "parola repoya girmez" diyor. Push'tan önce parolayı `.env`'e taşıdım ve henüz push edilmemiş commit'leri yeniden yazdım (compose, fixture ve README commit'leri). Aynı sırada AYEDAŞ fixture'ındaki reCAPTCHA site key'ini de maskeledim. Site key zaten herkese açık bir değer, ama "anahtar gibi görünen bir şey repoda yok" demek daha temiz.
 
 ## Açık kararlar (senden)
 
-1. AYEDAŞ, İSKİ ve İGDAŞ v1'den çıkarsa v1 sadece BEDAŞ (Avrupa yakası elektrik) olur. Faz 2'yi sadece BEDAŞ ile mi yapalım, yoksa v1 için başka bir kaynak mı arayalım?
-2. İSKİ için gömülü token'la devam etmek ister misin? Benim önerim hayır.
-3. Faz 9'daki İGDAŞ maddesinin yerine ne gelsin?
-4. Veri modeline `external_id` ve `lat`/`lon` eklensin mi?
+1. İSKİ verisi (İBB) geçmiş veri, en yenisi 2024-02-19. v1'de su katmanını bu haliyle, "geçmiş kesintiler" olarak mı gösterelim? Canlı su verisi için İSKİ'ye erişim talebi yazmamı ister misin?
+2. İSKİ (İBB) taramasını günde bir yapmayı onaylıyor musun? CLAUDE.md'deki 5/15 dakika kuralından bir sapma bu.
+3. Doğalgaz için uygun kaynak yok. Seçenekler: (a) İGDAŞ ya da Başkentgaz'dan izin/veri talep etmek, (b) v1.1'den doğalgazı çıkarıp yerine başka bir şey koymak (ör. plan'daki v1.2 şehirlerinden birinin elektrik ya da su kaynağı), (c) İzmirgaz'ı sadece seçili birkaç sokak için sorgulamak. Benim önerim (a) ile (b)'nin birlikte yürümesi.

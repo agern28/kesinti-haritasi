@@ -14,11 +14,13 @@ Her faz için ortak koşul: testler ve build yeşil, commit atılmış, `docs/tr
 Bitti sayılma koşulu: kaynak notları docs'ta, zor kaynaklar için karar önerisi yazılmış; fixture'lar `services/collector/src/test/resources/fixtures` altında; `docker compose up` ile beş container ayağa kalkıyor ve iki servisin health endpoint'i ile frontend cevap veriyor; iki servisin `mvn verify` çıktısı yeşil.
 
 Durum: tamamlandı (2026-09-11). Not: [tr/01-kesif-ve-iskelet.md](tr/01-kesif-ve-iskelet.md).
-Keşif sonucu: kurallara uyarak v1'de temiz okunabilen tek kaynak BEDAŞ. AYEDAŞ (reCAPTCHA), İSKİ (gömülü token + WAF) ve İGDAŞ (robots.txt `Disallow: /`) için karar bekleniyor, ayrıntılar faz notunun sonunda. Faz 2'ye bu kararlardan sonra geçilecek.
+Kararlar (2026-09-11): v1 kaynakları BEDAŞ (elektrik) ve İSKİ (su, İBB Açık Veri'deki "Su Kesintileri" dosyası). AYEDAŞ v1'de yok (reCAPTCHA). İSKİ'nin gömülü token'ı kullanılmıyor. Veri modeline nullable `external_id`, `lat`, `lon` eklendi ([tr/veri-modeli.md](tr/veri-modeli.md)). Doğalgaz için uygun kaynak bulunamadı (İGDAŞ robots.txt, İBB'de İGDAŞ kesinti verisi yok, Başkentgaz yayınlamıyor, İzmirgaz sadece sokak bazlı sorgu).
+Bekleyen sorular (faz notunun sonunda): İBB su verisinin geçmiş veri olması (en yenisi 2024-02-19), İBB taramasının günde bir yapılması, doğalgaz kaynağı.
 
 ## [ ] Faz 2 - Collector
 - [ ] Ortak `Outage` modeli ve `SourceCollector` arayüzü
-- [ ] BEDAŞ, AYEDAŞ, İSKİ collector'ları, fixture tabanlı testlerle
+- [ ] BEDAŞ (planlı: `GetItemsData`, arıza: `RetrieveOutages` + trafo konum cache'i) ve İSKİ (İBB Açık Veri XLSX) collector'ları, fixture tabanlı testlerle
+- [ ] Her istekten önce robots.txt kontrolü (yasaksa istek atılmaz, Crawl-delay'e uyulur)
 - [ ] Tarih/saat ve il/ilçe/mahalle normalizasyonu
 - [ ] Kaynak başına iki zamanlama (arıza 5 dk, planlı 15 dk), config'ten değiştirilebilir
 - [ ] İsteklerde jitter
@@ -29,7 +31,7 @@ Keşif sonucu: kurallara uyarak v1'de temiz okunabilen tek kaynak BEDAŞ. AYEDA�
 Bitti sayılma koşulu: her collector için fixture'dan parse testi, normalizasyon testleri, diff (NEW/UPDATED/GONE) testleri ve hata izolasyonu testi yeşil; lokal compose'da collector çalışınca stream'e olay düşüyor, ikinci taramada değişiklik yoksa hiçbir şey yazılmıyor; `/actuator/prometheus` üç metriği kaynak etiketiyle gösteriyor.
 
 ## [ ] Faz 3 - API
-- [ ] Consumer group ile stream tüketimi, `dedup_key` ile upsert, Flyway migration'ları
+- [ ] Consumer group ile stream tüketimi, `dedup_key` ile upsert (`external_id` varsa `source:external_id`, yoksa hash), Flyway migration'ları
 - [ ] `GET /api/outages`, `GET /api/outages/{id}`, `GET /api/map/summary` (Redis cache), `GET /api/sources`, `GET /api/stream` (SSE)
 - [ ] `outage.created` / `outage.updated` / `outage.ended` olayları, ilçe özeti cache'te güncelleniyor
 - [ ] Redis Pub/Sub ile pod'lar arası SSE dağıtımı
@@ -87,9 +89,9 @@ Bitti sayılma koşulu: `helm lint` ve `helm template` temiz; Argo CD'de int ve 
 Bitti sayılma koşulu: paneller Grafana'da veriyle doluyor; kaynak bilerek bozulunca Telegram'a alarm düşüyor ve düzelince resolved geliyor; node bellek kullanımı makul seviyede.
 
 ## [ ] Faz 9 - v1.1 ve dayanıklılık
-- [ ] İGDAŞ collector'ı, doğalgaz filtresi ve rengi, CHANGELOG, INT'e otomatik, PROD'a PR ile
+- [ ] Doğalgaz kaynağı: BEKLEMEDE. İGDAŞ robots.txt `Disallow: /`, İBB'de İGDAŞ kesinti verisi yok, Başkentgaz sitesinde kesinti yayınlamıyor, İzmirgaz sadece sokak bazlı sorgu veriyor (ayrıntı: [tr/01-kesif-ve-iskelet.md](tr/01-kesif-ve-iskelet.md)). Faz 9 başında yeniden bakılacak; kaynak bulunursa: collector, doğalgaz filtresi ve rengi, CHANGELOG, INT'e otomatik, PROD'a PR ile. Bulunamazsa v1.1'in yeni kaynağı senin kararınla belirlenecek ve aynı hattan geçecek.
 - [ ] k6 ani trafik senaryosu, HPA ve cache ölçümü, sonuçlar docs'ta
 - [ ] Rollback denemesi
 - [ ] Demo runbook'u (TR/EN)
 
-Bitti sayılma koşulu: v1.1 PROD'da; k6 sonuçları (istek/sn, p95, hata oranı, pod sayısı) docs'ta; rollback ve geri alma adım adım denenmiş; runbook plan'daki demo senaryosunu komut komut kapsıyor.
+Bitti sayılma koşulu: v1.1 (yeni kaynakla) PROD'da; k6 sonuçları (istek/sn, p95, hata oranı, pod sayısı) docs'ta; rollback ve geri alma adım adım denenmiş; runbook plan'daki demo senaryosunu komut komut kapsıyor.

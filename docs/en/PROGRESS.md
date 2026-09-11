@@ -14,11 +14,13 @@ Common condition for every phase: tests and build green, committed, `docs/tr/NN-
 Done when: source notes are in docs with a recommendation for hard sources; fixtures live under `services/collector/src/test/resources/fixtures`; `docker compose up` starts five containers and both service health endpoints plus the frontend respond; `mvn verify` is green for both services.
 
 Status: done (2026-09-11). Notes: [01-discovery-and-skeleton.md](01-discovery-and-skeleton.md).
-Discovery result: following our rules, BEDAŞ is the only source that can be read cleanly in v1. AYEDAŞ (reCAPTCHA), İSKİ (embedded token + WAF) and İGDAŞ (robots.txt `Disallow: /`) need a decision, see the end of the phase notes. Phase 2 starts after those decisions.
+Decisions (2026-09-11): v1 sources are BEDAŞ (electricity) and İSKİ (water, the "Su Kesintileri" file on İBB Open Data). AYEDAŞ is not in v1 (reCAPTCHA). İSKİ's embedded token is not used. Nullable `external_id`, `lat`, `lon` added to the data model ([data-model.md](data-model.md)). No suitable natural gas source was found (İGDAŞ robots.txt, no İGDAŞ outage data on İBB, Başkentgaz doesn't publish, İzmirgaz only has per-street queries).
+Open questions (end of the phase notes): the İBB water data is historical (newest 2024-02-19), scanning İBB once a day, the natural gas source.
 
 ## [ ] Phase 2 - Collector
 - [ ] Common `Outage` model and `SourceCollector` interface
-- [ ] BEDAŞ, AYEDAŞ, İSKİ collectors with fixture-based tests
+- [ ] BEDAŞ (planned: `GetItemsData`, faults: `RetrieveOutages` + transformer location cache) and İSKİ (İBB Open Data XLSX) collectors with fixture-based tests
+- [ ] robots.txt check before every request (no request if disallowed, Crawl-delay respected)
 - [ ] Date/time and province/district/neighbourhood normalization
 - [ ] Two schedules per source (unplanned 5 min, planned 15 min), configurable
 - [ ] Jitter on requests
@@ -29,7 +31,7 @@ Discovery result: following our rules, BEDAŞ is the only source that can be rea
 Done when: fixture parse tests, normalization tests, diff (NEW/UPDATED/GONE) tests and an error isolation test are green; in local compose the collector writes events to the stream and writes nothing on a second scan without changes; `/actuator/prometheus` shows the three metrics with a source label.
 
 ## [ ] Phase 3 - API
-- [ ] Stream consumption with a consumer group, upsert by `dedup_key`, Flyway migrations
+- [ ] Stream consumption with a consumer group, upsert by `dedup_key` (`source:external_id` when there is an `external_id`, hash otherwise), Flyway migrations
 - [ ] `GET /api/outages`, `GET /api/outages/{id}`, `GET /api/map/summary` (Redis cache), `GET /api/sources`, `GET /api/stream` (SSE)
 - [ ] `outage.created` / `outage.updated` / `outage.ended` events, district summary refreshed in cache
 - [ ] SSE fan-out across pods through Redis Pub/Sub
@@ -87,9 +89,9 @@ Done when: `helm lint` and `helm template` are clean; int and prod are Synced/He
 Done when: dashboards show data; breaking a source sends an alert to Telegram and a resolved message after the fix; node memory stays reasonable.
 
 ## [ ] Phase 9 - v1.1 and resilience
-- [ ] İGDAŞ collector, gas filter and colour, CHANGELOG, automatic to INT, PR to PROD
+- [ ] Natural gas source: ON HOLD. İGDAŞ robots.txt `Disallow: /`, no İGDAŞ outage data on İBB, Başkentgaz doesn't publish outages on its site, İzmirgaz only offers per-street queries (details: [01-discovery-and-skeleton.md](01-discovery-and-skeleton.md)). To be revisited at the start of Phase 9; if a source is found: collector, gas filter and colour, CHANGELOG, automatic to INT, PR to PROD. If not, the new v1.1 source is your call and goes through the same pipeline.
 - [ ] k6 spike scenario, HPA and cache measurements, results in docs
 - [ ] Rollback exercise
 - [ ] Demo runbook (TR/EN)
 
-Done when: v1.1 is on PROD; k6 results (req/s, p95, error rate, pod count) are in docs; rollback and roll-forward tried step by step; the runbook covers the demo scenario from the plan command by command.
+Done when: v1.1 (with the new source) is on PROD; k6 results (req/s, p95, error rate, pod count) are in docs; rollback and roll-forward tried step by step; the runbook covers the demo scenario from the plan command by command.
