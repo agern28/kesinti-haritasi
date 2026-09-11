@@ -22,7 +22,7 @@ Open questions (end of the phase notes): the İBB water data is historical (newe
 - [ ] BEDAŞ (planned: `GetItemsData`, faults: `RetrieveOutages` + transformer location cache) and İSKİ (İBB Open Data XLSX) collectors with fixture-based tests
 - [ ] robots.txt check before every request (no request if disallowed, Crawl-delay respected)
 - [ ] Date/time and province/district/neighbourhood normalization
-- [ ] Two schedules per source (unplanned 5 min, planned 15 min), configurable
+- [ ] Schedule per source based on how often the source updates, at most every 5 min (unplanned 5 min, planned 15 min, İBB open data once a day), configurable
 - [ ] Jitter on requests
 - [ ] Hash-based change detection, NEW / UPDATED / GONE to a Redis Stream
 - [ ] Prometheus metrics: `collector_last_success_timestamp`, `collector_items_total`, `collector_errors_total`
@@ -82,7 +82,7 @@ Done when: `helm lint` and `helm template` are clean; int and prod are Synced/He
 - [ ] kube-prometheus-stack values that fit into 4 GB
 - [ ] ServiceMonitors
 - [ ] Grafana dashboards (JSON, provisioned): source health, application, cluster, SSE client count, DB -> browser latency
-- [ ] Telegram alert (unplanned 30 min, planned 3 h)
+- [ ] Telegram alert (unplanned 30 min, planned 3 h, daily open data source 26 h)
 - [ ] A way to break a source on purpose to test the alert
 - [ ] YAPMAN GEREKEN: Telegram bot token and chat id
 

@@ -29,7 +29,7 @@ Benzer siteler var ama çoğu il il liste. Buradaki fark:
 ### collector-service
 - Her kaynak ayrı bir sınıf: `SourceCollector` arayüzü, `BedasCollector`, `IskiCollector` (İBB Açık Veri)... Hangi kaynağın neden alındığı ya da alınmadığı (AYEDAŞ, İGDAŞ, Başkentgaz, İzmirgaz): [tr/01-kesif-ve-iskelet.md](tr/01-kesif-ve-iskelet.md).
 - Yeni şehir/kurum eklemek = yeni bir sınıf + testi. Sürüm sürüm büyüme buradan geliyor.
-- Arıza/anlık kesinti sayfalarını 5 dakikada, planlı kesinti duyurularını 15 dakikada bir tarar. Veriyi ortak modele çevirir (normalize), sadece yeni/değişen/biten kayıtları Redis Stream'e yazar.
+- Tarama sıklığı kaynağın güncellenme sıklığına göre, en sık 5 dakika: arıza/anlık kesinti sayfaları 5 dakikada, planlı kesinti duyuruları 15 dakikada, İBB Açık Veri'deki İSKİ veri seti günde bir. Veriyi ortak modele çevirir (normalize), sadece yeni/değişen/biten kayıtları Redis Stream'e yazar.
 - Parser testleri canlı siteye gitmez: her kaynaktan kaydedilmiş örnek HTML/JSON dosyaları (`src/test/resources/fixtures/`) üzerinden çalışır. Site tasarımı değişince önce test kırılır.
 - Prometheus metrikleri:
   - `collector_last_success_timestamp{source}`
@@ -109,7 +109,7 @@ GitOps (Argo CD):
   - kaynak sağlığı: her kaynağın son başarılı taraması, bulunan kayıt sayısı, hata sayısı
   - uygulama: istek sayısı, gecikme, hata oranı, cache hit oranı
   - cluster: pod sayısı, CPU/bellek, HPA durumu
-- Alarm: arıza sayfalarından 30 dakika, planlı duyurulardan 3 saat boyunca başarılı tarama gelmezse Telegram bildirimi
+- Alarm: arıza sayfalarından 30 dakika, planlı duyurulardan 3 saat, günlük açık veri kaynaklarından 26 saat boyunca başarılı tarama gelmezse Telegram bildirimi
 
 ## Repo yapısı
 
@@ -141,10 +141,10 @@ kesinti-haritasi/
 
 ## Veri toplama kuralları
 
-- Arıza sayfaları 5 dakikada, planlı duyurular 15 dakikada bir; isteklere rastgele küçük gecikme (jitter), kaynak başına tek istek dizisi, agresif tarama yok
+- Tarama sıklığı kaynağın güncellenme sıklığına göre belirlenir, en sık 5 dakika: arıza sayfaları 5 dakikada, planlı duyurular 15 dakikada, açık veri setleri günde bir; isteklere rastgele küçük gecikme (jitter), kaynak başına tek istek dizisi, agresif tarama yok
 - `robots.txt` her istekten önce kodla kontrol edilir: yasak yola istek atılmaz, `Crawl-delay` varsa ona uyulur. User-Agent'ta proje adı ve iletişim bilgisi
 - Captcha, gömülü token, WAF gibi erişim kontrolleri aşılmaz; böyle bir kaynak v1'e alınmaz
-- Açık veri setleri (yılda bir güncellenen dosyalar) dakikalık değil günlük kontrol edilir (onay bekliyor)
+- Seyrek güncellenen açık veri setleri (ör. İBB'deki İSKİ su kesintileri, yılda bir dosya) günde bir kontrol edilir; yeni dosya yoksa indirme yapılmaz
 - Haritada her kesintinin yanında kaynak adı ve orijinal duyuru linki
 - Gün 1'de her kaynağın verisinin nasıl sunulduğu (HTML tablo, JSON endpoint, form arkası) çıkarılır. Bir kaynak zor çıkarsa v1'den çıkarılıp sonraki sürüme bırakılır.
 
@@ -168,7 +168,7 @@ kesinti-haritasi/
 - v1.2: Ankara (Başkent EDAŞ, ASKİ, Başkentgaz) ve İzmir (GDZ, İZSU, İzmirgaz)
 - v1.3: kullanıcı bildirimi ("bende de yok"), IP başına limit, aynı bölgeden bildirimler birikince haritada işaret
 - v2.0: adres kaydı ve planlı kesinti uyarısı (e-posta/Telegram, bildirimler kuyruktan)
-- v2.1: mahalle karnesi, Türkiye geneli istatistik sayfası
+- v2.1: mahalle karnesi, Türkiye geneli istatistik sayfası. İSKİ'nin İBB Açık Veri'deki geçmiş su kesintisi verisi (2022-2024, mahalle bazında) karnenin su tarafında kullanılacak; bu veri v1'den itibaren günlük toplanıp saklanıyor ama canlı haritada aktif kesinti olarak görünmüyor.
 - sonra: mahalle poligonları, internet sağlayıcı kesintileri, açık API
 
 ## Demo senaryosu (5-7 dk)

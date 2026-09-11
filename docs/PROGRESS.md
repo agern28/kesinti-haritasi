@@ -22,7 +22,7 @@ Bekleyen sorular (faz notunun sonunda): İBB su verisinin geçmiş veri olması 
 - [ ] BEDAŞ (planlı: `GetItemsData`, arıza: `RetrieveOutages` + trafo konum cache'i) ve İSKİ (İBB Açık Veri XLSX) collector'ları, fixture tabanlı testlerle
 - [ ] Her istekten önce robots.txt kontrolü (yasaksa istek atılmaz, Crawl-delay'e uyulur)
 - [ ] Tarih/saat ve il/ilçe/mahalle normalizasyonu
-- [ ] Kaynak başına iki zamanlama (arıza 5 dk, planlı 15 dk), config'ten değiştirilebilir
+- [ ] Kaynak başına zamanlama, kaynağın güncellenme sıklığına göre ve en sık 5 dk (arıza 5 dk, planlı 15 dk, İBB açık veri günde bir), config'ten değiştirilebilir
 - [ ] İsteklerde jitter
 - [ ] Hash ile değişiklik tespiti, Redis Stream'e NEW / UPDATED / GONE
 - [ ] Prometheus metrikleri: `collector_last_success_timestamp`, `collector_items_total`, `collector_errors_total`
@@ -82,7 +82,7 @@ Bitti sayılma koşulu: `helm lint` ve `helm template` temiz; Argo CD'de int ve 
 - [ ] 4 GB'a sığacak kube-prometheus-stack değerleri
 - [ ] ServiceMonitor'lar
 - [ ] Grafana panelleri (JSON, provisioning): kaynak sağlığı, uygulama, cluster, SSE istemci sayısı, DB -> tarayıcı gecikmesi
-- [ ] Telegram alarmı (arıza 30 dk, planlı 3 saat)
+- [ ] Telegram alarmı (arıza 30 dk, planlı 3 saat, günlük açık veri kaynağı 26 saat)
 - [ ] Alarm testi için kaynak bozma yöntemi
 - [ ] YAPMAN GEREKEN: Telegram bot token ve chat id
 

@@ -16,7 +16,7 @@ Tam plan: docs/plan.md. İlerleme: docs/PROGRESS.md. Her oturuma bu iki dosyayı
 - Her iş küçük, anlamlı commit'lerle ilerler. Conventional commits (feat:, fix:, ci:, docs:, infra:).
 - Bir faz bitmeden sonrakine geçme. Faz bitince docs/PROGRESS.md'yi güncelle ve dur.
 - Test yazmadan collector parser'ı yazma. Parser testleri canlı siteye gitmez, src/test/resources/fixtures altındaki kayıtlı örneklerle çalışır.
-- Kaynak sitelere nazik ol: keşif için kaynak başına birkaç istek; üretimde arıza/anlık kesinti sayfaları 5 dakikada, planlı kesinti duyuruları 15 dakikada bir taranır; anlamlı User-Agent, robots.txt kontrolü.
+- Kaynak sitelere nazik ol: keşif için kaynak başına birkaç istek; üretimde tarama sıklığı kaynağın güncellenme sıklığına göre belirlenir, en sık 5 dakika (tipik değerler: arıza/anlık kesinti sayfaları 5 dakika, planlı kesinti duyuruları 15 dakika, seyrek güncellenen açık veri setleri günde bir); anlamlı User-Agent, robots.txt kontrolü.
 - Gerçek zamanlılık: veritabanına yeni/değişen/biten bir kesinti düştüğü an SSE ile tarayıcıya gider. Kullanıcı sayfayı yenilemeden görür.
 - Secret, token, parola, kubeconfig asla repoya girmez. Örnek dosyalar *.example uzantısıyla.
 - Sunucu 2 vCPU / 4 GB. Her pod'a resource request/limit ver, JVM'lerde -XX:MaxRAMPercentage kullan, gereksiz bileşen kurma.
