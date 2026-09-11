@@ -1,0 +1,26 @@
+# Java / Maven
+target/
+*.class
+*.log
+
+# Node
+node_modules/
+dist/
+
+# IDE
+.idea/
+.vscode/
+*.iml
+.DS_Store
+
+# Secret ve yerel ayarlar asla repoya girmez
+.env
+*.tfvars
+!*.tfvars.example
+*.tfstate
+*.tfstate.*
+.terraform/
+kubeconfig*
+!kubeconfig.example
+*secret*.yaml
+!*secret*.example.yaml
