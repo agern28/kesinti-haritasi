@@ -15,8 +15,8 @@ Benzer siteler var ama çoğu il il liste. Buradaki fark:
 ## Mimari
 
 ```
-[BEDAŞ] [AYEDAŞ] [İSKİ] [İGDAŞ] ...
-        \    |    |    /
+   [BEDAŞ]   [İSKİ / İBB Açık Veri]   ...
+        \         /
       collector-service  (Spring Boot, zamanlanmış görevler)
               |
         Redis Streams  (outage-events)
@@ -27,7 +27,7 @@ Benzer siteler var ama çoğu il il liste. Buradaki fark:
 ```
 
 ### collector-service
-- Her kaynak ayrı bir sınıf: `SourceCollector` arayüzü, `BedasCollector`, `AyedasCollector`, `IskiCollector`, `IgdasCollector`...
+- Her kaynak ayrı bir sınıf: `SourceCollector` arayüzü, `BedasCollector`, `IskiCollector` (İBB Açık Veri)... Hangi kaynağın neden alındığı ya da alınmadığı (AYEDAŞ, İGDAŞ, Başkentgaz, İzmirgaz): [tr/01-kesif-ve-iskelet.md](tr/01-kesif-ve-iskelet.md).
 - Yeni şehir/kurum eklemek = yeni bir sınıf + testi. Sürüm sürüm büyüme buradan geliyor.
 - Arıza/anlık kesinti sayfalarını 5 dakikada, planlı kesinti duyurularını 15 dakikada bir tarar. Veriyi ortak modele çevirir (normalize), sadece yeni/değişen/biten kayıtları Redis Stream'e yazar.
 - Parser testleri canlı siteye gitmez: her kaynaktan kaydedilmiş örnek HTML/JSON dosyaları (`src/test/resources/fixtures/`) üzerinden çalışır. Site tasarımı değişince önce test kırılır.
@@ -37,7 +37,7 @@ Benzer siteler var ama çoğu il il liste. Buradaki fark:
   - `collector_errors_total{source}`
 
 ### outage-api
-- Stream'i okur, kesintiyi veritabanına yazar. Aynı kesinti her taramada tekrar geldiği için `dedup_key` (kaynak + ilçe + başlangıç + mahalle listesinin hash'i) ile tekilleştirilir.
+- Stream'i okur, kesintiyi veritabanına yazar. Aynı kesinti her taramada tekrar geldiği için `dedup_key` ile tekilleştirilir: kaynak kendi id'sini veriyorsa (`external_id`) anahtar `kaynak + external_id`, vermiyorsa kaynak + ilçe + başlangıç + mahalle listesinin hash'i. Ayrıntı: [tr/veri-modeli.md](tr/veri-modeli.md).
 - Endpoint'ler:
   - `GET /api/outages?type=&il=&ilce=&active=true`
   - `GET /api/map/summary` - il/ilçe bazında aktif kesinti sayıları (harita renklendirme, Redis'te cache)
@@ -57,7 +57,8 @@ Benzer siteler var ama çoğu il il liste. Buradaki fark:
 ```
 outage
   id              uuid
-  source          varchar   -- BEDAS, AYEDAS, ISKI, IGDAS
+  source          varchar   -- BEDAS, ISKI, ... (kaynak listesi: tr/01-kesif-ve-iskelet.md)
+  external_id     varchar   -- kaynağın kendi id'si (BEDAŞ: plannedOutage.id, OUTAGE_NO); yoksa null
   type            varchar   -- ELECTRICITY, WATER, GAS
   planned         boolean
   il              varchar
@@ -67,10 +68,14 @@ outage
   ends_at         timestamptz
   reason          text
   source_url      text
+  lat             double precision  -- null olabilir (BEDAŞ planlılarda var)
+  lon             double precision  -- null olabilir
   dedup_key       varchar unique
   first_seen_at   timestamptz
   last_seen_at    timestamptz
 ```
+
+Tekilleştirme: `external_id` doluysa `dedup_key = <source>:<external_id>`, boşsa `dedup_key = <source>:h:` + (kaynak + ilçe + başlangıç + sıralı mahalle listesi) hash'i. Ek olarak `(source, external_id)` üzerinde `external_id IS NOT NULL` koşullu unique index var. Ayrıntılı tablo ve kurallar: [tr/veri-modeli.md](tr/veri-modeli.md) / [en/data-model.md](en/data-model.md).
 
 Aktif kesinti = `now()` başlangıç ve bitiş arasında. Kaynaktan kaybolan ama bitiş saati gelmemiş kayıtlar `last_seen_at` ile takip edilir.
 
@@ -137,7 +142,9 @@ kesinti-haritasi/
 ## Veri toplama kuralları
 
 - Arıza sayfaları 5 dakikada, planlı duyurular 15 dakikada bir; isteklere rastgele küçük gecikme (jitter), kaynak başına tek istek dizisi, agresif tarama yok
-- `robots.txt` kontrol edilir, User-Agent'ta proje adı ve iletişim bilgisi
+- `robots.txt` her istekten önce kodla kontrol edilir: yasak yola istek atılmaz, `Crawl-delay` varsa ona uyulur. User-Agent'ta proje adı ve iletişim bilgisi
+- Captcha, gömülü token, WAF gibi erişim kontrolleri aşılmaz; böyle bir kaynak v1'e alınmaz
+- Açık veri setleri (yılda bir güncellenen dosyalar) dakikalık değil günlük kontrol edilir (onay bekliyor)
 - Haritada her kesintinin yanında kaynak adı ve orijinal duyuru linki
 - Gün 1'de her kaynağın verisinin nasıl sunulduğu (HTML tablo, JSON endpoint, form arkası) çıkarılır. Bir kaynak zor çıkarsa v1'den çıkarılıp sonraki sürüme bırakılır.
 
@@ -146,14 +153,14 @@ kesinti-haritasi/
 | Gün | İş | Çıktı |
 |---|---|---|
 | 1 | Kaynak keşfi (BEDAŞ, AYEDAŞ, İSKİ, İGDAŞ), veri modeli, repo iskeleti, docker-compose | kaynak notları, boş servisler ayağa kalkıyor |
-| 2 | collector: BEDAŞ + AYEDAŞ, fixture testleri | İstanbul elektrik verisi normalize ediliyor |
-| 3 | collector: İSKİ; Redis Streams; api tarafında tüketme, dedup, Postgres | veriler veritabanında |
+| 2 | collector: BEDAŞ (planlı + arıza), fixture testleri | İstanbul Avrupa yakası elektrik verisi normalize ediliyor |
+| 3 | collector: İSKİ (İBB Açık Veri); Redis Streams; api tarafında tüketme, dedup, Postgres | veriler veritabanında |
 | 4 | api endpoint'leri + frontend harita (ilçe renklendirme, liste, SSE) | lokalde çalışan harita |
 | 5 | Dockerfile'lar, CI (test, coverage, Sonar, Trivy, GHCR) | `v1.0.0` image'ları GHCR'da |
 | 6 | Terraform ile Hetzner + k3s, domain, HTTPS | boş cluster internetten erişilebilir |
 | 7 | Helm chart'ları, Argo CD, INT/PROD, PR ile terfi | v1.0 canlıda |
 | 8 | Prometheus/Grafana, collector metrikleri, kaynak sağlığı paneli, Telegram alarmı | paneller + alarm testi |
-| 9 | v1.1: İGDAŞ (doğalgaz) tüm hattan geçer; k6 yük testi, HPA, cache ölçümü | v1.1 canlıda, yük testi sonuçları |
+| 9 | v1.1: yeni kaynak (doğalgaz kaynağı bulunursa o, bulunamazsa senin seçtiğin kaynak) tüm hattan geçer; k6 yük testi, HPA, cache ölçümü | v1.1 canlıda, yük testi sonuçları |
 | 10 | v1.2 (yeni şehir veya kullanıcı bildirimi), rollback denemesi, demo runbook, README | demo hazır |
 
 ## Sonraki sürümler
