@@ -1,0 +1,95 @@
+# Progress
+
+Plan (Turkish): [../plan.md](../plan.md). Turkish version of this file: [../PROGRESS.md](../PROGRESS.md).
+
+Common condition for every phase: tests and build green, committed, `docs/tr/NN-...md` and `docs/en/NN-...md` written, this file updated. Work stops at the end of each phase; the next one starts only after approval.
+
+## [x] Phase 1 - Discovery and skeleton
+- [x] Outage pages of BEDAŞ, AYEDAŞ, İSKİ, İGDAŞ examined (URL, format, fields, planned/unplanned split, difficulties)
+- [x] Sample responses from each source saved as fixtures
+- [x] Monorepo skeleton (services/collector, services/api, frontend, helm, gitops, infra, loadtest, docs, .github/workflows)
+- [x] docker-compose.yml: postgres, redis, collector, api, frontend
+- [x] README.md / README.en.md
+
+Done when: source notes are in docs with a recommendation for hard sources; fixtures live under `services/collector/src/test/resources/fixtures`; `docker compose up` starts five containers and both service health endpoints plus the frontend respond; `mvn verify` is green for both services.
+
+Status: done (2026-09-11). Notes: [01-discovery-and-skeleton.md](01-discovery-and-skeleton.md).
+Discovery result: following our rules, BEDAŞ is the only source that can be read cleanly in v1. AYEDAŞ (reCAPTCHA), İSKİ (embedded token + WAF) and İGDAŞ (robots.txt `Disallow: /`) need a decision, see the end of the phase notes. Phase 2 starts after those decisions.
+
+## [ ] Phase 2 - Collector
+- [ ] Common `Outage` model and `SourceCollector` interface
+- [ ] BEDAŞ, AYEDAŞ, İSKİ collectors with fixture-based tests
+- [ ] Date/time and province/district/neighbourhood normalization
+- [ ] Two schedules per source (unplanned 5 min, planned 15 min), configurable
+- [ ] Jitter on requests
+- [ ] Hash-based change detection, NEW / UPDATED / GONE to a Redis Stream
+- [ ] Prometheus metrics: `collector_last_success_timestamp`, `collector_items_total`, `collector_errors_total`
+- [ ] A failing source does not stop the others
+
+Done when: fixture parse tests, normalization tests, diff (NEW/UPDATED/GONE) tests and an error isolation test are green; in local compose the collector writes events to the stream and writes nothing on a second scan without changes; `/actuator/prometheus` shows the three metrics with a source label.
+
+## [ ] Phase 3 - API
+- [ ] Stream consumption with a consumer group, upsert by `dedup_key`, Flyway migrations
+- [ ] `GET /api/outages`, `GET /api/outages/{id}`, `GET /api/map/summary` (Redis cache), `GET /api/sources`, `GET /api/stream` (SSE)
+- [ ] `outage.created` / `outage.updated` / `outage.ended` events, district summary refreshed in cache
+- [ ] SSE fan-out across pods through Redis Pub/Sub
+- [ ] Last-Event-ID and heartbeat
+- [ ] Separate liveness/readiness, `/actuator/prometheus`
+- [ ] Testcontainers integration tests
+
+Done when: Testcontainers (Postgres + Redis) tests prove that a stream event lands in the database, a repeated event does not create a duplicate, an SSE client receives the event and Pub/Sub fan-out works between two API instances; the collector -> api -> SSE path is checked by hand in compose.
+
+## [ ] Phase 4 - Frontend
+- [ ] React + Vite + Leaflet, openly licensed province/district GeoJSON (license in docs)
+- [ ] District colouring, type filter, list on district click
+- [ ] Live updates over SSE with a highlight animation
+- [ ] Data freshness indicator, last scan per source, delay warning
+- [ ] Connection status icon
+- [ ] Version/environment label, "What's new" dialog
+- [ ] Mobile layout
+
+Done when: `npm run build` and component tests are green; in compose a new outage is highlighted on the map without a reload; stopping the API shows "reconnecting"; usable at mobile width.
+
+## [ ] Phase 5 - Containers and CI
+- [ ] Multi-stage Dockerfiles, non-root, small base images, nginx for the frontend
+- [ ] One GitHub Actions workflow per service (paths filter, cache, JaCoCo threshold, SonarQube Cloud, Trivy, GHCR + Release on tag)
+- [ ] CHANGELOG.md
+- [ ] YAPMAN GEREKEN (your part): SonarQube Cloud, SONAR_TOKEN, making GHCR packages public
+- [ ] Commands for the v1.0.0 tags
+
+Done when: all three workflows are green on main; the Trivy step fails on CRITICAL; a tag produces an image on GHCR and a Release (first tag is pushed by you).
+
+## [ ] Phase 6 - Infrastructure
+- [ ] Terraform: Hetzner CX23, firewall (22 only from your IP, 80/443 open), SSH key, k3s via cloud-init; `terraform.tfvars.example`
+- [ ] Steps to fetch the kubeconfig locally
+- [ ] cert-manager + Let's Encrypt ClusterIssuer (staging first, then prod)
+- [ ] YAPMAN GEREKEN: Hetzner account/token, domain, DNS A record; terraform commands
+
+Done when: `terraform validate` and `terraform plan` are clean; after your apply `kubectl get nodes` is Ready and staging and prod certificates are issued for a test ingress.
+
+## [ ] Phase 7 - Helm and GitOps
+- [ ] helm/collector, helm/api, helm/frontend (probes, limits, ConfigMap, secret reference, TLS Ingress, HPA for api)
+- [ ] Lightweight PostgreSQL and Redis charts, one database per environment
+- [ ] Argo CD, int and prod Applications under gitops/apps, values in gitops/int and gitops/prod
+- [ ] CI bumps the INT tag (without fighting branch protection), PROD promotion through a PR
+- [ ] int.<domain> and <domain>
+
+Done when: `helm lint` and `helm template` are clean; int and prod are Synced/Healthy in Argo CD; v1.0 is live on `https://<domain>`.
+
+## [ ] Phase 8 - Observability
+- [ ] kube-prometheus-stack values that fit into 4 GB
+- [ ] ServiceMonitors
+- [ ] Grafana dashboards (JSON, provisioned): source health, application, cluster, SSE client count, DB -> browser latency
+- [ ] Telegram alert (unplanned 30 min, planned 3 h)
+- [ ] A way to break a source on purpose to test the alert
+- [ ] YAPMAN GEREKEN: Telegram bot token and chat id
+
+Done when: dashboards show data; breaking a source sends an alert to Telegram and a resolved message after the fix; node memory stays reasonable.
+
+## [ ] Phase 9 - v1.1 and resilience
+- [ ] İGDAŞ collector, gas filter and colour, CHANGELOG, automatic to INT, PR to PROD
+- [ ] k6 spike scenario, HPA and cache measurements, results in docs
+- [ ] Rollback exercise
+- [ ] Demo runbook (TR/EN)
+
+Done when: v1.1 is on PROD; k6 results (req/s, p95, error rate, pod count) are in docs; rollback and roll-forward tried step by step; the runbook covers the demo scenario from the plan command by command.
