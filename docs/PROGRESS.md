@@ -15,12 +15,14 @@ Bitti sayılma koşulu: kaynak notları docs'ta, zor kaynaklar için karar öner
 
 Durum: tamamlandı (2026-09-11). Not: [tr/01-kesif-ve-iskelet.md](tr/01-kesif-ve-iskelet.md).
 Kararlar (2026-09-11): v1 kaynakları BEDAŞ (elektrik) ve İSKİ (su, İBB Açık Veri'deki "Su Kesintileri" dosyası). AYEDAŞ v1'de yok (reCAPTCHA). İSKİ'nin gömülü token'ı kullanılmıyor. Veri modeline nullable `external_id`, `lat`, `lon` eklendi ([tr/veri-modeli.md](tr/veri-modeli.md)). Doğalgaz için uygun kaynak bulunamadı (İGDAŞ robots.txt, İBB'de İGDAŞ kesinti verisi yok, Başkentgaz yayınlamıyor, İzmirgaz sadece sokak bazlı sorgu).
-Bekleyen sorular (faz notunun sonunda): İBB su verisinin geçmiş veri olması (en yenisi 2024-02-19), İBB taramasının günde bir yapılması, doğalgaz kaynağı.
+Sonraki kararlar (2026-09-11): İSKİ geçmiş verisi v2.1 mahalle karnesinde kullanılacak; İBB taraması günde bir; tarama sıklığı kuralı CLAUDE.md'de güncellendi; İSKİ, İGDAŞ, Başkentgaz talep taslakları `docs/tr/talepler/` altında.
+Kaynak taraması (21 elektrik dağıtım şirketi, 10 su idaresi): [tr/01-kaynak-taramasi.md](tr/01-kaynak-taramasi.md). Öneri (onay bekliyor): v1 elektrik BEDAŞ + AEDAŞ + ÇEDAŞ + KCETAŞ, v1 canlı su İZSU, v1.1'de doğalgaz yerine ASKİ.
 
 ## [ ] Faz 2 - Collector
 - [ ] Ortak `Outage` modeli ve `SourceCollector` arayüzü
 - [ ] BEDAŞ (planlı: `GetItemsData`, arıza: `RetrieveOutages` + trafo konum cache'i) ve İSKİ (İBB Açık Veri XLSX) collector'ları, fixture tabanlı testlerle
 - [ ] Her istekten önce robots.txt kontrolü (yasaksa istek atılmaz, Crawl-delay'e uyulur)
+- [ ] (onay bekliyor) AEDAŞ ve ÇEDAŞ (BEDAŞ ile aynı CK Enerji altyapısı, aynı parser), KCETAŞ (tarih başına tek JSON isteği) ve İZSU (canlı su, sunucuda render edilen tablo) collector'ları
 - [ ] Tarih/saat ve il/ilçe/mahalle normalizasyonu
 - [ ] Kaynak başına zamanlama, kaynağın güncellenme sıklığına göre ve en sık 5 dk (arıza 5 dk, planlı 15 dk, İBB açık veri günde bir), config'ten değiştirilebilir
 - [ ] İsteklerde jitter
@@ -89,7 +91,7 @@ Bitti sayılma koşulu: `helm lint` ve `helm template` temiz; Argo CD'de int ve 
 Bitti sayılma koşulu: paneller Grafana'da veriyle doluyor; kaynak bilerek bozulunca Telegram'a alarm düşüyor ve düzelince resolved geliyor; node bellek kullanımı makul seviyede.
 
 ## [ ] Faz 9 - v1.1 ve dayanıklılık
-- [ ] Doğalgaz kaynağı: BEKLEMEDE. İGDAŞ robots.txt `Disallow: /`, İBB'de İGDAŞ kesinti verisi yok, Başkentgaz sitesinde kesinti yayınlamıyor, İzmirgaz sadece sokak bazlı sorgu veriyor (ayrıntı: [tr/01-kesif-ve-iskelet.md](tr/01-kesif-ve-iskelet.md)). Faz 9 başında yeniden bakılacak; kaynak bulunursa: collector, doğalgaz filtresi ve rengi, CHANGELOG, INT'e otomatik, PROD'a PR ile. Bulunamazsa v1.1'in yeni kaynağı senin kararınla belirlenecek ve aynı hattan geçecek.
+- [ ] Doğalgaz kaynağı: BEKLEMEDE. İGDAŞ robots.txt `Disallow: /`, İBB'de İGDAŞ kesinti verisi yok, Başkentgaz sitesinde kesinti yayınlamıyor, İzmirgaz sadece sokak bazlı sorgu veriyor (ayrıntı: [tr/01-kesif-ve-iskelet.md](tr/01-kesif-ve-iskelet.md)). Faz 9 başında yeniden bakılacak; kaynak bulunursa: collector, doğalgaz filtresi ve rengi, CHANGELOG, INT'e otomatik, PROD'a PR ile. Bulunamazsa v1.1'in yeni kaynağı olarak ASKİ (Ankara canlı su arızaları) önerildi, onay bekliyor; aynı hattan geçecek.
 - [ ] k6 ani trafik senaryosu, HPA ve cache ölçümü, sonuçlar docs'ta
 - [ ] Rollback denemesi
 - [ ] Demo runbook'u (TR/EN)

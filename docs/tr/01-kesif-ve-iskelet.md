@@ -2,7 +2,7 @@
 
 Tarih: 2026-09-11
 
-Bu fazda iki iş vardı: dört kaynağın (BEDAŞ, AYEDAŞ, İSKİ, İGDAŞ) verisini nasıl sunduğunu çıkarmak ve boş ama ayağa kalkan bir monorepo kurmak. İlk keşiften sonra kararlar alındı ve su ile doğalgaz için ikinci bir tur keşif yaptım. İkisi de aşağıda.
+Bu fazda iki iş vardı: dört kaynağın (BEDAŞ, AYEDAŞ, İSKİ, İGDAŞ) verisini nasıl sunduğunu çıkarmak ve boş ama ayağa kalkan bir monorepo kurmak. İlk keşiften sonra kararlar alındı ve su ile doğalgaz için ikinci bir tur keşif yaptım. İkisi de aşağıda. Üçüncü turda 21 elektrik dağıtım şirketini ve 10 büyükşehir su idaresini taradım: [01-kaynak-taramasi.md](01-kaynak-taramasi.md).
 
 ## Özet ve kararlar
 
@@ -27,7 +27,7 @@ Alınan kararlar (2026-09-11):
 
 İlk turda bir hata yaptım: İBB Açık Veri'de robots.txt'i aynı script'te çektim ama sonucuna göre durmadım, `Disallow: /api/` olan yola 2 istek gitti. İkinci turda bunun için küçük bir yardımcı yazdım (`polite.py`, repoda değil, keşif için): her istekten önce host'un robots.txt'ini okuyor, `*` ve `$` desteğiyle en uzun eşleşen kuralı uyguluyor, yasaksa isteği hiç atmıyor, `Crawl-delay` varsa istekler arasında o kadar bekliyor. İkinci turdaki bütün istekler bu yardımcıdan geçti. Collector'daki robots kontrolü Faz 2'de aynı mantıkla Java'da yazılacak.
 
-Kayıtlı örnekler `services/collector/src/test/resources/fixtures/<kaynak>/` altında.
+Repoda sadece v1'e önerilen elektrik kaynaklarının (BEDAŞ, AEDAŞ, ÇEDAŞ, KCETAŞ) ve Faz 2'de toplanacak İBB su kesintisi dosyasının fixture'ları tutuluyor (`services/collector/src/test/resources/fixtures/`). Diğer kaynaklardan aldığım yanıtlar repodan çıkarıldı; ne gördüğüm bu dokümanda ve tarama raporunda not olarak duruyor.
 
 ## BEDAŞ
 
@@ -90,7 +90,7 @@ Kayıtlı örnekler `services/collector/src/test/resources/fixtures/<kaynak>/` a
 - Engel: formda Google reCAPTCHA var (`FormValidation` içinde `CaptchaValueCheck`, sunucu captcha hatasında `state: 3` dönüyor), üstüne `__RequestVerificationToken`. İlçe bazında bile sorgu atmak için captcha çözmek gerekiyor.
 - robots.txt izin verse de veri captcha'nın arkasında. Captcha, sitenin "otomatik sorgu istemiyorum" demesi. Onu aşmak (captcha çözme servisi vs.) bu projede yapılacak bir şey değil.
 - Geriye AYEDAŞ/Enerjisa'ya yazıp veri erişimi istemek ya da açık veri yayınlarsa eklemek kalıyor.
-- Fixture: `ayedas/elektrik-kesintisi-sorgulama.html` (formun ve JS'in kaydı; bundan parser yazılmaz; Google Maps anahtarı, reCAPTCHA site key'i ve form token'ı maskelendi), `ayedas/robots-www.ayedas.com.tr.txt`.
+- Kayıtlı yanıtlar repodan çıkarıldı (v1 kaynağı değil). Formun yapısı yukarıda.
 
 ## İSKİ
 
@@ -101,7 +101,7 @@ Kayıtlı örnekler `services/collector/src/test/resources/fixtures/<kaynak>/` a
 - Sayfanın JS'i veriyi `https://iskiapi.iski.istanbul/api/iski/bolgeselAriza/listesi` ve `.../bolgeselAriza/arizaDetayiFiltreli?ilceKodu=&mahalleKodu=` endpoint'lerinden çekiyor. Şablonda kullanılan alanlar: `ilceKodu`, `mahalleAdi`, `arizaNeviAciklamasi`, `baslamaTarihi`, `tahminiBitisTarihi`.
 - API, `Authorization` başlığı olmadan `403 Forbidden` dönüyor. Sitenin JS'inde sabit bir Bearer token gömülü. Bu token bize verilmedi, kullanmıyoruz (karar).
 - Arıza kayıtlarının link verdiği `harita.iski.gov.tr`'de JS dosyalarına attığım istekler WAF tarafından `Request Rejected` ile reddedildi.
-- Fixture: `iski/bolgeselariza-listesi-403.json`, `iski/ariza-kesinti-page-shell.html`, `iski/harita-waf-rejected.html`.
+- Kayıtlı yanıtlar (token'sız 403 cevabı, sayfa kabuğu, WAF sayfası) repodan çıkarıldı.
 
 ### İBB Açık Veri (v1'de kullanılacak)
 
@@ -137,7 +137,7 @@ Veri seti sayfaları (`/dataset/<ad>`) ve dosya indirme linkleri (`/dataset/<uui
 
 **Zamanlama önerisi:** Dosyalar yılda bir ekleniyor. 5 ya da 15 dakikada bir indirmek anlamsız ve İBB'ye yük. Önerim: veri seti sayfasını günde bir kez okumak, yeni bir dosya linki ya da değişmiş "Son Güncelleme" görürsem sadece o dosyayı indirmek. Bu, CLAUDE.md'deki 5/15 dakika kuralından sapma olduğu için onayını istiyorum (kural arıza ve planlı kesinti sayfaları için yazılmış, burası bir veri seti).
 
-- Fixture: `iski/ibb-su-kesintileri-2023-2024.xlsx`, `iski/ibb-iski-duyurular-2023.xlsx`.
+- Fixture: `iski/ibb-su-kesintileri-2023-2024.xlsx` (Faz 2'deki günlük İBB collector'ının parser testi için repoda). Duyurular dosyası kesinti verisi olmadığı için çıkarıldı.
 
 ## Doğalgaz
 
@@ -145,7 +145,7 @@ Veri seti sayfaları (`/dataset/<ad>`) ve dosya indirme linkleri (`/dataset/<uui
 
 - `https://www.igdas.istanbul/robots.txt` ve `https://www.igdas.com.tr/robots.txt`: ikisi de `User-agent: *` / `Disallow: /`. Kesinti sayfasına hiç istek atmadım.
 - İBB Açık Veri'de İGDAŞ organizasyonunun altındaki veri setleri: bina bilgileri, gaz birim fiyatı ve miktarı, gaz tüketimi, ilçe bazında aylık tüketim, ilçelere göre abone sayıları, kullanım sınıfı bazında tüketim, yatırım türü ve uzunluk bilgileri. Hiçbiri kesinti verisi değil. Linkler robots.txt'e göre izinli, ama indirecek bir kesinti dosyası yok.
-- Fixture: `igdas/robots-www.igdas.istanbul.txt`, `igdas/robots-www.igdas.com.tr.txt`.
+- robots.txt kayıtları repodan çıkarıldı, içerikleri yukarıda.
 
 ### Başkentgaz (Ankara)
 
@@ -154,7 +154,7 @@ Veri seti sayfaları (`/dataset/<ad>`) ve dosya indirme linkleri (`/dataset/<uui
 - TLS: sunucu ara sertifikayı göndermiyor (GoDaddy G2), curl ve Python doğrulamada düşüyor. `-k` ile doğrulamayı kapatmak yerine sertifikadaki AIA adresinden ara sertifikayı alıp ayrı bir CA paketiyle bağlandım. Collector'da kullanılsaydı Java truststore'una aynı ara sertifika eklenmesi gerekirdi.
 - Site bir React SPA, içeriği `https://bskapiv1.baskentdogalgaz.com.tr/api/` altındaki bir CMS API'sinden alıyor. Bundle'da kesinti ile ilgili bir endpoint yok. Bütün menü ağacını (`menus/ByDomainMenus/1`, 460 öğe) tarayınca "kesinti" kelimesi sadece "kesintisiz doğal gaz" gibi tanıtım metinlerinde geçiyor. Duyurular fiyat tarifesi ve ihale duyuruları.
 - Sonuç: Başkentgaz planlı ya da arıza kaynaklı kesintileri sitesinde yayınlamıyor, okunacak veri yok.
-- Fixture: `baskentgaz/api-menus-bydomainmainmenus-1.json`, `baskentgaz/api-parameters.json`, `baskentgaz/robots-www.baskentdogalgaz.com.tr.txt`.
+- Kayıtlı yanıtlar repodan çıkarıldı.
 
 ### İzmirgaz
 
@@ -162,7 +162,7 @@ Veri seti sayfaları (`/dataset/<ad>`) ve dosya indirme linkleri (`/dataset/<uui
 - TLS: Başkentgaz'la aynı sorun (Sectigo DV R36 ara sertifikası gönderilmiyor), aynı yöntemle bağlandım.
 - Kesinti bilgisi "Sokağımda Gaz Var mı?" sayfasında (`/SokagimdaGazVarmi.php`). Sayfa içeriği `pages/islemler/SokagimdaGazVarmi.php` parçasından yükleniyor. Parça bir form: ilçe seç, mahalle seç, sokak seç. Sokak seçilince `POST gaz.php` ile sadece sokak kodu gönderiliyor ve o sokak için cevap geliyor. Captcha yok.
 - Sorun: liste yok. Bütün kesintileri görmek için İzmir'deki her sokağı tek tek sorgulamak gerekiyor. İzmir'de on binlerce sokak var, 15 dakikalık bir tarama bunu kaldıramaz, siteye de ciddi yük olur. "Kaynak sitelere nazik ol" kuralıyla bağdaşmıyor.
-- Fixture: `izmirgaz/pages-islemler-sokagimdagazvarmi.html`, `izmirgaz/robots-www.izmirgaz.com.tr.txt`.
+- Kayıtlı yanıtlar repodan çıkarıldı.
 
 ### Doğalgaz sonucu
 

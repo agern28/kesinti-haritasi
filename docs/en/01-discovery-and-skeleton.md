@@ -2,7 +2,7 @@
 
 Date: 2026-09-11
 
-Two jobs in this phase: find out how the four sources (BEDAŞ, AYEDAŞ, İSKİ, İGDAŞ) serve their data, and set up an empty monorepo that actually starts. After the first discovery round some decisions were made and I did a second round for water and natural gas. Both rounds are below.
+Two jobs in this phase: find out how the four sources (BEDAŞ, AYEDAŞ, İSKİ, İGDAŞ) serve their data, and set up an empty monorepo that actually starts. After the first discovery round some decisions were made and I did a second round for water and natural gas. Both rounds are below. In a third round I surveyed the 21 electricity distribution companies and 10 metropolitan water utilities: [01-source-survey.md](01-source-survey.md).
 
 ## Summary and decisions
 
@@ -27,7 +27,7 @@ In the first round requests were made with curl and the User-Agent `KesintiHarit
 
 I made a mistake in the first round: on İBB Open Data I fetched robots.txt in the same script but didn't stop on its result, so 2 requests went to a path under `Disallow: /api/`. For the second round I wrote a small helper (`polite.py`, not in the repo, only for discovery): before every request it reads the host's robots.txt, applies the longest matching rule with `*` and `$` support, doesn't send the request at all if it's disallowed, and waits `Crawl-delay` seconds between requests when there is one. Every request in the second round went through it. The robots check in the collector will be written in Java with the same logic in Phase 2.
 
-Recorded samples live under `services/collector/src/test/resources/fixtures/<source>/`.
+Only the fixtures of the electricity sources proposed for v1 (BEDAŞ, AEDAŞ, ÇEDAŞ, KCETAŞ) and the İBB water outage file collected in Phase 2 are kept in the repo (`services/collector/src/test/resources/fixtures/`). Responses from the other sources were removed from the repo; what I saw is kept as notes in this document and in the survey report.
 
 ## BEDAŞ
 
@@ -90,7 +90,7 @@ The page `www.bedas.com.tr/elektrik-kesintisi-sorgulama` asks for province/distr
 - Blocker: the form has Google reCAPTCHA (`CaptchaValueCheck` in `FormValidation`, the server returns `state: 3` on captcha failure) plus a `__RequestVerificationToken`. Even a district-level query needs a solved captcha.
 - robots.txt allows it, but the data sits behind the captcha. A captcha is the site saying "no automated queries". Getting around it (captcha solving services and so on) is not something this project does.
 - What's left is asking AYEDAŞ/Enerjisa for data access, or adding it if they publish open data.
-- Fixtures: `ayedas/elektrik-kesintisi-sorgulama.html` (a record of the form and its JS; no parser can be written against it; the Google Maps key, the reCAPTCHA site key and the form token are masked), `ayedas/robots-www.ayedas.com.tr.txt`.
+- Recorded responses were removed from the repo (not a v1 source). The form is described above.
 
 ## İSKİ
 
@@ -101,7 +101,7 @@ The page `www.bedas.com.tr/elektrik-kesintisi-sorgulama` asks for province/distr
 - The page's JS fetches data from `https://iskiapi.iski.istanbul/api/iski/bolgeselAriza/listesi` and `.../bolgeselAriza/arizaDetayiFiltreli?ilceKodu=&mahalleKodu=`. Fields used in the template: `ilceKodu`, `mahalleAdi`, `arizaNeviAciklamasi`, `baslamaTarihi`, `tahminiBitisTarihi`.
 - Without an `Authorization` header the API returns `403 Forbidden`. A fixed Bearer token is embedded in the site's JS. That token wasn't given to us, so we don't use it (decision).
 - On `harita.iski.gov.tr`, which the fault records link to, my requests for JS files were rejected by a WAF with `Request Rejected`.
-- Fixtures: `iski/bolgeselariza-listesi-403.json`, `iski/ariza-kesinti-page-shell.html`, `iski/harita-waf-rejected.html`.
+- Recorded responses (the 403 without a token, the page shell, the WAF page) were removed from the repo.
 
 ### İBB Open Data (used in v1)
 
@@ -137,7 +137,7 @@ The 2023-2024 file:
 
 **Schedule proposal:** files are added about once a year. Downloading them every 5 or 15 minutes makes no sense and loads İBB for nothing. My proposal: read the dataset page once a day and download a file only when a new link or a changed "Son Güncelleme" (last updated) shows up. This deviates from the 5/15 minute rule in CLAUDE.md, so I need your approval (the rule was written for outage and planned outage pages; this is a dataset).
 
-- Fixtures: `iski/ibb-su-kesintileri-2023-2024.xlsx`, `iski/ibb-iski-duyurular-2023.xlsx`.
+- Fixture: `iski/ibb-su-kesintileri-2023-2024.xlsx` (kept for the parser test of the daily İBB collector in Phase 2). The announcements file was removed because it isn't outage data.
 
 ## Natural gas
 
@@ -145,7 +145,7 @@ The 2023-2024 file:
 
 - `https://www.igdas.istanbul/robots.txt` and `https://www.igdas.com.tr/robots.txt`: both `User-agent: *` / `Disallow: /`. I didn't send a single request to the outage page.
 - İGDAŞ datasets on İBB Open Data: building information, gas unit price and volume, gas consumption, monthly consumption per district, subscriber counts per district, consumption by usage class, investment type and length. None of them is outage data. The links are allowed by robots.txt, but there is no outage file to download.
-- Fixtures: `igdas/robots-www.igdas.istanbul.txt`, `igdas/robots-www.igdas.com.tr.txt`.
+- The robots.txt records were removed from the repo; their content is above.
 
 ### Başkentgaz (Ankara)
 
@@ -154,7 +154,7 @@ The 2023-2024 file:
 - TLS: the server doesn't send the intermediate certificate (GoDaddy G2), so curl and Python fail verification. Instead of turning verification off with `-k`, I fetched the intermediate from the AIA URL in the certificate and connected with a separate CA bundle. If we used this source, the collector would need the same intermediate in its Java truststore.
 - The site is a React SPA that gets its content from a CMS API under `https://bskapiv1.baskentdogalgaz.com.tr/api/`. The bundle has no outage-related endpoint. Going through the whole menu tree (`menus/ByDomainMenus/1`, 460 items), the word "kesinti" only appears in marketing text like "kesintisiz doğal gaz" (uninterrupted gas). The announcements are price tariffs and tenders.
 - Result: Başkentgaz doesn't publish planned or fault outages on its site; there is nothing to read.
-- Fixtures: `baskentgaz/api-menus-bydomainmainmenus-1.json`, `baskentgaz/api-parameters.json`, `baskentgaz/robots-www.baskentdogalgaz.com.tr.txt`.
+- Recorded responses were removed from the repo.
 
 ### İzmirgaz
 
@@ -162,7 +162,7 @@ The 2023-2024 file:
 - TLS: same problem as Başkentgaz (the Sectigo DV R36 intermediate isn't sent); I connected the same way.
 - Outage information is on the "Sokağımda Gaz Var mı?" (is there gas in my street) page (`/SokagimdaGazVarmi.php`). Its content is loaded from the `pages/islemler/SokagimdaGazVarmi.php` fragment. The fragment is a form: pick district, pick neighbourhood, pick street. When a street is picked, only the street code is sent with `POST gaz.php` and the answer is for that street. No captcha.
 - Problem: there is no list. To see all outages we would have to query every street in İzmir one by one. İzmir has tens of thousands of streets; a 15 minute scan can't do that and it would put real load on the site. It doesn't fit the "be gentle with the sources" rule.
-- Fixtures: `izmirgaz/pages-islemler-sokagimdagazvarmi.html`, `izmirgaz/robots-www.izmirgaz.com.tr.txt`.
+- Recorded responses were removed from the repo.
 
 ### Natural gas result
 
