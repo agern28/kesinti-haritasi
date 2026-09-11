@@ -1,0 +1,23 @@
+server:
+  port: 8081
+
+spring:
+  application:
+    name: collector
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,prometheus
+  endpoint:
+    health:
+      probes:
+        enabled: true
+  metrics:
+    tags:
+      application: ${spring.application.name}
+
+collector:
+  # Kaynak sitelere giden her istekte bu User-Agent kullanilir.
+  user-agent: "KesintiHaritasi/0.1 (+https://github.com/agern28/kesinti-haritasi)"
