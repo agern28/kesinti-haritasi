@@ -1,9 +1,24 @@
 server:
   port: 8080
+  shutdown: graceful
 
 spring:
   application:
     name: api
+  threads:
+    virtual:
+      enabled: true
+  datasource:
+    # Compose ve Kubernetes'te SPRING_DATASOURCE_* ortam degiskenleriyle verilir; parola repoda yok.
+    url: jdbc:postgresql://localhost:5432/kesinti
+    username: kesinti
+    hikari:
+      maximum-pool-size: 5
+  flyway:
+    enabled: true
+  mvc:
+    problemdetails:
+      enabled: true
 
 management:
   endpoints:
@@ -14,6 +29,48 @@ management:
     health:
       probes:
         enabled: true
+      group:
+        # Veritabani ya da Redis yoksa trafik alma; ama canli (liveness) say, pod yeniden baslamasin.
+        readiness:
+          include: readinessState,db,redis
   metrics:
     tags:
       application: ${spring.application.name}
+
+springdoc:
+  swagger-ui:
+    path: /swagger-ui.html
+  api-docs:
+    path: /v3/api-docs
+
+api:
+  stream:
+    # collector'in yazdigi stream ve consumer group. consumer bossa HOSTNAME (pod adi) kullanilir.
+    key: outage-events
+    group: api
+    batch-size: 100
+    block: 2s
+    # Olen bir pod'un onaylamadigi mesajlar bu kadar bekledikten sonra baska pod tarafindan devralinir.
+    claim-idle: 60s
+    claim-interval: 30s
+  sse:
+    # Tarayiciya giden olaylar: Pub/Sub ile tum pod'lara dagitilir, yeniden baglananlar icin
+    # son olaylar ayrica kisa bir stream'de tutulur (Last-Event-ID).
+    events-key: sse-events
+    channel: outage-updates
+    replay-max-len: 10000
+    replay-limit: 1000
+    heartbeat: 15s
+    timeout: 30m
+    retry: 3s
+  summary:
+    ttl: 10m
+  sweeper:
+    # Planli kesintinin baslama/bitis saati gelince olay uretir. Ayni anda tek pod calistirir (Redis kilidi).
+    enabled: true
+    interval: 60s
+    max-window: 24h
+  sources:
+    # Bir feed son basarili taramasindan bu yana aralik x stale-factor + stale-grace gectiyse "gecikmis".
+    stale-factor: 2
+    stale-grace: 60s
