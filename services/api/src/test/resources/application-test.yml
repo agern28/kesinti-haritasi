@@ -1,0 +1,11 @@
+# Testlerde kisa sureler. Zaman taramasi otomatik calismaz; testler dogrudan cagirir.
+api:
+  stream:
+    consumer: a
+    block: 200ms
+    claim-idle: 2s
+    claim-interval: 1s
+  sse:
+    heartbeat: 300ms
+  sweeper:
+    enabled: false
