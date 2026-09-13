@@ -2,6 +2,8 @@
 
 Plan (Turkish): [../plan.md](../plan.md). Turkish version of this file: [../PROGRESS.md](../PROGRESS.md).
 
+Full definition of the phases: [phases.md](phases.md). The items here are a summary; that file is the source of the details.
+
 Common condition for every phase: tests and build green, committed, `docs/tr/NN-...md` and `docs/en/NN-...md` written, this file updated. Work stops at the end of each phase; the next one starts only after approval.
 
 ## [x] Phase 1 - Discovery and skeleton

@@ -2,6 +2,8 @@
 
 Plan: [plan.md](plan.md). İngilizcesi: [en/PROGRESS.md](en/PROGRESS.md).
 
+Fazların tam tanımı: [tr/fazlar.md](tr/fazlar.md). Bu dosyadaki maddeler özet, ayrıntının kaynağı orası.
+
 Her faz için ortak koşul: testler ve build yeşil, commit atılmış, `docs/tr/NN-...md` ve `docs/en/NN-...md` yazılmış, bu dosya güncellenmiş. Faz bitince durulur, sonraki faza onaysız geçilmez.
 
 ## [x] Faz 1 - Keşif ve iskelet

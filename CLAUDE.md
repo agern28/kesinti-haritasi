@@ -2,7 +2,7 @@
 
 Türkiye genelindeki elektrik, su ve doğalgaz kesintilerini resmi kaynaklardan toplayıp haritada gösteren uygulama. Aynı zamanda bir DevOps staj projesi: amaç uygulamanın kendisi kadar, onu bulutta nasıl işlettiğimizi göstermek.
 
-Tam plan: docs/plan.md. İlerleme: docs/PROGRESS.md. Her oturuma bu iki dosyayı okuyarak başla.
+Tam plan: docs/plan.md. Fazların tam tanımı (9 faz, orijinal metin + kararlarla değişenler): docs/tr/fazlar.md. İlerleme: docs/PROGRESS.md. Her oturuma bu üç dosyayı okuyarak başla. Faz tanımları kısaltılmaz ve silinmez; karar değişiklikleri fazlar.md'deki tabloya eklenir.
 
 ## Teknoloji
 - Backend: Java 21+, güncel kararlı Spring Boot, Maven
