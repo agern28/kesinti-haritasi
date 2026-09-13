@@ -10,7 +10,7 @@ Faz 1 keşfinden sonra plan'daki `outage` tablosuna iki şey ekledik: kaynağın
 |---|---|---|---|
 | `id` | uuid | hayır | Birincil anahtar, api tarafında üretilir |
 | `source` | varchar(32) | hayır | `BEDAS`, `ISKI`, ... |
-| `external_id` | varchar(64) | evet | Kaynağın kendi kayıt id'si. BEDAŞ planlı: `plannedOutage.id`, BEDAŞ arıza: `OUTAGE_NO`. Kaynak id vermiyorsa null |
+| `external_id` | varchar(64) | evet | Kaynağın kendi kayıt id'si. CK planlı (BEDAŞ/AEDAŞ/ÇEDAŞ): `plannedOutage.id`, kayıt birden fazla ilçeye yayılıyorsa `id/İLÇE`. CK arıza: `OUTAGE_NO/İLÇE`. Kaynak id vermiyorsa (KCETAŞ, İZSU, İSKİ) null. Neden böyle: [02-collector.md](02-collector.md) |
 | `type` | varchar(16) | hayır | `ELECTRICITY`, `WATER`, `GAS` |
 | `planned` | boolean | hayır | Planlı mı, arıza mı |
 | `il` | varchar(64) | hayır | Normalize edilmiş il adı |
