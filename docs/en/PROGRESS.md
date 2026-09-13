@@ -35,7 +35,7 @@ Source survey (21 electricity distribution companies, 10 water utilities): [01-s
 Done when: fixture parse tests, normalization tests, diff (NEW/UPDATED/GONE) tests and an error isolation test are green; in local compose the collector writes events to the stream and writes nothing on a second scan without changes; `/actuator/prometheus` shows the three metrics with a source label.
 
 Status: done (2026-09-13). Notes: [02-collector.md](02-collector.md). 73 tests green. Two rounds against live sources in compose: 19,085 events in the first round (18,380 of them İSKİ historical data); in the second round unchanged feeds wrote nothing to the stream.
-Awaiting approval: a `feed` label was added to the metrics next to `source` (to separate the 30 min fault / 3 h planned alerts in Phase 8).
+Approved (2026-09-13): a `feed` label on the metrics next to `source` (to separate the 30 min fault / 3 h planned alerts in Phase 8).
 
 ## [ ] Phase 3 - API
 - [ ] Stream consumption with a consumer group, upsert by `dedup_key` (`source:external_id` when there is an `external_id`, hash otherwise), Flyway migrations
@@ -45,6 +45,7 @@ Awaiting approval: a `feed` label was added to the metrics next to `source` (to 
 - [ ] Last-Event-ID and heartbeat
 - [ ] Separate liveness/readiness, `/actuator/prometheus`
 - [ ] Testcontainers integration tests
+- [ ] A browser UI for the API: Swagger UI and a live SSE event page (user request)
 
 Done when: Testcontainers (Postgres + Redis) tests prove that a stream event lands in the database, a repeated event does not create a duplicate, an SSE client receives the event and Pub/Sub fan-out works between two API instances; the collector -> api -> SSE path is checked by hand in compose.
 

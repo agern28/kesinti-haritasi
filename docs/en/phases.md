@@ -104,6 +104,7 @@ The original definition above stays unchanged. This section shows the decisions 
 | 2026-09-11 | Phase 9 | ASKİ (Ankara live water faults) instead of gas in v1.1, backups BUSKİ and MESKİ | decided (approved 2026-09-13) | [01-source-survey.md](01-source-survey.md) |
 | 2026-09-11 | v2.1 | İSKİ historical data will be used in the neighbourhood report card | decided | [../plan.md](../plan.md) |
 | 2026-09-13 | Phase 2 | The İBB water outage file (`iski/ibb-su-kesintileri-2023-2024.xlsx`) stays in the repo as a fixture | decided | [01-source-survey.md](01-source-survey.md) |
-| 2026-09-13 | Phase 2, 8 | A `feed` label on the collector metrics next to `source` (to separate the 30 min fault / 3 h planned alerts) | **awaiting approval** | [02-collector.md](02-collector.md) |
+| 2026-09-13 | Phase 2, 8 | A `feed` label on the collector metrics next to `source` (to separate the 30 min fault / 3 h planned alerts) | decided (approved 2026-09-13) | [02-collector.md](02-collector.md) |
+| 2026-09-13 | Phase 3 | The API gets a browser UI: Swagger UI (REST) and a small SSE page showing live events. The map UI stays in Phase 4 | decided (user request) | [03-api.md](03-api.md) |
 
 When a pending approval is settled, a new row is added to this table. The original definition is never changed.

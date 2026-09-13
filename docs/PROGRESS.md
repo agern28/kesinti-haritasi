@@ -35,7 +35,7 @@ Kaynak taraması (21 elektrik dağıtım şirketi, 10 su idaresi): [tr/01-kaynak
 Bitti sayılma koşulu: her collector için fixture'dan parse testi, normalizasyon testleri, diff (NEW/UPDATED/GONE) testleri ve hata izolasyonu testi yeşil; lokal compose'da collector çalışınca stream'e olay düşüyor, ikinci taramada değişiklik yoksa hiçbir şey yazılmıyor; `/actuator/prometheus` üç metriği kaynak etiketiyle gösteriyor.
 
 Durum: tamamlandı (2026-09-13). Not: [tr/02-collector.md](tr/02-collector.md). 73 test yeşil. Compose'da canlı kaynaklarla iki tur: ilk turda 19.085 olay (18.380'i İSKİ geçmiş verisi), ikinci turda değişmeyen feed'ler stream'e hiçbir şey yazmadı.
-Onay bekleyen: metriklere `source`'a ek olarak `feed` etiketi eklendi (Faz 8'de arıza 30 dk / planlı 3 saat alarmını ayırmak için).
+Onaylandı (2026-09-13): metriklerde `source`'a ek olarak `feed` etiketi (Faz 8'de arıza 30 dk / planlı 3 saat alarmını ayırmak için).
 
 ## [ ] Faz 3 - API
 - [ ] Consumer group ile stream tüketimi, `dedup_key` ile upsert (`external_id` varsa `source:external_id`, yoksa hash), Flyway migration'ları
@@ -45,6 +45,7 @@ Onay bekleyen: metriklere `source`'a ek olarak `feed` etiketi eklendi (Faz 8'de 
 - [ ] Last-Event-ID ve heartbeat
 - [ ] Ayrı liveness/readiness, `/actuator/prometheus`
 - [ ] Testcontainers entegrasyon testleri
+- [ ] Tarayıcıdan kullanılabilen arayüz: Swagger UI ve canlı SSE olay sayfası (kullanıcı isteği)
 
 Bitti sayılma koşulu: Testcontainers (Postgres + Redis) ile stream'den gelen olayın veritabanına yazıldığı, tekrar gelen olayın çift kayıt üretmediği, SSE istemcisinin olayı aldığı ve iki API instance'ı arasında Pub/Sub dağıtımının çalıştığı testler yeşil; compose ile collector -> api -> SSE hattı elle doğrulanmış.
 
