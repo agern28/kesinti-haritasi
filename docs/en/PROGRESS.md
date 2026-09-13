@@ -20,19 +20,22 @@ Decisions (2026-09-11): v1 sources are BEDAŞ (electricity) and İSKİ (water, t
 Later decisions (2026-09-11): İSKİ historical data will be used in the v2.1 neighbourhood report card; İBB is scanned once a day; the scan frequency rule in CLAUDE.md was updated; request drafts for İSKİ, İGDAŞ and Başkentgaz are under `docs/tr/talepler/` (translations in `docs/en/requests/`).
 Source survey (21 electricity distribution companies, 10 water utilities): [01-source-survey.md](01-source-survey.md). Approved (2026-09-13): v1 electricity BEDAŞ + AEDAŞ + ÇEDAŞ + KCETAŞ, v1 live water İZSU, ASKİ instead of natural gas in v1.1, the İBB xlsx fixture stays in the repo.
 
-## [ ] Phase 2 - Collector
-- [ ] Common `Outage` model and `SourceCollector` interface
-- [ ] BEDAŞ (planned: `GetItemsData`, faults: `RetrieveOutages` + transformer location cache) and İSKİ (İBB Open Data XLSX) collectors with fixture-based tests
-- [ ] robots.txt check before every request (no request if disallowed, Crawl-delay respected)
-- [ ] AEDAŞ and ÇEDAŞ (same CK Enerji platform as BEDAŞ, same parser), KCETAŞ (one JSON request per date) and İZSU (live water, server-rendered table) collectors
-- [ ] Date/time and province/district/neighbourhood normalization
-- [ ] Schedule per source based on how often the source updates, at most every 5 min (unplanned 5 min, planned 15 min, İBB open data once a day), configurable
-- [ ] Jitter on requests
-- [ ] Hash-based change detection, NEW / UPDATED / GONE to a Redis Stream
-- [ ] Prometheus metrics: `collector_last_success_timestamp`, `collector_items_total`, `collector_errors_total`
-- [ ] A failing source does not stop the others
+## [x] Phase 2 - Collector
+- [x] Common `Outage` model and `SourceCollector` interface
+- [x] BEDAŞ (planned: `GetItemsData`, faults: `RetrieveOutages` + transformer location cache) and İSKİ (İBB Open Data XLSX) collectors with fixture-based tests
+- [x] robots.txt check before every request (no request if disallowed, Crawl-delay respected)
+- [x] AEDAŞ and ÇEDAŞ (same CK Enerji platform as BEDAŞ, same parser), KCETAŞ (one JSON request per date) and İZSU (live water, server-rendered table) collectors
+- [x] Date/time and province/district/neighbourhood normalization
+- [x] Schedule per source based on how often the source updates, at most every 5 min (unplanned 5 min, planned 15 min, İBB open data once a day), configurable
+- [x] Jitter on requests
+- [x] Hash-based change detection, NEW / UPDATED / GONE to a Redis Stream
+- [x] Prometheus metrics: `collector_last_success_timestamp`, `collector_items_total`, `collector_errors_total`
+- [x] A failing source does not stop the others
 
 Done when: fixture parse tests, normalization tests, diff (NEW/UPDATED/GONE) tests and an error isolation test are green; in local compose the collector writes events to the stream and writes nothing on a second scan without changes; `/actuator/prometheus` shows the three metrics with a source label.
+
+Status: done (2026-09-13). Notes: [02-collector.md](02-collector.md). 73 tests green. Two rounds against live sources in compose: 19,085 events in the first round (18,380 of them İSKİ historical data); in the second round unchanged feeds wrote nothing to the stream.
+Awaiting approval: a `feed` label was added to the metrics next to `source` (to separate the 30 min fault / 3 h planned alerts in Phase 8).
 
 ## [ ] Phase 3 - API
 - [ ] Stream consumption with a consumer group, upsert by `dedup_key` (`source:external_id` when there is an `external_id`, hash otherwise), Flyway migrations

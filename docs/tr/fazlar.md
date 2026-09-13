@@ -104,5 +104,6 @@ Orijinal metin yukarıda değiştirilmeden duruyor. Bu bölüm, faz tanımına d
 | 2026-09-11 | Faz 9 | v1.1'de doğalgaz yerine ASKİ (Ankara canlı su arızaları), yedekler BUSKİ ve MESKİ | karar (2026-09-13 onaylandı) | [01-kaynak-taramasi.md](01-kaynak-taramasi.md) |
 | 2026-09-11 | v2.1 | İSKİ geçmiş verisi mahalle karnesinde kullanılacak | karar | [../plan.md](../plan.md) |
 | 2026-09-13 | Faz 2 | İBB su kesintisi dosyası (`iski/ibb-su-kesintileri-2023-2024.xlsx`) fixture olarak repoda kalıyor | karar | [01-kaynak-taramasi.md](01-kaynak-taramasi.md) |
+| 2026-09-13 | Faz 2, 8 | Collector metriklerine `source`'a ek olarak `feed` etiketi (arıza 30 dk / planlı 3 saat alarmını ayırmak için) | **onay bekliyor** | [02-collector.md](02-collector.md) |
 
 Bekleyen onaylar netleşince bu tabloya yeni satır eklenir. Orijinal tanım değiştirilmez.

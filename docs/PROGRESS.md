@@ -20,19 +20,22 @@ Kararlar (2026-09-11): v1 kaynakları BEDAŞ (elektrik) ve İSKİ (su, İBB Aç�
 Sonraki kararlar (2026-09-11): İSKİ geçmiş verisi v2.1 mahalle karnesinde kullanılacak; İBB taraması günde bir; tarama sıklığı kuralı CLAUDE.md'de güncellendi; İSKİ, İGDAŞ, Başkentgaz talep taslakları `docs/tr/talepler/` altında.
 Kaynak taraması (21 elektrik dağıtım şirketi, 10 su idaresi): [tr/01-kaynak-taramasi.md](tr/01-kaynak-taramasi.md). Onaylandı (2026-09-13): v1 elektrik BEDAŞ + AEDAŞ + ÇEDAŞ + KCETAŞ, v1 canlı su İZSU, v1.1'de doğalgaz yerine ASKİ, İBB xlsx fixture'ı repoda kalıyor.
 
-## [ ] Faz 2 - Collector
-- [ ] Ortak `Outage` modeli ve `SourceCollector` arayüzü
-- [ ] BEDAŞ (planlı: `GetItemsData`, arıza: `RetrieveOutages` + trafo konum cache'i) ve İSKİ (İBB Açık Veri XLSX) collector'ları, fixture tabanlı testlerle
-- [ ] Her istekten önce robots.txt kontrolü (yasaksa istek atılmaz, Crawl-delay'e uyulur)
-- [ ] AEDAŞ ve ÇEDAŞ (BEDAŞ ile aynı CK Enerji altyapısı, aynı parser), KCETAŞ (tarih başına tek JSON isteği) ve İZSU (canlı su, sunucuda render edilen tablo) collector'ları
-- [ ] Tarih/saat ve il/ilçe/mahalle normalizasyonu
-- [ ] Kaynak başına zamanlama, kaynağın güncellenme sıklığına göre ve en sık 5 dk (arıza 5 dk, planlı 15 dk, İBB açık veri günde bir), config'ten değiştirilebilir
-- [ ] İsteklerde jitter
-- [ ] Hash ile değişiklik tespiti, Redis Stream'e NEW / UPDATED / GONE
-- [ ] Prometheus metrikleri: `collector_last_success_timestamp`, `collector_items_total`, `collector_errors_total`
-- [ ] Bir kaynağın hatası diğerlerini durdurmuyor
+## [x] Faz 2 - Collector
+- [x] Ortak `Outage` modeli ve `SourceCollector` arayüzü
+- [x] BEDAŞ (planlı: `GetItemsData`, arıza: `RetrieveOutages` + trafo konum cache'i) ve İSKİ (İBB Açık Veri XLSX) collector'ları, fixture tabanlı testlerle
+- [x] Her istekten önce robots.txt kontrolü (yasaksa istek atılmaz, Crawl-delay'e uyulur)
+- [x] AEDAŞ ve ÇEDAŞ (BEDAŞ ile aynı CK Enerji altyapısı, aynı parser), KCETAŞ (tarih başına tek JSON isteği) ve İZSU (canlı su, sunucuda render edilen tablo) collector'ları
+- [x] Tarih/saat ve il/ilçe/mahalle normalizasyonu
+- [x] Kaynak başına zamanlama, kaynağın güncellenme sıklığına göre ve en sık 5 dk (arıza 5 dk, planlı 15 dk, İBB açık veri günde bir), config'ten değiştirilebilir
+- [x] İsteklerde jitter
+- [x] Hash ile değişiklik tespiti, Redis Stream'e NEW / UPDATED / GONE
+- [x] Prometheus metrikleri: `collector_last_success_timestamp`, `collector_items_total`, `collector_errors_total`
+- [x] Bir kaynağın hatası diğerlerini durdurmuyor
 
 Bitti sayılma koşulu: her collector için fixture'dan parse testi, normalizasyon testleri, diff (NEW/UPDATED/GONE) testleri ve hata izolasyonu testi yeşil; lokal compose'da collector çalışınca stream'e olay düşüyor, ikinci taramada değişiklik yoksa hiçbir şey yazılmıyor; `/actuator/prometheus` üç metriği kaynak etiketiyle gösteriyor.
+
+Durum: tamamlandı (2026-09-13). Not: [tr/02-collector.md](tr/02-collector.md). 73 test yeşil. Compose'da canlı kaynaklarla iki tur: ilk turda 19.085 olay (18.380'i İSKİ geçmiş verisi), ikinci turda değişmeyen feed'ler stream'e hiçbir şey yazmadı.
+Onay bekleyen: metriklere `source`'a ek olarak `feed` etiketi eklendi (Faz 8'de arıza 30 dk / planlı 3 saat alarmını ayırmak için).
 
 ## [ ] Faz 3 - API
 - [ ] Consumer group ile stream tüketimi, `dedup_key` ile upsert (`external_id` varsa `source:external_id`, yoksa hash), Flyway migration'ları
