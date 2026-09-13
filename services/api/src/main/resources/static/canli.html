@@ -1,0 +1,80 @@
+<!doctype html>
+<html lang="tr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Kesinti Haritası - canlı olaylar</title>
+  <style>
+    :root { font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; color: #1f2933; background: #f5f7fa; }
+    body { margin: 0; padding: 1rem; max-width: 960px; margin-inline: auto; }
+    header { display: flex; flex-wrap: wrap; gap: .75rem; align-items: center; justify-content: space-between; }
+    h1 { font-size: 1.25rem; margin: 0; }
+    .state { padding: .2rem .6rem; border-radius: 999px; font-size: .85rem; color: #fff; background: #9aa5b1; }
+    .state.ok { background: #2f9e44; }
+    .state.retry { background: #e67700; }
+    .meta { font-size: .8rem; color: #52606d; margin: .5rem 0 1rem; }
+    .meta a { color: #1864ab; }
+    table { width: 100%; border-collapse: collapse; background: #fff; font-size: .85rem; }
+    th, td { text-align: left; padding: .4rem .5rem; border-bottom: 1px solid #e4e7eb; vertical-align: top; }
+    th { background: #eef2f6; }
+    .created { color: #2f9e44; } .updated { color: #1864ab; } .ended { color: #c92a2a; } .resync { color: #e67700; }
+    .wrap { overflow-x: auto; }
+  </style>
+</head>
+<body>
+<header>
+  <h1>Canlı olaylar</h1>
+  <span id="state" class="state">bağlanıyor</span>
+</header>
+<p class="meta">
+  <code>/api/stream</code> üzerinden gelen olaylar. Son olay id: <code id="last">-</code>,
+  alınan olay: <span id="count">0</span>, son heartbeat yok sayılır.
+  REST uç noktaları için <a href="/swagger-ui.html">Swagger UI</a>.
+  Asıl harita arayüzü Faz 4'te.
+</p>
+<div class="wrap">
+  <table>
+    <thead><tr><th>Zaman</th><th>Olay</th><th>Kaynak</th><th>İl / İlçe</th><th>Mahalleler</th><th>Başlangıç - Bitiş</th></tr></thead>
+    <tbody id="rows"></tbody>
+  </table>
+</div>
+<script>
+  const rows = document.getElementById('rows');
+  const state = document.getElementById('state');
+  const fmt = (s) => s ? new Date(s).toLocaleString('tr-TR') : '-';
+  let count = 0;
+
+  function add(type, raw, id) {
+    let d = {};
+    try { d = JSON.parse(raw || '{}'); } catch (e) { d = {}; }
+    const tr = document.createElement('tr');
+    const cls = type.replace('outage.', '');
+    const cells = [
+      new Date().toLocaleTimeString('tr-TR'),
+      type,
+      d.source || '',
+      [d.il, d.ilce].filter(Boolean).join(' / '),
+      (d.mahalleler || []).join(', '),
+      fmt(d.startsAt) + ' - ' + fmt(d.endsAt)
+    ];
+    cells.forEach((text, i) => {
+      const td = document.createElement('td');
+      td.textContent = text;
+      if (i === 1) td.className = cls;
+      tr.appendChild(td);
+    });
+    rows.prepend(tr);
+    while (rows.children.length > 200) rows.lastChild.remove();
+    document.getElementById('count').textContent = String(++count);
+    if (id) document.getElementById('last').textContent = id;
+  }
+
+  // EventSource koparsa kendisi yeniden baglanir ve son id'yi Last-Event-ID olarak gonderir.
+  const es = new EventSource('/api/stream');
+  es.onopen = () => { state.textContent = 'bağlı'; state.className = 'state ok'; };
+  es.onerror = () => { state.textContent = 'yeniden bağlanıyor'; state.className = 'state retry'; };
+  ['outage.created', 'outage.updated', 'outage.ended', 'outage.resync'].forEach((t) =>
+    es.addEventListener(t, (e) => add(t, e.data, e.lastEventId)));
+</script>
+</body>
+</html>
