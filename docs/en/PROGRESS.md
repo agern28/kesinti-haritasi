@@ -18,13 +18,13 @@ Done when: source notes are in docs with a recommendation for hard sources; fixt
 Status: done (2026-09-11). Notes: [01-discovery-and-skeleton.md](01-discovery-and-skeleton.md).
 Decisions (2026-09-11): v1 sources are BEDAŞ (electricity) and İSKİ (water, the "Su Kesintileri" file on İBB Open Data). AYEDAŞ is not in v1 (reCAPTCHA). İSKİ's embedded token is not used. Nullable `external_id`, `lat`, `lon` added to the data model ([data-model.md](data-model.md)). No suitable natural gas source was found (İGDAŞ robots.txt, no İGDAŞ outage data on İBB, Başkentgaz doesn't publish, İzmirgaz only has per-street queries).
 Later decisions (2026-09-11): İSKİ historical data will be used in the v2.1 neighbourhood report card; İBB is scanned once a day; the scan frequency rule in CLAUDE.md was updated; request drafts for İSKİ, İGDAŞ and Başkentgaz are under `docs/tr/talepler/` (translations in `docs/en/requests/`).
-Source survey (21 electricity distribution companies, 10 water utilities): [01-source-survey.md](01-source-survey.md). Proposal (awaiting approval): v1 electricity BEDAŞ + AEDAŞ + ÇEDAŞ + KCETAŞ, v1 live water İZSU, ASKİ instead of natural gas in v1.1.
+Source survey (21 electricity distribution companies, 10 water utilities): [01-source-survey.md](01-source-survey.md). Approved (2026-09-13): v1 electricity BEDAŞ + AEDAŞ + ÇEDAŞ + KCETAŞ, v1 live water İZSU, ASKİ instead of natural gas in v1.1, the İBB xlsx fixture stays in the repo.
 
 ## [ ] Phase 2 - Collector
 - [ ] Common `Outage` model and `SourceCollector` interface
 - [ ] BEDAŞ (planned: `GetItemsData`, faults: `RetrieveOutages` + transformer location cache) and İSKİ (İBB Open Data XLSX) collectors with fixture-based tests
 - [ ] robots.txt check before every request (no request if disallowed, Crawl-delay respected)
-- [ ] (awaiting approval) AEDAŞ and ÇEDAŞ (same CK Enerji platform as BEDAŞ, same parser), KCETAŞ (one JSON request per date) and İZSU (live water, server-rendered table) collectors
+- [ ] AEDAŞ and ÇEDAŞ (same CK Enerji platform as BEDAŞ, same parser), KCETAŞ (one JSON request per date) and İZSU (live water, server-rendered table) collectors
 - [ ] Date/time and province/district/neighbourhood normalization
 - [ ] Schedule per source based on how often the source updates, at most every 5 min (unplanned 5 min, planned 15 min, İBB open data once a day), configurable
 - [ ] Jitter on requests
@@ -93,7 +93,7 @@ Done when: `helm lint` and `helm template` are clean; int and prod are Synced/He
 Done when: dashboards show data; breaking a source sends an alert to Telegram and a resolved message after the fix; node memory stays reasonable.
 
 ## [ ] Phase 9 - v1.1 and resilience
-- [ ] Natural gas source: ON HOLD. İGDAŞ robots.txt `Disallow: /`, no İGDAŞ outage data on İBB, Başkentgaz doesn't publish outages on its site, İzmirgaz only offers per-street queries (details: [01-discovery-and-skeleton.md](01-discovery-and-skeleton.md)). To be revisited at the start of Phase 9; if a source is found: collector, gas filter and colour, CHANGELOG, automatic to INT, PR to PROD. If not, ASKİ (Ankara live water faults) is proposed as the new v1.1 source, awaiting approval; it goes through the same pipeline.
+- [ ] Natural gas source: ON HOLD. İGDAŞ robots.txt `Disallow: /`, no İGDAŞ outage data on İBB, Başkentgaz doesn't publish outages on its site, İzmirgaz only offers per-street queries (details: [01-discovery-and-skeleton.md](01-discovery-and-skeleton.md)). To be revisited at the start of Phase 9; if a source is found: collector, gas filter and colour, CHANGELOG, automatic to INT, PR to PROD. If not, the new v1.1 source is ASKİ (Ankara live water faults, approved 2026-09-13); it goes through the same pipeline.
 - [ ] k6 spike scenario, HPA and cache measurements, results in docs
 - [ ] Rollback exercise
 - [ ] Demo runbook (TR/EN)

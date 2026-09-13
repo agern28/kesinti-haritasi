@@ -97,11 +97,12 @@ Orijinal metin yukarıda değiştirilmeden duruyor. Bu bölüm, faz tanımına d
 | 2026-09-11 | Faz 1, 2 | İSKİ'nin sitesine gömülü token kullanılmıyor. İSKİ verisi İBB Açık Veri'deki "Su Kesintileri" dosyasından (geçmiş veri, en yenisi 2024-02-19) | karar | [01-kesif-ve-iskelet.md](01-kesif-ve-iskelet.md) |
 | 2026-09-11 | Faz 2 | İBB veri seti günde bir taranıyor. Genel kural: tarama sıklığı kaynağın güncellenme sıklığına göre, en sık 5 dakika (CLAUDE.md güncellendi) | karar | CLAUDE.md, [../plan.md](../plan.md) |
 | 2026-09-11 | Faz 2 | Her istekten önce robots.txt kontrolü. Captcha, WAF ya da robots.txt ile engelleyen kaynaklar kara listede | karar | [01-kaynak-taramasi.md](01-kaynak-taramasi.md) |
-| 2026-09-11 | Faz 2 | v1 kaynaklarına AEDAŞ, ÇEDAŞ, KCETAŞ (elektrik) ve İZSU (canlı su) eklenmesi | **onay bekliyor** | [01-kaynak-taramasi.md](01-kaynak-taramasi.md) |
+| 2026-09-11 | Faz 2 | v1 kaynaklarına AEDAŞ, ÇEDAŞ, KCETAŞ (elektrik) ve İZSU (canlı su) eklenmesi | karar (2026-09-13 onaylandı) | [01-kaynak-taramasi.md](01-kaynak-taramasi.md) |
 | 2026-09-11 | Faz 3 | Veri modeline nullable `external_id`, `lat`, `lon`. Tekilleştirme: `external_id` varsa `(source, external_id)`, yoksa hash | karar | [veri-modeli.md](veri-modeli.md) |
 | 2026-09-11 | Faz 8 | Günde bir taranan açık veri kaynağı için alarm eşiği 26 saat (arıza 30 dk ve planlı 3 saat aynen duruyor) | öneri, plan'a yazıldı | [../plan.md](../plan.md) |
 | 2026-09-11 | Faz 9 | İGDAŞ taranamıyor (robots.txt `Disallow: /`). Başkentgaz kesinti yayınlamıyor, İzmirgaz sadece sokak bazlı sorgu veriyor. Doğalgaz maddesi beklemede. İGDAŞ ve Başkentgaz'a talep taslakları hazır | karar | [talepler/](talepler/) |
-| 2026-09-11 | Faz 9 | v1.1'de doğalgaz yerine ASKİ (Ankara canlı su arızaları), yedekler BUSKİ ve MESKİ | **onay bekliyor** | [01-kaynak-taramasi.md](01-kaynak-taramasi.md) |
+| 2026-09-11 | Faz 9 | v1.1'de doğalgaz yerine ASKİ (Ankara canlı su arızaları), yedekler BUSKİ ve MESKİ | karar (2026-09-13 onaylandı) | [01-kaynak-taramasi.md](01-kaynak-taramasi.md) |
 | 2026-09-11 | v2.1 | İSKİ geçmiş verisi mahalle karnesinde kullanılacak | karar | [../plan.md](../plan.md) |
+| 2026-09-13 | Faz 2 | İBB su kesintisi dosyası (`iski/ibb-su-kesintileri-2023-2024.xlsx`) fixture olarak repoda kalıyor | karar | [01-kaynak-taramasi.md](01-kaynak-taramasi.md) |
 
 Bekleyen onaylar netleşince bu tabloya yeni satır eklenir. Orijinal tanım değiştirilmez.

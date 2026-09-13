@@ -97,11 +97,12 @@ The original definition above stays unchanged. This section shows the decisions 
 | 2026-09-11 | Phase 1, 2 | The token embedded in İSKİ's site is not used. İSKİ data comes from the "Su Kesintileri" file on İBB Open Data (historical, newest 2024-02-19) | decided | [01-discovery-and-skeleton.md](01-discovery-and-skeleton.md) |
 | 2026-09-11 | Phase 2 | The İBB dataset is scanned once a day. General rule: scan frequency follows how often the source updates, at most every 5 minutes (CLAUDE.md updated) | decided | CLAUDE.md, [../plan.md](../plan.md) |
 | 2026-09-11 | Phase 2 | robots.txt check before every request. Sources that block with a captcha, a WAF or robots.txt are on a blocklist | decided | [01-source-survey.md](01-source-survey.md) |
-| 2026-09-11 | Phase 2 | Adding AEDAŞ, ÇEDAŞ, KCETAŞ (electricity) and İZSU (live water) to the v1 sources | **awaiting approval** | [01-source-survey.md](01-source-survey.md) |
+| 2026-09-11 | Phase 2 | Adding AEDAŞ, ÇEDAŞ, KCETAŞ (electricity) and İZSU (live water) to the v1 sources | decided (approved 2026-09-13) | [01-source-survey.md](01-source-survey.md) |
 | 2026-09-11 | Phase 3 | Nullable `external_id`, `lat`, `lon` in the data model. Dedup: `(source, external_id)` when there is an `external_id`, the hash otherwise | decided | [data-model.md](data-model.md) |
 | 2026-09-11 | Phase 8 | Alert threshold of 26 hours for open data sources scanned once a day (30 min for faults and 3 h for planned stay as they are) | proposal, written into the plan | [../plan.md](../plan.md) |
 | 2026-09-11 | Phase 9 | İGDAŞ can't be crawled (robots.txt `Disallow: /`). Başkentgaz doesn't publish outages, İzmirgaz only has per-street queries. The gas item is on hold. Request drafts for İGDAŞ and Başkentgaz are ready | decided | [requests/](requests/) |
-| 2026-09-11 | Phase 9 | ASKİ (Ankara live water faults) instead of gas in v1.1, backups BUSKİ and MESKİ | **awaiting approval** | [01-source-survey.md](01-source-survey.md) |
+| 2026-09-11 | Phase 9 | ASKİ (Ankara live water faults) instead of gas in v1.1, backups BUSKİ and MESKİ | decided (approved 2026-09-13) | [01-source-survey.md](01-source-survey.md) |
 | 2026-09-11 | v2.1 | İSKİ historical data will be used in the neighbourhood report card | decided | [../plan.md](../plan.md) |
+| 2026-09-13 | Phase 2 | The İBB water outage file (`iski/ibb-su-kesintileri-2023-2024.xlsx`) stays in the repo as a fixture | decided | [01-source-survey.md](01-source-survey.md) |
 
 When a pending approval is settled, a new row is added to this table. The original definition is never changed.
