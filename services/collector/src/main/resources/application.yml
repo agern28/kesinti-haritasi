@@ -14,6 +14,10 @@ management:
     health:
       probes:
         enabled: true
+      group:
+        # Redis yoksa olay yazamayiz: readiness Redis'e bagli, liveness degil.
+        readiness:
+          include: readinessState,redis
   metrics:
     tags:
       application: ${spring.application.name}
@@ -21,3 +25,48 @@ management:
 collector:
   # Kaynak sitelere giden her istekte bu User-Agent kullanilir.
   user-agent: "KesintiHaritasi/0.1 (+https://github.com/agern28/kesinti-haritasi)"
+  scheduling:
+    enabled: true
+    # Her taramanin basinda 0..jitter-max arasi rastgele bekleme; kaynaklara ayni saniyede gidilmez.
+    jitter-max: 5s
+    # Uygulama acilirken ilk taramalar 0..initial-delay-max arasina dagitilir.
+    initial-delay-max: 30s
+  http:
+    connect-timeout: 10s
+    request-timeout: 60s
+    # Ayni host'a iki istek arasi en az bu kadar (robots.txt Crawl-delay daha uzunsa o).
+    min-host-delay: 2s
+  robots:
+    cache-ttl: 24h
+    # robots.txt'e ulasilamazsa tamamen yasak sayilir; bu sure sonra tekrar denenir.
+    failure-ttl: 10m
+  stream:
+    key: outage-events
+    max-len: 100000
+  sources:
+    # CK Enerji ariza kayitlarinda konum trafo numarasindan ek istekle bulunur (Redis'te 30 gun cache).
+    ck-location-lookups-per-scan: 40
+    kcetas-days-ahead: 2
+  # Tarama sikligi kaynagin guncellenme sikligina gore, en sik 5 dakika.
+  # Anahtar: <kaynak>-<feed>. enabled: false ile tek bir feed kapatilabilir.
+  feeds:
+    bedas-planned:
+      interval: 15m
+    bedas-unplanned:
+      interval: 5m
+    aedas-planned:
+      interval: 15m
+    aedas-unplanned:
+      interval: 5m
+    cedas-planned:
+      interval: 15m
+    cedas-unplanned:
+      interval: 5m
+    kcetas-planned:
+      interval: 15m
+    # İZSU planli ve arizayi ayni sayfada veriyor: 5 dakika.
+    izsu-all:
+      interval: 5m
+    # İBB Açık Veri, yilda bir dosya ekleniyor: gunde bir.
+    iski-daily:
+      interval: 24h

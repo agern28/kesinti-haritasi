@@ -1,0 +1,5 @@
+# Testlerde zamanlama kapali: hicbir test canli kaynaga istek atmaz.
+collector:
+  scheduling:
+    enabled: false
+    jitter-max: 0s
