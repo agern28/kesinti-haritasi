@@ -26,14 +26,16 @@ public class ScanScheduler {
     private final TaskScheduler scheduler;
     private final CollectorProperties props;
     private final Clock clock;
+    private final SourceStatusStore status;
 
     public ScanScheduler(List<SourceCollector> collectors, ScanRunner runner, CollectorMetrics metrics,
-                         TaskScheduler scheduler, CollectorProperties props, Clock clock) {
+                         TaskScheduler scheduler, CollectorProperties props, Clock clock, SourceStatusStore status) {
         this.collectors = collectors.stream().filter(c -> props.feed(c.id()).enabled()).toList();
         this.runner = runner;
         this.scheduler = scheduler;
         this.props = props;
         this.clock = clock;
+        this.status = status;
         this.collectors.forEach(c -> metrics.register(c.id()));
     }
 
@@ -50,6 +52,11 @@ public class ScanScheduler {
         long spread = props.scheduling().initialDelayMax().toMillis();
         for (SourceCollector c : collectors) {
             Duration interval = interval(c);
+            try {
+                status.registered(c.id(), interval);
+            } catch (RuntimeException e) {
+                log.warn("{} durumu kaydedilemedi: {}", c.id(), e.toString());
+            }
             Duration firstDelay = Duration.ofMillis(spread > 0 ? ThreadLocalRandom.current().nextLong(spread + 1) : 0);
             scheduler.scheduleWithFixedDelay(() -> runner.run(c), clock.instant().plus(firstDelay), interval);
             log.info("{} her {} bir taranacak (ilk tarama {} sn sonra)", c.id(), interval, firstDelay.toSeconds());

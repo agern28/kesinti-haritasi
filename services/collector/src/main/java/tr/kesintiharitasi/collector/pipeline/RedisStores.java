@@ -78,6 +78,57 @@ public final class RedisStores {
         }
     }
 
+    /** Feed durumlari: collector:status hash'i, alan "KAYNAK/feed", deger JSON. Her feed kendi alanini yazar. */
+    public static class Status implements SourceStatusStore {
+
+        static final String KEY = "collector:status";
+        private static final int MAX_ERROR_LENGTH = 300;
+
+        private final StringRedisTemplate redis;
+        private final JsonMapper json;
+
+        public Status(StringRedisTemplate redis, JsonMapper json) {
+            this.redis = redis;
+            this.json = json;
+        }
+
+        @Override
+        public void registered(FeedId feed, Duration interval) {
+            update(feed, n -> n.put("intervalSeconds", interval.toSeconds()));
+        }
+
+        @Override
+        public void succeeded(FeedId feed, java.time.Instant at, Integer items) {
+            update(feed, n -> {
+                n.put("lastSuccessAt", at.toString());
+                if (items != null) {
+                    n.put("lastItems", items);
+                }
+            });
+        }
+
+        @Override
+        public void failed(FeedId feed, java.time.Instant at, String error) {
+            String e = error == null ? "" : error;
+            update(feed, n -> {
+                n.put("lastErrorAt", at.toString());
+                n.put("lastError", e.length() > MAX_ERROR_LENGTH ? e.substring(0, MAX_ERROR_LENGTH) : e);
+            });
+        }
+
+        private void update(FeedId feed, java.util.function.Consumer<tools.jackson.databind.node.ObjectNode> change) {
+            String field = feed.source() + "/" + feed.feed();
+            Object raw = redis.opsForHash().get(KEY, field);
+            tools.jackson.databind.node.ObjectNode node = raw == null
+                    ? json.createObjectNode()
+                    : (tools.jackson.databind.node.ObjectNode) json.readTree(raw.toString());
+            node.put("source", feed.source());
+            node.put("feed", feed.feed());
+            change.accept(node);
+            redis.opsForHash().put(KEY, field, json.writeValueAsString(node));
+        }
+    }
+
     /**
      * Olaylari Redis Stream'e yazar. Alanlar: event, source, feed, dedupKey, contentHash, scannedAt, payload (JSON).
      * Stream MAXLEN ~ ile kirpilir; api uzun sure kapali kalirsa en eski olaylar dusebilir, ama bir sonraki

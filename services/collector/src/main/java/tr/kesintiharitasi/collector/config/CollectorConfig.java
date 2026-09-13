@@ -17,6 +17,7 @@ import tr.kesintiharitasi.collector.pipeline.RedisStores;
 import tr.kesintiharitasi.collector.pipeline.ScanRunner;
 import tr.kesintiharitasi.collector.pipeline.ScanScheduler;
 import tr.kesintiharitasi.collector.pipeline.SnapshotStore;
+import tr.kesintiharitasi.collector.pipeline.SourceStatusStore;
 import tr.kesintiharitasi.collector.pipeline.StateStore;
 import tr.kesintiharitasi.collector.source.SourceCollector;
 import tr.kesintiharitasi.collector.source.ck.CkCompany;
@@ -67,15 +68,20 @@ public class CollectorConfig {
     }
 
     @Bean
+    SourceStatusStore sourceStatusStore(StringRedisTemplate redis, JsonMapper json) {
+        return new RedisStores.Status(redis, json);
+    }
+
+    @Bean
     CollectorMetrics collectorMetrics(MeterRegistry registry) {
         return new CollectorMetrics(registry);
     }
 
     @Bean
     ScanRunner scanRunner(SnapshotStore snapshots, EventPublisher publisher, CollectorMetrics metrics, Clock clock,
-                          CollectorProperties props) {
+                          CollectorProperties props, SourceStatusStore status) {
         return new ScanRunner(snapshots, publisher, metrics, clock, props.scheduling().jitterMax(),
-                d -> Thread.sleep(d.toMillis()));
+                d -> Thread.sleep(d.toMillis()), status);
     }
 
     @Bean(destroyMethod = "shutdown")
@@ -90,8 +96,9 @@ public class CollectorConfig {
 
     @Bean
     ScanScheduler scanScheduler(List<SourceCollector> collectors, ScanRunner runner, CollectorMetrics metrics,
-                                ThreadPoolTaskScheduler scanTaskScheduler, CollectorProperties props, Clock clock) {
-        return new ScanScheduler(collectors, runner, metrics, scanTaskScheduler, props, clock);
+                                ThreadPoolTaskScheduler scanTaskScheduler, CollectorProperties props, Clock clock,
+                                SourceStatusStore status) {
+        return new ScanScheduler(collectors, runner, metrics, scanTaskScheduler, props, clock, status);
     }
 
     // --- Kaynaklar ---

@@ -56,7 +56,7 @@ class ScanSchedulerTest {
                 mock(TaskScheduler.class),
                 props(Map.of("a-unplanned", new CollectorProperties.Feed(true, Duration.ofMinutes(1)),
                         "b-planned", new CollectorProperties.Feed(false, null))),
-                Clock.systemUTC());
+                Clock.systemUTC(), SourceStatusStore.NOOP);
 
         assertThat(s.enabledCollectors()).containsExactly(planned, fast);
         assertThat(s.interval(planned)).isEqualTo(Duration.ofMinutes(15));

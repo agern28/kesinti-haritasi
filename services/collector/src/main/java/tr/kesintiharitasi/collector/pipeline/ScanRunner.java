@@ -30,16 +30,23 @@ public class ScanRunner {
     private final Clock clock;
     private final Duration jitterMax;
     private final Sleeper sleeper;
+    private final SourceStatusStore status;
     private final Differ differ = new Differ();
 
     public ScanRunner(SnapshotStore snapshots, EventPublisher publisher, CollectorMetrics metrics, Clock clock,
                       Duration jitterMax, Sleeper sleeper) {
+        this(snapshots, publisher, metrics, clock, jitterMax, sleeper, SourceStatusStore.NOOP);
+    }
+
+    public ScanRunner(SnapshotStore snapshots, EventPublisher publisher, CollectorMetrics metrics, Clock clock,
+                      Duration jitterMax, Sleeper sleeper, SourceStatusStore status) {
         this.snapshots = snapshots;
         this.publisher = publisher;
         this.metrics = metrics;
         this.clock = clock;
         this.jitterMax = jitterMax;
         this.sleeper = sleeper;
+        this.status = status;
     }
 
     /** @return tarama basarili mi */
@@ -52,6 +59,7 @@ public class ScanRunner {
             Instant now = clock.instant();
             if (result.unchanged()) {
                 metrics.success(feed, null, Map.of(), elapsed(t0), now);
+                recordStatus(() -> status.succeeded(feed, now, null));
                 log.info("{}: kaynak degismemis, diff yapilmadi", feed);
                 return true;
             }
@@ -63,6 +71,7 @@ public class ScanRunner {
             result.afterCommit().run();
             Map<EventType, Integer> counts = diff.counts();
             metrics.success(feed, result.outages().size(), counts, elapsed(t0), now);
+            recordStatus(() -> status.succeeded(feed, now, result.outages().size()));
             log.info("{}: {} kayit, NEW={} UPDATED={} GONE={}{} ({} ms)", feed, result.outages().size(),
                     counts.get(EventType.NEW), counts.get(EventType.UPDATED), counts.get(EventType.GONE),
                     diff.duplicates() > 0 ? ", tekrar eden " + diff.duplicates() : "", elapsed(t0).toMillis());
@@ -72,8 +81,18 @@ public class ScanRunner {
             return false;
         } catch (Exception e) {
             metrics.failure(feed, elapsed(t0));
+            recordStatus(() -> status.failed(feed, clock.instant(), e.toString()));
             log.warn("{}: tarama basarisiz: {}", feed, e.toString());
             return false;
+        }
+    }
+
+    /** Durum yazilamazsa (Redis gecici olarak yok) tarama sonucu degismez. */
+    private void recordStatus(Runnable write) {
+        try {
+            write.run();
+        } catch (RuntimeException e) {
+            log.debug("kaynak durumu yazilamadi: {}", e.toString());
         }
     }
 
