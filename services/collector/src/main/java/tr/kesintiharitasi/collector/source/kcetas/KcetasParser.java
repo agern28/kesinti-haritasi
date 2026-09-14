@@ -13,10 +13,12 @@ import tr.kesintiharitasi.collector.normalize.Names;
  * {"ilce":"PINARBAŞI","adres":" SOLAKLAR MAH. PINARBAŞI KAYSERİ","tur":"Bildirimli",
  *  "baslangic":"2026-09-11T09:00:00","bitis":"2026-09-11T17:00:00"} + poligon.
  * Kaynak id vermiyor; tekillestirme hash ile. lat/lon poligonun agirlik merkezi.
+ * Il ayri bir alan degil, adresin sonunda: KCETAŞ Sivas'in Gemerek ilcesine de hizmet veriyor
+ * (" KÖPRÜBAŞI MAH. GEMEREK SİVAS").
  */
 public class KcetasParser {
 
-    static final String IL = "KAYSERİ";
+    static final String DEFAULT_IL = "KAYSERİ";
     public static final String SOURCE_URL = "https://www.kcetas.com.tr/tr/planli-kesintiler-bakimlar";
 
     public List<Outage> parse(JsonNode root) {
@@ -33,11 +35,13 @@ public class KcetasParser {
             if (ilce == null) {
                 continue;
             }
-            String mahalle = mahalle(p.path("adres").asString(""), ilce);
+            String adres = p.path("adres").asString("");
+            String il = il(adres, ilce);
+            String mahalle = mahalle(adres, ilce, il);
             double[] centroid = centroid(f.path("geometry"));
             out.add(new Outage("KCETAS", null, OutageType.ELECTRICITY,
                     !"Bildirimsiz".equalsIgnoreCase(p.path("tur").asString("").strip()),
-                    IL, ilce, mahalle == null ? List.of() : List.of(mahalle),
+                    il, ilce, mahalle == null ? List.of() : List.of(mahalle),
                     Dates.iso(p.path("baslangic").asString(null)), Dates.iso(p.path("bitis").asString(null)),
                     null, SOURCE_URL,
                     centroid == null ? null : centroid[0], centroid == null ? null : centroid[1]));
@@ -45,14 +49,29 @@ public class KcetasParser {
         return out;
     }
 
+    /** Adres "... MAH. GEMEREK SİVAS" gibi bitiyor: ilceden sonraki tek kelime il. Yoksa Kayseri. */
+    static String il(String adres, String ilce) {
+        String s = Names.name(adres);
+        if (s != null) {
+            int i = s.lastIndexOf(" " + ilce + " ");
+            if (i >= 0) {
+                String rest = s.substring(i + ilce.length() + 2).strip();
+                if (!rest.isEmpty() && !rest.contains(" ")) {
+                    return rest;
+                }
+            }
+        }
+        return DEFAULT_IL;
+    }
+
     /** " SOLAKLAR MAH. PINARBAŞI KAYSERİ" -> SOLAKLAR */
-    static String mahalle(String adres, String ilce) {
+    static String mahalle(String adres, String ilce, String il) {
         String s = Names.name(adres);
         if (s == null) {
             return null;
         }
-        if (s.endsWith(" " + IL)) {
-            s = s.substring(0, s.length() - IL.length() - 1);
+        if (s.endsWith(" " + il)) {
+            s = s.substring(0, s.length() - il.length() - 1);
         }
         if (s.endsWith(" " + ilce)) {
             s = s.substring(0, s.length() - ilce.length() - 1);

@@ -157,6 +157,10 @@ Faz 3'ün canlı denemesinde İSKİ'nin geçmiş verisinden 39 kayıt haritada "
 
 Ders: bir veri setinin tek dosyasına bakıp bütün dosyaları aynı sanmamak gerekiyordu.
 
+## Sonradan bulunan: KCETAŞ'ta il (Faz 4 sırasında)
+
+Faz 4'te kaynak adlarını harita sınırlarıyla eşleştirirken KCETAŞ'ın Gemerek kayıtları Kayseri'de çıktı. Gemerek Sivas'ta, KCETAŞ oraya da elektrik veriyor. Parser'da il sabit `KAYSERİ` idi, fixture'daki bütün kayıtlar da Kayseri'deydi, o yüzden fark etmemiştim. Kaynak ili adresin sonuna yazıyor (`... KÖPRÜBAŞI MAH. GEMEREK SİVAS`). Parser artık ili oradan okuyor: ilçe adından sonra gelen tek kelime. Adreste yoksa Kayseri kabul ediliyor. İki test eklendi, 78 test yeşil.
+
 ## Bilinen sınırlar
 
 - CK'da devam eden planlı kesinti hem planlı listede hem arıza listesinde (`Bildirimli`) görünüyor. Arızalardan sadece `Bildirimsiz` satırları alıyorum, iki kez sayılmıyor. Ama planlı kesintinin gerçekte ne zaman bittiğini arıza tarafından öğrenmiyoruz.

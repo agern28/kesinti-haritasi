@@ -157,6 +157,10 @@ In the Phase 3 live run, 39 İSKİ historical records showed as "active" on the 
 
 Lesson: I shouldn't have looked at one file of a dataset and assumed all files were the same.
 
+## Found later: the province in KCETAŞ (during Phase 4)
+
+While matching source names to the map boundaries in Phase 4, KCETAŞ's Gemerek records turned up under Kayseri. Gemerek is in Sivas, and KCETAŞ supplies electricity there too. The province was hard-coded as `KAYSERİ` in the parser, and every record in the fixture was in Kayseri, so I hadn't noticed. The source writes the province at the end of the address (`... KÖPRÜBAŞI MAH. GEMEREK SİVAS`). The parser now reads it from there: the single word after the district name. If the address doesn't have it, Kayseri is assumed. Two tests were added, 78 tests green.
+
 ## Known limitations
 
 - On CK, a planned outage in progress shows up both in the planned list and in the fault list (`Bildirimli`). I only take `Bildirimsiz` rows from the faults, so it isn't counted twice. But we don't learn from the fault side when a planned outage actually ended.

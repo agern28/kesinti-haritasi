@@ -45,8 +45,32 @@ class KcetasParserTest {
 
     @Test
     void adrestenMahalle() {
-        assertThat(KcetasParser.mahalle(" YAKUTİYE MAH. BÜNYAN KAYSERİ", "BÜNYAN")).isEqualTo("YAKUTİYE");
-        assertThat(KcetasParser.mahalle("", "BÜNYAN")).isNull();
+        assertThat(KcetasParser.mahalle(" YAKUTİYE MAH. BÜNYAN KAYSERİ", "BÜNYAN", "KAYSERİ")).isEqualTo("YAKUTİYE");
+        assertThat(KcetasParser.mahalle(" KÖPRÜBAŞI MAH. GEMEREK SİVAS", "GEMEREK", "SİVAS")).isEqualTo("KÖPRÜBAŞI");
+        assertThat(KcetasParser.mahalle("", "BÜNYAN", "KAYSERİ")).isNull();
+    }
+
+    @Test
+    void adrestenIl() {
+        assertThat(KcetasParser.il(" KÖPRÜBAŞI MAH. GEMEREK SİVAS", "GEMEREK")).isEqualTo("SİVAS");
+        assertThat(KcetasParser.il(" SOLAKLAR MAH. PINARBAŞI KAYSERİ", "PINARBAŞI")).isEqualTo("KAYSERİ");
+        // il yazilmamissa ya da ilceden sonra birden fazla kelime varsa Kayseri
+        assertThat(KcetasParser.il(" YAKUTİYE MAH. BÜNYAN", "BÜNYAN")).isEqualTo("KAYSERİ");
+        assertThat(KcetasParser.il(" A MAH. BÜNYAN B C", "BÜNYAN")).isEqualTo("KAYSERİ");
+        assertThat(KcetasParser.il("", "BÜNYAN")).isEqualTo("KAYSERİ");
+    }
+
+    @Test
+    void kayseriDisindakiIlce() {
+        // 2026-09-14 canli cevabindan: KCETAŞ Sivas'in Gemerek ilcesine de hizmet veriyor
+        String json = """
+                {"success":true,"features":[{"type":"Feature","properties":{"ilce":"GEMEREK",
+                "adres":" KÖPRÜBAŞI MAH. GEMEREK SİVAS","tur":"Bildirimli",
+                "baslangic":"2026-09-14T09:00:00","bitis":"2026-09-14T17:00:00"},"geometry":null}]}""";
+        Outage o = parser.parse(Fixtures.JSON.readTree(json)).get(0);
+        assertThat(o.il()).isEqualTo("SİVAS");
+        assertThat(o.ilce()).isEqualTo("GEMEREK");
+        assertThat(o.mahalleler()).containsExactly("KÖPRÜBAŞI");
     }
 
     @Test
