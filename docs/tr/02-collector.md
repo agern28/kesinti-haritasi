@@ -146,6 +146,17 @@ Toplam 73 test, hepsi yeşil (`mvn verify`). Hiçbiri canlı siteye gitmiyor.
 - ÇEDAŞ mesajları üç farklı biçimde geliyor, biri serbest metin. Parser burada "en iyi çaba" ile çalışıyor. Testler bilinen kayıtları sabitliyor. Yeni bir biçim görürsek fixture ekleyip testi genişletmek gerekecek.
 - KCETAŞ aynı mahalle ve saat için birden fazla trafo satırı veriyor (26 satır, 24 tekil). Bunları Differ tekilleştiriyor.
 
+## Sonradan bulunan: İBB veri temizliği (Faz 3 sırasında)
+
+Faz 3'ün canlı denemesinde İSKİ'nin geçmiş verisinden 39 kayıt haritada "aktif" göründü. Faz 2'de sadece 2023-2024 dosyasına bakmıştım, 2022-2023 dosyası farklı çıktı:
+- **Farklı şema**: `ARIZA NUMARASI | ILCE | MAHALLE | ARIZA SEBEP | SORUMLU | BASLANGIC | BITIS | SAAT_FARK | DAKIKA_FARK`. Parser başlıkları "içeriyor mu" diye aradığı için kolonları doğru buluyordu.
+- **39 satırda bitiş boş**: bitişsiz kayıt "hâlâ sürüyor" sayıldı. Artık bitiş boşsa ya da başlangıçtan önceyse `SAAT_FARK`/`DAKIKA_FARK`'tan hesaplanıyor, o da yoksa bitiş başlangıçla aynı kabul ediliyor. Kesinti kesin bitmiş, sadece süresi bilinmiyor. 2023-2024 dosyasında da 6 satırda bitiş başlangıçtan önceydi.
+- **Kısaltılmış ilçe adları** (iki dosyada da): `G.O.PAŞA`, `B.ÇEKMECE`, `K.ÇEKMECE` tam adlarına çevriliyor. Aksi halde Faz 4'te harita sınırlarıyla eşleşmezlerdi.
+- **Yer tutucu mahalleler**: `ADALAR-STANDARTDIŞI ADRES` gibi adres bilinmiyor anlamındaki girdiler atılıyor.
+- **Kimlik**: `ARIZA NUMARASI` tekil değil (19.236 satırda 6.582 farklı değer). Kimlik olarak kullanılmıyor, tekilleştirme hash'le kalıyor.
+
+Ders: bir veri setinin tek dosyasına bakıp bütün dosyaları aynı sanmamak gerekiyordu.
+
 ## Bilinen sınırlar
 
 - CK'da devam eden planlı kesinti hem planlı listede hem arıza listesinde (`Bildirimli`) görünüyor. Arızalardan sadece `Bildirimsiz` satırları alıyorum, iki kez sayılmıyor. Ama planlı kesintinin gerçekte ne zaman bittiğini arıza tarafından öğrenmiyoruz.

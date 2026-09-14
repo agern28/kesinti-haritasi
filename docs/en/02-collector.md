@@ -146,6 +146,17 @@ Second round (5 minute feeds):
 - ÇEDAŞ messages come in three different formats, one of them free text. The parser works on a best-effort basis there. The tests pin the known records; if a new format shows up we'll need to add a fixture and extend the test.
 - KCETAŞ returns several transformer rows for the same neighbourhood and time (26 rows, 24 distinct). The Differ deduplicates them.
 
+## Found later: İBB data cleanup (during Phase 3)
+
+In the Phase 3 live run, 39 İSKİ historical records showed as "active" on the map. In Phase 2 I had only looked at the 2023-2024 file; the 2022-2023 file turned out to be different:
+- **Different schema**: `ARIZA NUMARASI | ILCE | MAHALLE | ARIZA SEBEP | SORUMLU | BASLANGIC | BITIS | SAAT_FARK | DAKIKA_FARK`. Since the parser finds columns by "header contains", it found the right ones.
+- **39 rows with an empty end time**: a record without an end was counted as ongoing. Now, if the end is empty or before the start, it is computed from `SAAT_FARK`/`DAKIKA_FARK`; if that's missing too, the end is taken to be the start. The outage has definitely ended, only its duration is unknown. The 2023-2024 file also had 6 rows with the end before the start.
+- **Abbreviated district names** (in both files): `G.O.PAŞA`, `B.ÇEKMECE`, `K.ÇEKMECE` are expanded to their full names. Otherwise they wouldn't match the map boundaries in Phase 4.
+- **Placeholder neighbourhoods**: entries like `ADALAR-STANDARTDIŞI ADRES`, meaning the address is unknown, are dropped.
+- **Identity**: `ARIZA NUMARASI` isn't unique (6,582 distinct values over 19,236 rows). It isn't used as an id; dedup stays on the hash.
+
+Lesson: I shouldn't have looked at one file of a dataset and assumed all files were the same.
+
 ## Known limitations
 
 - On CK, a planned outage in progress shows up both in the planned list and in the fault list (`Bildirimli`). I only take `Bildirimsiz` rows from the faults, so it isn't counted twice. But we don't learn from the fault side when a planned outage actually ended.
