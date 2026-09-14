@@ -106,5 +106,7 @@ Orijinal metin yukarıda değiştirilmeden duruyor. Bu bölüm, faz tanımına d
 | 2026-09-13 | Faz 2 | İBB su kesintisi dosyası (`iski/ibb-su-kesintileri-2023-2024.xlsx`) fixture olarak repoda kalıyor | karar | [01-kaynak-taramasi.md](01-kaynak-taramasi.md) |
 | 2026-09-13 | Faz 2, 8 | Collector metriklerine `source`'a ek olarak `feed` etiketi (arıza 30 dk / planlı 3 saat alarmını ayırmak için) | karar (2026-09-13 onaylandı) | [02-collector.md](02-collector.md) |
 | 2026-09-13 | Faz 3 | API'nin tarayıcıdan kullanılabilecek arayüzü olsun: Swagger UI (REST) ve canlı olayları gösteren küçük bir SSE sayfası. Harita arayüzü Faz 4'te kalıyor | karar (kullanıcı isteği) | [03-api.md](03-api.md) |
+| 2026-09-14 | Faz 4 | İlçe sınırları OCHA HDX COD-AB'den (HGK verisi, CC BY-IGO), GeoJSON yerine sadeleştirilmiş TopoJSON olarak. İl ve ilçe adlarının Türkçe yazımı Wikidata'dan (CC0) | karar | [04-frontend.md](04-frontend.md) |
+| 2026-09-14 | Faz 4, 5 | CHANGELOG.md (ve CHANGELOG.en.md) "Yenilikler" penceresi için Faz 5 yerine Faz 4'te başladı. Frontend imajının build context'i repo kökü oldu | karar | [04-frontend.md](04-frontend.md) |
 
 Bekleyen onaylar netleşince bu tabloya yeni satır eklenir. Orijinal tanım değiştirilmez.

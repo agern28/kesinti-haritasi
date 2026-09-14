@@ -106,5 +106,7 @@ The original definition above stays unchanged. This section shows the decisions 
 | 2026-09-13 | Phase 2 | The İBB water outage file (`iski/ibb-su-kesintileri-2023-2024.xlsx`) stays in the repo as a fixture | decided | [01-source-survey.md](01-source-survey.md) |
 | 2026-09-13 | Phase 2, 8 | A `feed` label on the collector metrics next to `source` (to separate the 30 min fault / 3 h planned alerts) | decided (approved 2026-09-13) | [02-collector.md](02-collector.md) |
 | 2026-09-13 | Phase 3 | The API gets a browser UI: Swagger UI (REST) and a small SSE page showing live events. The map UI stays in Phase 4 | decided (user request) | [03-api.md](03-api.md) |
+| 2026-09-14 | Phase 4 | District boundaries from OCHA HDX COD-AB (HGK data, CC BY-IGO), as simplified TopoJSON instead of GeoJSON. Turkish spelling of province and district names from Wikidata (CC0) | decided | [04-frontend.md](04-frontend.md) |
+| 2026-09-14 | Phase 4, 5 | CHANGELOG.md (and CHANGELOG.en.md) started in Phase 4 instead of Phase 5, for the "What's new" window. The build context of the frontend image is now the repo root | decided | [04-frontend.md](04-frontend.md) |
 
 When a pending approval is settled, a new row is added to this table. The original definition is never changed.

@@ -65,7 +65,13 @@ cd services/api && mvn verify
 
 # Frontend (expects the api on localhost:8080)
 cd frontend && npm install && npm run dev
+cd frontend && npm test
+
+# Regenerate the district boundaries (needs python3 and npx, writes public/geo/ilceler.topo.json)
+cd frontend && python3 scripts/ilceler.py
 ```
+
+District boundaries come from OCHA HDX COD-AB (data from the General Command of Mapping, CC BY-IGO). Details: [docs/en/04-frontend.md](docs/en/04-frontend.md).
 
 ## Data sources
 

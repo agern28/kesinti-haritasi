@@ -65,7 +65,13 @@ cd services/api && mvn verify
 
 # Frontend (api'yi localhost:8080'de bekler)
 cd frontend && npm install && npm run dev
+cd frontend && npm test
+
+# İlçe sınırlarını yeniden üretmek (python3 ve npx gerekiyor, sonuç public/geo/ilceler.topo.json)
+cd frontend && python3 scripts/ilceler.py
 ```
+
+İlçe sınırları OCHA HDX COD-AB'den (Harita Genel Komutanlığı verisi, CC BY-IGO). Ayrıntı: [docs/tr/04-frontend.md](docs/tr/04-frontend.md).
 
 ## Veri kaynakları
 
