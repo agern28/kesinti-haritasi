@@ -51,16 +51,18 @@ Done when: Testcontainers (Postgres + Redis) tests prove that a stream event lan
 
 Status: done (2026-09-14). Notes: [03-api.md](03-api.md). 24 api tests and 76 collector tests green. The collector -> api -> SSE path was checked in compose against live sources through nginx: 19,022 events processed, lag 0, a new event reached the browser in about 230 ms. After the İBB data cleanup there are no fake active records from İSKİ.
 
-## [ ] Phase 4 - Frontend
-- [ ] React + Vite + Leaflet, openly licensed province/district GeoJSON (license in docs)
-- [ ] District colouring, type filter, list on district click
-- [ ] Live updates over SSE with a highlight animation
-- [ ] Data freshness indicator, last scan per source, delay warning
-- [ ] Connection status icon
-- [ ] Version/environment label, "What's new" dialog
-- [ ] Mobile layout
+## [x] Phase 4 - Frontend
+- [x] React + Vite + Leaflet, openly licensed province/district GeoJSON (license in docs)
+- [x] District colouring, type filter, list on district click
+- [x] Live updates over SSE with a highlight animation
+- [x] Data freshness indicator, last scan per source, delay warning
+- [x] Connection status icon
+- [x] Version/environment label, "What's new" dialog
+- [x] Mobile layout
 
 Done when: `npm run build` and component tests are green; in compose a new outage is highlighted on the map without a reload; stopping the API shows "reconnecting"; usable at mobile width.
+
+Status: done (2026-09-14). Notes: [04-frontend.md](04-frontend.md). 34 frontend tests and the build are green. Checked in compose against live sources with headless Chromium: a new outage was highlighted on the map within half a second without a reload, stopping the api showed "Yeniden bağlanıyor" (reconnecting), no horizontal scroll at 390 px. District boundaries from OCHA HDX COD-AB (HGK data, CC BY-IGO), as TopoJSON. This phase also fixed the KCETAŞ province bug in the collector (Gemerek is in Sivas); 78 collector tests green. CHANGELOG.md started in this phase for the What's new window.
 
 ## [ ] Phase 5 - Containers and CI
 - [ ] Multi-stage Dockerfiles, non-root, small base images, nginx for the frontend

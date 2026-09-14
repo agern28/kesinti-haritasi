@@ -51,16 +51,18 @@ Bitti sayılma koşulu: Testcontainers (Postgres + Redis) ile stream'den gelen o
 
 Durum: tamamlandı (2026-09-14). Not: [tr/03-api.md](tr/03-api.md). api'de 24, collector'da 76 test yeşil. Compose'da canlı kaynaklarla collector -> api -> SSE hattı nginx üzerinden doğrulandı: 19.022 olay işlendi, lag 0, yeni olay tarayıcıya yaklaşık 230 ms'de ulaştı. İBB veri temizliğinden sonra İSKİ'den sahte aktif kayıt kalmadı.
 
-## [ ] Faz 4 - Frontend
-- [ ] React + Vite + Leaflet, açık lisanslı il/ilçe GeoJSON (lisansı docs'ta)
-- [ ] İlçe renklendirme, tür filtresi, ilçeye tıklayınca liste
-- [ ] SSE ile canlı güncelleme ve vurgu animasyonu
-- [ ] Veri tazeliği göstergesi, kaynak bazında son tarama, gecikme uyarısı
-- [ ] Bağlantı durumu ikonu
-- [ ] Sürüm/ortam etiketi, "Yenilikler" penceresi
-- [ ] Mobil uyum
+## [x] Faz 4 - Frontend
+- [x] React + Vite + Leaflet, açık lisanslı il/ilçe GeoJSON (lisansı docs'ta)
+- [x] İlçe renklendirme, tür filtresi, ilçeye tıklayınca liste
+- [x] SSE ile canlı güncelleme ve vurgu animasyonu
+- [x] Veri tazeliği göstergesi, kaynak bazında son tarama, gecikme uyarısı
+- [x] Bağlantı durumu ikonu
+- [x] Sürüm/ortam etiketi, "Yenilikler" penceresi
+- [x] Mobil uyum
 
 Bitti sayılma koşulu: `npm run build` ve bileşen testleri yeşil; compose ile açılan sayfada yeni kesinti sayfa yenilenmeden haritada vurgulanıyor; API kapatılınca "yeniden bağlanıyor" görünüyor; mobil genişlikte kullanılabilir.
+
+Durum: tamamlandı (2026-09-14). Not: [tr/04-frontend.md](tr/04-frontend.md). 34 frontend testi ve build yeşil. Compose'da canlı kaynaklarla, headless Chromium ile denendi: yeni kesinti sayfa yenilenmeden yarım saniyede haritada vurgulandı, api kapatılınca "Yeniden bağlanıyor" göründü, 390 px genişlikte yatay kaydırma yok. İlçe sınırları OCHA HDX COD-AB (HGK verisi, CC BY-IGO), TopoJSON olarak. Bu fazda collector'da KCETAŞ'ın il hatası da düzeltildi (Gemerek Sivas'ta), collector'da 78 test yeşil. CHANGELOG.md Yenilikler penceresi için bu fazda başladı.
 
 ## [ ] Faz 5 - Container ve CI
 - [ ] Çok aşamalı Dockerfile'lar, non-root, küçük base image, frontend için nginx
