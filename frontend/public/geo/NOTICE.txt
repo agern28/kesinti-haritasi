@@ -1,0 +1,13 @@
+ilceler.topo.json - İlçe sınırları / District boundaries
+
+Kaynak / Source: OCHA HDX, "Türkiye - Subnational Administrative Boundaries" (COD-AB)
+Veri / Data: Harita Genel Komutanlığı (General Command of Mapping)
+https://data.humdata.org/dataset/cod-ab-tur
+Lisans / License: Creative Commons Attribution for Intergovernmental Organisations (CC BY-IGO)
+
+Değişiklikler: geometri mapshaper ile sadeleştirildi (%6) ve TopoJSON'a çevrildi. İlçe ve il adlarının
+Türkçe yazımı Wikidata'dan (CC0) alındı.
+Changes: geometry simplified with mapshaper (6%) and converted to TopoJSON. Turkish spelling of district
+and province names taken from Wikidata (CC0).
+
+Üretim / Build: frontend/scripts/ilceler.py
