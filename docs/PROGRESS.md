@@ -37,17 +37,19 @@ Bitti sayılma koşulu: her collector için fixture'dan parse testi, normalizasy
 Durum: tamamlandı (2026-09-13). Not: [tr/02-collector.md](tr/02-collector.md). 73 test yeşil. Compose'da canlı kaynaklarla iki tur: ilk turda 19.085 olay (18.380'i İSKİ geçmiş verisi), ikinci turda değişmeyen feed'ler stream'e hiçbir şey yazmadı.
 Onaylandı (2026-09-13): metriklerde `source`'a ek olarak `feed` etiketi (Faz 8'de arıza 30 dk / planlı 3 saat alarmını ayırmak için).
 
-## [ ] Faz 3 - API
-- [ ] Consumer group ile stream tüketimi, `dedup_key` ile upsert (`external_id` varsa `source:external_id`, yoksa hash), Flyway migration'ları
-- [ ] `GET /api/outages`, `GET /api/outages/{id}`, `GET /api/map/summary` (Redis cache), `GET /api/sources`, `GET /api/stream` (SSE)
-- [ ] `outage.created` / `outage.updated` / `outage.ended` olayları, ilçe özeti cache'te güncelleniyor
-- [ ] Redis Pub/Sub ile pod'lar arası SSE dağıtımı
-- [ ] Last-Event-ID ve heartbeat
-- [ ] Ayrı liveness/readiness, `/actuator/prometheus`
-- [ ] Testcontainers entegrasyon testleri
-- [ ] Tarayıcıdan kullanılabilen arayüz: Swagger UI ve canlı SSE olay sayfası (kullanıcı isteği)
+## [x] Faz 3 - API
+- [x] Consumer group ile stream tüketimi, `dedup_key` ile upsert (`external_id` varsa `source:external_id`, yoksa hash), Flyway migration'ları
+- [x] `GET /api/outages`, `GET /api/outages/{id}`, `GET /api/map/summary` (Redis cache), `GET /api/sources`, `GET /api/stream` (SSE)
+- [x] `outage.created` / `outage.updated` / `outage.ended` olayları, ilçe özeti cache'te güncelleniyor
+- [x] Redis Pub/Sub ile pod'lar arası SSE dağıtımı
+- [x] Last-Event-ID ve heartbeat
+- [x] Ayrı liveness/readiness, `/actuator/prometheus`
+- [x] Testcontainers entegrasyon testleri
+- [x] Tarayıcıdan kullanılabilen arayüz: Swagger UI ve canlı SSE olay sayfası (kullanıcı isteği)
 
 Bitti sayılma koşulu: Testcontainers (Postgres + Redis) ile stream'den gelen olayın veritabanına yazıldığı, tekrar gelen olayın çift kayıt üretmediği, SSE istemcisinin olayı aldığı ve iki API instance'ı arasında Pub/Sub dağıtımının çalıştığı testler yeşil; compose ile collector -> api -> SSE hattı elle doğrulanmış.
+
+Durum: tamamlandı (2026-09-14). Not: [tr/03-api.md](tr/03-api.md). api'de 24, collector'da 76 test yeşil. Compose'da canlı kaynaklarla collector -> api -> SSE hattı nginx üzerinden doğrulandı: 19.022 olay işlendi, lag 0, yeni olay tarayıcıya yaklaşık 230 ms'de ulaştı. İBB veri temizliğinden sonra İSKİ'den sahte aktif kayıt kalmadı.
 
 ## [ ] Faz 4 - Frontend
 - [ ] React + Vite + Leaflet, açık lisanslı il/ilçe GeoJSON (lisansı docs'ta)

@@ -37,17 +37,19 @@ Done when: fixture parse tests, normalization tests, diff (NEW/UPDATED/GONE) tes
 Status: done (2026-09-13). Notes: [02-collector.md](02-collector.md). 73 tests green. Two rounds against live sources in compose: 19,085 events in the first round (18,380 of them İSKİ historical data); in the second round unchanged feeds wrote nothing to the stream.
 Approved (2026-09-13): a `feed` label on the metrics next to `source` (to separate the 30 min fault / 3 h planned alerts in Phase 8).
 
-## [ ] Phase 3 - API
-- [ ] Stream consumption with a consumer group, upsert by `dedup_key` (`source:external_id` when there is an `external_id`, hash otherwise), Flyway migrations
-- [ ] `GET /api/outages`, `GET /api/outages/{id}`, `GET /api/map/summary` (Redis cache), `GET /api/sources`, `GET /api/stream` (SSE)
-- [ ] `outage.created` / `outage.updated` / `outage.ended` events, district summary refreshed in cache
-- [ ] SSE fan-out across pods through Redis Pub/Sub
-- [ ] Last-Event-ID and heartbeat
-- [ ] Separate liveness/readiness, `/actuator/prometheus`
-- [ ] Testcontainers integration tests
-- [ ] A browser UI for the API: Swagger UI and a live SSE event page (user request)
+## [x] Phase 3 - API
+- [x] Stream consumption with a consumer group, upsert by `dedup_key` (`source:external_id` when there is an `external_id`, hash otherwise), Flyway migrations
+- [x] `GET /api/outages`, `GET /api/outages/{id}`, `GET /api/map/summary` (Redis cache), `GET /api/sources`, `GET /api/stream` (SSE)
+- [x] `outage.created` / `outage.updated` / `outage.ended` events, district summary refreshed in cache
+- [x] SSE fan-out across pods through Redis Pub/Sub
+- [x] Last-Event-ID and heartbeat
+- [x] Separate liveness/readiness, `/actuator/prometheus`
+- [x] Testcontainers integration tests
+- [x] A browser UI for the API: Swagger UI and a live SSE event page (user request)
 
 Done when: Testcontainers (Postgres + Redis) tests prove that a stream event lands in the database, a repeated event does not create a duplicate, an SSE client receives the event and Pub/Sub fan-out works between two API instances; the collector -> api -> SSE path is checked by hand in compose.
+
+Status: done (2026-09-14). Notes: [03-api.md](03-api.md). 24 api tests and 76 collector tests green. The collector -> api -> SSE path was checked in compose against live sources through nginx: 19,022 events processed, lag 0, a new event reached the browser in about 230 ms. After the İBB data cleanup there are no fake active records from İSKİ.
 
 ## [ ] Phase 4 - Frontend
 - [ ] React + Vite + Leaflet, openly licensed province/district GeoJSON (license in docs)
