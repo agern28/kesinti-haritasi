@@ -2,28 +2,555 @@
   font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
   color: #1f2933;
   background: #f5f7fa;
+  --line: #d9e2ec;
+  --muted: #616e7c;
+  --ok: #16a34a;
+  --warn: #d97706;
+  --bad: #dc2626;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  height: 100%;
 }
 
 body {
   margin: 0;
 }
 
-.app {
-  min-height: 100vh;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 0.5rem;
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
 }
 
-.badge {
-  position: fixed;
-  right: 0.75rem;
+.muted {
+  color: var(--muted);
+}
+
+.small {
+  font-size: 0.8rem;
+}
+
+.error {
+  color: var(--bad);
+}
+
+.app {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Ust cubuk */
+.topbar {
+  position: relative;
+  z-index: 1100;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem 1rem;
+  padding: 0.5rem 0.75rem;
+  background: #fff;
+  border-bottom: 1px solid var(--line);
+}
+
+.topbar h1 {
+  margin: 0;
+  font-size: 1.05rem;
+  white-space: nowrap;
+}
+
+.topbar-right {
+  margin-left: auto;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem 0.75rem;
+}
+
+.type-filter {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.3rem 0.65rem;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: #fff;
+  font-size: 0.85rem;
+  cursor: pointer;
+  user-select: none;
+}
+
+.chip input {
+  margin: 0;
+}
+
+.chip.disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.swatch {
+  display: inline-block;
+  width: 0.8rem;
+  height: 0.8rem;
+  border-radius: 2px;
+}
+
+/* Baglanti durumu */
+.conn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.85rem;
+  white-space: nowrap;
+}
+
+.conn-dot {
+  width: 0.6rem;
+  height: 0.6rem;
+  border-radius: 50%;
+  background: var(--muted);
+}
+
+.conn-open .conn-dot {
+  background: var(--ok);
+}
+
+.conn-reconnecting {
+  color: var(--warn);
+}
+
+.conn-reconnecting .conn-dot {
+  background: var(--warn);
+  animation: pulse 1s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  50% {
+    opacity: 0.3;
+  }
+}
+
+/* Veri tazeligi */
+.freshness {
+  position: relative;
+}
+
+.freshness-btn {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.25rem 0.5rem;
+  border: 1px solid transparent;
+  border-radius: 4px;
+  background: none;
+  color: inherit;
+  font: inherit;
+  font-size: 0.85rem;
+  cursor: pointer;
+}
+
+.freshness-btn:hover,
+.freshness-btn[aria-expanded='true'] {
+  border-color: var(--line);
+}
+
+.stale-count {
+  padding: 0.05rem 0.4rem;
+  border-radius: 4px;
+  background: #fef3c7;
+  color: #92400e;
+  font-size: 0.75rem;
+}
+
+.sources-pop {
+  position: absolute;
+  right: 0;
+  top: calc(100% + 0.4rem);
+  width: 22rem;
+  max-width: calc(100vw - 1.5rem);
+  padding: 0.5rem 0.75rem;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: #fff;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.12);
+}
+
+.sources-pop ul {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.sources-pop li {
+  padding: 0.4rem 0;
+  border-bottom: 1px solid var(--line);
+  font-size: 0.85rem;
+}
+
+.sources-pop li.stale .src-time {
+  color: #92400e;
+}
+
+.src-name small,
+.src-time {
+  color: var(--muted);
+}
+
+/* Harita ve panel */
+.content {
+  position: relative;
+  flex: 1;
+  min-height: 0;
+  display: flex;
+}
+
+.map-wrap {
+  position: relative;
+  flex: 1;
+  min-width: 0;
+}
+
+.map {
+  position: absolute;
+  inset: 0;
+  background: #e8eef3;
+}
+
+.leaflet-interactive.flash {
+  animation: flash 0.8s ease-in-out 3;
+}
+
+@keyframes flash {
+  50% {
+    stroke: #e11d48;
+    stroke-width: 6px;
+    fill-opacity: 0.95;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .leaflet-interactive.flash {
+    animation: flash 2.4s ease-in-out 1;
+  }
+
+  .conn-reconnecting .conn-dot {
+    animation: none;
+  }
+}
+
+.map-error {
+  position: absolute;
+  top: 0.75rem;
+  left: 50%;
+  z-index: 800;
+  transform: translateX(-50%);
+  padding: 0.4rem 0.75rem;
+  border-radius: 4px;
+  background: #fee2e2;
+  color: #991b1b;
+  font-size: 0.85rem;
+}
+
+.legend {
+  position: absolute;
+  left: 0.75rem;
+  bottom: 2.75rem;
+  z-index: 800;
+  max-width: calc(100% - 1.5rem);
+  padding: 0.4rem 0.6rem;
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.94);
+  box-shadow: 0 1px 6px rgba(0, 0, 0, 0.15);
+  font-size: 0.75rem;
+}
+
+.legend summary {
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.legend table {
+  margin-top: 0.3rem;
+  border-collapse: collapse;
+}
+
+.legend th,
+.legend td {
+  padding: 0.1rem 0.25rem;
+  font-weight: normal;
+  text-align: center;
+}
+
+.legend th[scope='row'] {
+  text-align: left;
+}
+
+.legend .swatch {
+  width: 1.2rem;
+}
+
+.legend p {
+  margin: 0.3rem 0 0;
+}
+
+.unmapped {
+  color: #92400e;
+  cursor: help;
+}
+
+.version-badge {
+  position: absolute;
+  left: 0.75rem;
   bottom: 0.75rem;
+  z-index: 800;
   padding: 0.2rem 0.5rem;
+  border: 0;
   border-radius: 4px;
   background: #1f2933;
   color: #fff;
+  font: inherit;
   font-size: 0.75rem;
+  cursor: pointer;
+}
+
+.version-badge.env-int {
+  background: #b45309;
+}
+
+.version-badge.env-prod {
+  background: #166534;
+}
+
+.panel {
+  display: flex;
+  flex-direction: column;
+  width: 380px;
+  min-height: 0;
+  border-left: 1px solid var(--line);
+  background: #fff;
+}
+
+.panel-head,
+.modal-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.5rem;
+  padding: 0.75rem;
+  border-bottom: 1px solid var(--line);
+}
+
+.panel-head h2,
+.modal-head h2 {
+  margin: 0;
+  font-size: 1.1rem;
+}
+
+.panel-head p {
+  margin: 0.1rem 0 0;
+}
+
+.icon-btn {
+  padding: 0 0.4rem;
+  border: 0;
+  background: none;
+  color: var(--muted);
+  font-size: 1.5rem;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.panel-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 0 0.75rem 0.75rem;
+}
+
+.panel-body h3 {
+  margin: 1rem 0 0.4rem;
+  font-size: 0.95rem;
+}
+
+.count {
+  padding: 0 0.4rem;
+  border-radius: 999px;
+  background: #e4e7eb;
+  font-size: 0.75rem;
+  font-weight: normal;
+}
+
+.outages {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.outage {
+  padding: 0.6rem 0;
+  border-bottom: 1px solid var(--line);
+  font-size: 0.85rem;
+}
+
+.outage p {
+  margin: 0.3rem 0 0;
+}
+
+.outage-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.outage-time {
+  margin-left: auto;
+  font-variant-numeric: tabular-nums;
+}
+
+.tag {
+  padding: 0.05rem 0.4rem;
+  border-radius: 4px;
+  background: #e4e7eb;
+  font-size: 0.75rem;
+}
+
+.tag-ELECTRICITY {
+  background: #fde68a;
+}
+
+.tag-WATER {
+  background: #bae6fd;
+}
+
+.tag-GAS {
+  background: #fecaca;
+}
+
+.reason,
+.source {
+  color: var(--muted);
+}
+
+.link-btn {
+  padding: 0;
+  border: 0;
+  background: none;
+  color: #2563eb;
+  font: inherit;
+  cursor: pointer;
+}
+
+/* Yenilikler */
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 2000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+  background: rgba(15, 23, 42, 0.45);
+}
+
+.modal {
+  display: flex;
+  flex-direction: column;
+  width: 32rem;
+  max-width: 100%;
+  max-height: 85vh;
+  border-radius: 8px;
+  background: #fff;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.25);
+}
+
+.modal-body {
+  overflow-y: auto;
+  padding: 0 1rem 1rem;
+  font-size: 0.9rem;
+}
+
+.modal-body h3 {
+  margin: 1rem 0 0.25rem;
+}
+
+.modal-body h4 {
+  margin: 0.5rem 0 0.25rem;
+  font-size: 0.85rem;
+  color: var(--muted);
+}
+
+.modal-body ul {
+  margin: 0;
+  padding-left: 1.2rem;
+}
+
+/* Dar ekran: panel alttan acilan bir sayfa oluyor */
+@media (max-width: 720px) {
+  .topbar h1 {
+    font-size: 0.95rem;
+  }
+
+  .topbar-right {
+    width: 100%;
+    margin-left: 0;
+    justify-content: space-between;
+  }
+
+  .sources-pop {
+    right: auto;
+    left: 0;
+  }
+
+  .panel {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 1000;
+    width: 100%;
+    max-height: 60%;
+    border-left: 0;
+    border-top: 1px solid var(--line);
+    border-radius: 12px 12px 0 0;
+    box-shadow: 0 -4px 16px rgba(0, 0, 0, 0.15);
+  }
+
+  .with-panel .legend,
+  .with-panel .version-badge {
+    display: none;
+  }
+
+  /* Atif dar ekranda iki satira iniyor; surum etiketi ve lejant onun ustunde */
+  .leaflet-control-attribution {
+    font-size: 10px;
+  }
+
+  .version-badge {
+    bottom: 2.4rem;
+  }
+
+  .legend {
+    bottom: 4.4rem;
+  }
 }

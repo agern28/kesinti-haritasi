@@ -1,0 +1,7 @@
+# Build context repo koku (compose: context .). Sadece frontend/ ve CHANGELOG.md gonderiliyor.
+*
+!CHANGELOG.md
+!frontend/**
+frontend/node_modules
+frontend/dist
+frontend/coverage

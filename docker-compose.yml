@@ -79,7 +79,10 @@ services:
 
   frontend:
     build:
-      context: ./frontend
+      # Kok dizin: "Yenilikler" penceresi CHANGELOG.md'yi okuyor. Gonderilen dosyalar
+      # frontend/Dockerfile.dockerignore'da (sadece frontend/ ve CHANGELOG.md).
+      context: .
+      dockerfile: frontend/Dockerfile
       args:
         APP_VERSION: 0.1.0
         APP_ENV: LOCAL
