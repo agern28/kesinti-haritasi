@@ -26,11 +26,13 @@ class HttpResultTest {
     void herAlanKarsilastirmayaGiriyor() {
         byte[] body = "a".getBytes(StandardCharsets.UTF_8);
         HttpResult base = new HttpResult(200, URL, "text/html", body);
+        // Baska turde bir nesne: Object olarak veriliyor, turleri uyumsuz bir assertion olmasin
+        Object otherType = "a";
         assertThat(base)
                 .isNotEqualTo(new HttpResult(200, URI.create("https://example.org/baska"), "text/html", body))
                 .isNotEqualTo(new HttpResult(200, URL, "application/json", body))
                 .isNotEqualTo(new HttpResult(200, URL, "text/html", null))
-                .isNotEqualTo("a")
+                .isNotEqualTo(otherType)
                 .isNotEqualTo(null);
         assertThat(new HttpResult(200, URL, null, null)).isEqualTo(new HttpResult(200, URL, null, null));
     }
