@@ -1,5 +1,9 @@
 # Kesinti Haritası (Outage Map)
 
+[![collector](https://github.com/agern28/kesinti-haritasi/actions/workflows/collector.yml/badge.svg)](https://github.com/agern28/kesinti-haritasi/actions/workflows/collector.yml)
+[![api](https://github.com/agern28/kesinti-haritasi/actions/workflows/api.yml/badge.svg)](https://github.com/agern28/kesinti-haritasi/actions/workflows/api.yml)
+[![frontend](https://github.com/agern28/kesinti-haritasi/actions/workflows/frontend.yml/badge.svg)](https://github.com/agern28/kesinti-haritasi/actions/workflows/frontend.yml)
+
 An app that collects electricity, water and natural gas outages in Turkey (starting with Istanbul) from official sources and shows them on a single map. The map is live: when a new outage lands in the database it shows up without a page reload.
 
 This is also a DevOps internship project. How the app is run matters as much as the app itself: CI, containers, Hetzner via Terraform, k3s, Helm, GitOps with Argo CD, monitoring with Prometheus/Grafana.

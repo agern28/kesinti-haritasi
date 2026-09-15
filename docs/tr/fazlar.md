@@ -108,5 +108,8 @@ Orijinal metin yukarıda değiştirilmeden duruyor. Bu bölüm, faz tanımına d
 | 2026-09-13 | Faz 3 | API'nin tarayıcıdan kullanılabilecek arayüzü olsun: Swagger UI (REST) ve canlı olayları gösteren küçük bir SSE sayfası. Harita arayüzü Faz 4'te kalıyor | karar (kullanıcı isteği) | [03-api.md](03-api.md) |
 | 2026-09-14 | Faz 4 | İlçe sınırları OCHA HDX COD-AB'den (HGK verisi, CC BY-IGO), GeoJSON yerine sadeleştirilmiş TopoJSON olarak. İl ve ilçe adlarının Türkçe yazımı Wikidata'dan (CC0) | karar | [04-frontend.md](04-frontend.md) |
 | 2026-09-14 | Faz 4, 5 | CHANGELOG.md (ve CHANGELOG.en.md) "Yenilikler" penceresi için Faz 5 yerine Faz 4'te başladı. Frontend imajının build context'i repo kökü oldu | karar | [04-frontend.md](04-frontend.md) |
+| 2026-09-15 | Faz 5 | Trivy sadece düzeltmesi yayınlanmış CRITICAL açıklarda kırıyor (`ignore-unfixed`) | karar | [05-container-ve-ci.md](05-container-ve-ci.md) |
+| 2026-09-15 | Faz 5, 7 | Ortam etiketi (LOCAL/INT/PROD) build argümanı değil, çalışma anında `APP_ENV` (nginx `/env.json`): aynı imaj INT'ten PROD'a taşınabilsin diye | karar | [05-container-ve-ci.md](05-container-ve-ci.md) |
+| 2026-09-15 | Faz 5 | İmaj her çalışmada derlenip taranıyor ama GHCR'a sadece tag'de gidiyor (`X.Y.Z` ve `latest`). `SONAR_TOKEN` yoksa Sonar adımı uyarıyla atlanıyor | karar | [05-container-ve-ci.md](05-container-ve-ci.md) |
 
 Bekleyen onaylar netleşince bu tabloya yeni satır eklenir. Orijinal tanım değiştirilmez.

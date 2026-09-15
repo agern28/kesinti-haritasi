@@ -108,5 +108,8 @@ The original definition above stays unchanged. This section shows the decisions 
 | 2026-09-13 | Phase 3 | The API gets a browser UI: Swagger UI (REST) and a small SSE page showing live events. The map UI stays in Phase 4 | decided (user request) | [03-api.md](03-api.md) |
 | 2026-09-14 | Phase 4 | District boundaries from OCHA HDX COD-AB (HGK data, CC BY-IGO), as simplified TopoJSON instead of GeoJSON. Turkish spelling of province and district names from Wikidata (CC0) | decided | [04-frontend.md](04-frontend.md) |
 | 2026-09-14 | Phase 4, 5 | CHANGELOG.md (and CHANGELOG.en.md) started in Phase 4 instead of Phase 5, for the "What's new" window. The build context of the frontend image is now the repo root | decided | [04-frontend.md](04-frontend.md) |
+| 2026-09-15 | Phase 5 | Trivy only fails on CRITICAL vulnerabilities that have a published fix (`ignore-unfixed`) | decided | [05-container-and-ci.md](05-container-and-ci.md) |
+| 2026-09-15 | Phase 5, 7 | The environment label (LOCAL/INT/PROD) is not a build argument but `APP_ENV` at runtime (nginx `/env.json`), so the same image can move from INT to PROD | decided | [05-container-and-ci.md](05-container-and-ci.md) |
+| 2026-09-15 | Phase 5 | The image is built and scanned on every run but only pushed to GHCR on a tag (`X.Y.Z` and `latest`). Without `SONAR_TOKEN` the Sonar step is skipped with a warning | decided | [05-container-and-ci.md](05-container-and-ci.md) |
 
 When a pending approval is settled, a new row is added to this table. The original definition is never changed.
