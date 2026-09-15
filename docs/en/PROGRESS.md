@@ -65,13 +65,15 @@ Done when: `npm run build` and component tests are green; in compose a new outag
 Status: done (2026-09-14). Notes: [04-frontend.md](04-frontend.md). 34 frontend tests and the build are green. Checked in compose against live sources with headless Chromium: a new outage was highlighted on the map within half a second without a reload, stopping the api showed "Yeniden bağlanıyor" (reconnecting), no horizontal scroll at 390 px. District boundaries from OCHA HDX COD-AB (HGK data, CC BY-IGO), as TopoJSON. This phase also fixed the KCETAŞ province bug in the collector (Gemerek is in Sivas); 78 collector tests green. CHANGELOG.md started in this phase for the What's new window.
 
 ## [ ] Phase 5 - Containers and CI
-- [ ] Multi-stage Dockerfiles, non-root, small base images, nginx for the frontend
-- [ ] One GitHub Actions workflow per service (paths filter, cache, JaCoCo threshold, SonarQube Cloud, Trivy, GHCR + Release on tag)
-- [ ] CHANGELOG.md
+- [x] Multi-stage Dockerfiles, non-root, small base images, nginx for the frontend
+- [x] One GitHub Actions workflow per service (paths filter, cache, JaCoCo threshold, SonarQube Cloud, Trivy, GHCR + Release on tag)
+- [x] CHANGELOG.md
 - [ ] YAPMAN GEREKEN (your part): SonarQube Cloud, SONAR_TOKEN, making GHCR packages public
-- [ ] Commands for the v1.0.0 tags
+- [x] Commands for the v1.0.0 tags
 
 Done when: all three workflows are green on main; the Trivy step fails on CRITICAL; a tag produces an image on GHCR and a Release (first tag is pushed by you).
+
+Status: in progress (2026-09-15). Notes: [05-container-and-ci.md](05-container-and-ci.md). Everything is green locally: `mvn verify` with the JaCoCo floor in both services (85%; measured 91% and 92%), frontend tests with the coverage floor, all three images, `actionlint`. On the first local scan Trivy failed on three CRITICAL vulnerabilities in Tomcat 11.0.24; clean after pinning 11.0.25. Left: pushing and the workflows going green on GitHub, the SonarQube Cloud setup and `SONAR_TOKEN`, the first tags and making the GHCR packages public.
 
 ## [ ] Phase 6 - Infrastructure
 - [ ] Terraform: Hetzner CX23, firewall (22 only from your IP, 80/443 open), SSH key, k3s via cloud-init; `terraform.tfvars.example`

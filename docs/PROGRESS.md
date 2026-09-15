@@ -65,13 +65,15 @@ Bitti sayılma koşulu: `npm run build` ve bileşen testleri yeşil; compose ile
 Durum: tamamlandı (2026-09-14). Not: [tr/04-frontend.md](tr/04-frontend.md). 34 frontend testi ve build yeşil. Compose'da canlı kaynaklarla, headless Chromium ile denendi: yeni kesinti sayfa yenilenmeden yarım saniyede haritada vurgulandı, api kapatılınca "Yeniden bağlanıyor" göründü, 390 px genişlikte yatay kaydırma yok. İlçe sınırları OCHA HDX COD-AB (HGK verisi, CC BY-IGO), TopoJSON olarak. Bu fazda collector'da KCETAŞ'ın il hatası da düzeltildi (Gemerek Sivas'ta), collector'da 78 test yeşil. CHANGELOG.md Yenilikler penceresi için bu fazda başladı.
 
 ## [ ] Faz 5 - Container ve CI
-- [ ] Çok aşamalı Dockerfile'lar, non-root, küçük base image, frontend için nginx
-- [ ] Servis başına GitHub Actions workflow'u (paths filtresi, cache, JaCoCo eşiği, SonarQube Cloud, Trivy, tag'de GHCR + Release)
-- [ ] CHANGELOG.md
+- [x] Çok aşamalı Dockerfile'lar, non-root, küçük base image, frontend için nginx
+- [x] Servis başına GitHub Actions workflow'u (paths filtresi, cache, JaCoCo eşiği, SonarQube Cloud, Trivy, tag'de GHCR + Release)
+- [x] CHANGELOG.md
 - [ ] YAPMAN GEREKEN: SonarQube Cloud, SONAR_TOKEN, GHCR paketlerini public yapma
-- [ ] v1.0.0 tag komutları
+- [x] v1.0.0 tag komutları
 
 Bitti sayılma koşulu: üç workflow da main üzerinde yeşil; Trivy CRITICAL'da kıran adım çalışıyor; tag atıldığında image GHCR'da ve Release oluşuyor (ilk tag kullanıcı tarafından atılır).
+
+Durum: devam ediyor (2026-09-15). Not: [tr/05-container-ve-ci.md](tr/05-container-ve-ci.md). Yerelde hepsi yeşil: iki serviste `mvn verify` ve JaCoCo alt sınırı (%85; ölçülen %91 ve %92), frontend testleri ve kapsam alt sınırı, üç imaj, `actionlint`. Trivy ilk yerel taramada Tomcat 11.0.24'teki üç CRITICAL açıkta kırdı, 11.0.25'e sabitlenince temiz. Kalan: push ve workflow'ların GitHub'da yeşil olması, SonarQube Cloud kurulumu ve `SONAR_TOKEN`, ilk tag'ler ve GHCR paketlerinin public yapılması.
 
 ## [ ] Faz 6 - Altyapı
 - [ ] Terraform: Hetzner CX23, firewall (22 sadece senin IP'n, 80/443 açık), SSH key, cloud-init ile k3s; `terraform.tfvars.example`
