@@ -71,7 +71,7 @@ Yeni imajları yerelde Trivy'den geçirince collector ve api'de Tomcat 11.0.24't
 - `actionlint` üç workflow'da temiz.
 - Workflow'larda kullanılan her input'u, action'ın sabitlenen SHA'daki `action.yml`'iyle karşılaştırdım; eksik yok.
 
-GitHub'da henüz çalışmadılar: push, SonarQube Cloud kurulumu ve ilk tag gerekiyor.
+GitHub'da (2026-09-15, `main`'e ilk push): collector, api ve frontend workflow'ları ilk koşuda yeşil. Test job'ları 20 sn ile 2 dk, imaj job'ları (derleme, Trivy, SBOM) 1-2,5 dk sürdü. `compose-smoke` ilk koşuda kırıldı (aşağıda), düzeltmeden sonra 14 kontrolün hepsi geçti. Sonar adımı `SONAR_TOKEN` olmadığı için uyarıyla atlandı. Push'tan sonra repoyu boş bir dizine klonlayıp README'deki adımlarla sıfırdan kurdum: üç servisin testleri ve smoke test orada da geçti. GHCR ve Release için ilk tag, Sonar için kurulum bekleniyor.
 
 ## Nerede takıldım
 

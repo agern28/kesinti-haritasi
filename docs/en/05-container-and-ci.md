@@ -71,7 +71,7 @@ When I ran the new images through Trivy locally, collector and api had three CRI
 - `actionlint` is clean on all three workflows.
 - I compared every input used in the workflows with the action's `action.yml` at the pinned SHA; nothing missing.
 
-They haven't run on GitHub yet: that needs a push, the SonarQube Cloud setup and the first tag.
+On GitHub (2026-09-15, first push to `main`): the collector, api and frontend workflows were green on their first run. The test jobs took 20 s to 2 min, the image jobs (build, Trivy, SBOM) 1-2.5 min. `compose-smoke` failed on its first run (below); after the fix all 14 checks passed. The Sonar step was skipped with a warning since there is no `SONAR_TOKEN`. After the push I cloned the repo into an empty directory and set it up from scratch following the README: the tests of all three services and the smoke test passed there too. GHCR and the Release wait for the first tag, Sonar for its setup.
 
 ## Where I got stuck
 
