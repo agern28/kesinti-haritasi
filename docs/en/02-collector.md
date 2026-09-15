@@ -161,6 +161,18 @@ Lesson: I shouldn't have looked at one file of a dataset and assumed all files w
 
 While matching source names to the map boundaries in Phase 4, KCETAŞ's Gemerek records turned up under Kayseri. Gemerek is in Sivas, and KCETAŞ supplies electricity there too. The province was hard-coded as `KAYSERİ` in the parser, and every record in the fixture was in Kayseri, so I hadn't noticed. The source writes the province at the end of the address (`... KÖPRÜBAŞI MAH. GEMEREK SİVAS`). The parser now reads it from there: the single word after the district name. If the address doesn't have it, Kayseri is assumed. Two tests were added, 78 tests green.
 
+## Found later: İZSU's fault table was never read (after Phase 4)
+
+When I started the app at night, the İZSU scan failed every 5 minutes with "İZSU kesinti tablosu bulunamadi" (table not found). Looking at the page turned up two problems:
+- **The page has two tables.** Planned maintenance (İlçe, Mahalleler, İş Adı, Kesinti Başlangıç, Kesinti Bitiş, Kısa Açıklama) and faults (İlçe, Mahalleler, Kesinti Süresi, Arıza Tipi, Açıklama). The parser read the first table whose headers matched, which was the maintenance table. It never read the fault table: the fixture had 10 faults, and the test only pinned the 1 maintenance record. On days without maintenance the first table is the fault table, but it has no "Kesinti Başlangıç" column, so every row was skipped. That explains "İZSU 0 records" in the earlier live runs.
+- **An empty section has no table.** When there are no records, a message like "Bakım bilgisi bulunmamaktadır." (no maintenance information) comes instead of a table. At night both sections were empty and there was no table on the page at all, which the parser took for a changed page structure.
+
+The fix: both tables are read. For faults, the duration text ("15.09.2026 saat 10:49 ile 12:30 arasında", i.e. between 10:49 and 12:30) is parsed; if the end has no date and is before the start, it counts as the next day. The reason field is "Arıza Tipi - Açıklama". Each section needs either a table or a "bulunmamaktadır" message; if neither is there, it still fails as before, so the faults don't silently go GONE. The live page from the morning of 2026-09-15 (no maintenance, 10 faults) was added as a second fixture.
+
+I haven't yet seen exactly what the page says when the fault section is empty. If that message doesn't contain "bulunmamaktadır", night scans will still fail; no wrong data comes out silently, it shows in the log.
+
+Lesson: don't assume one snapshot of a page tests everything in the fixture. The test should have pinned the number of records in the fixture.
+
 ## Known limitations
 
 - On CK, a planned outage in progress shows up both in the planned list and in the fault list (`Bildirimli`). I only take `Bildirimsiz` rows from the faults, so it isn't counted twice. But we don't learn from the fault side when a planned outage actually ended.

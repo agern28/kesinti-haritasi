@@ -161,6 +161,18 @@ Ders: bir veri setinin tek dosyasına bakıp bütün dosyaları aynı sanmamak g
 
 Faz 4'te kaynak adlarını harita sınırlarıyla eşleştirirken KCETAŞ'ın Gemerek kayıtları Kayseri'de çıktı. Gemerek Sivas'ta, KCETAŞ oraya da elektrik veriyor. Parser'da il sabit `KAYSERİ` idi, fixture'daki bütün kayıtlar da Kayseri'deydi, o yüzden fark etmemiştim. Kaynak ili adresin sonuna yazıyor (`... KÖPRÜBAŞI MAH. GEMEREK SİVAS`). Parser artık ili oradan okuyor: ilçe adından sonra gelen tek kelime. Adreste yoksa Kayseri kabul ediliyor. İki test eklendi, 78 test yeşil.
 
+## Sonradan bulunan: İZSU'nun arıza tablosu hiç okunmuyormuş (Faz 4'ten sonra)
+
+Uygulamayı gece açınca İZSU taraması her 5 dakikada "İZSU kesinti tablosu bulunamadı" diye düştü. Sayfaya baktım, iki sorun çıktı:
+- **Sayfada iki tablo var.** Planlı bakımlar (İlçe, Mahalleler, İş Adı, Kesinti Başlangıç, Kesinti Bitiş, Kısa Açıklama) ve arızalar (İlçe, Mahalleler, Kesinti Süresi, Arıza Tipi, Açıklama). Parser başlıkları uyan ilk tabloyu, yani bakım tablosunu okuyordu. Arıza tablosunu hiç okumamış: fixture'da 10 arıza vardı, test sadece 1 bakım kaydını sabitlemişti. Bakım olmayan günlerde ilk tablo arıza tablosu oluyor ama "Kesinti Başlangıç" sütunu olmadığı için bütün satırlar atlanıyordu. Önceki canlı denemelerdeki "İZSU 0 kayıt" bundan.
+- **Boş bölümde tablo yok.** Kayıt yoksa tablo yerine "Bakım bilgisi bulunmamaktadır." gibi bir mesaj geliyor. Gece iki bölüm de boştu, sayfada hiç tablo yoktu, parser bunu "sayfa yapısı değişti" sandı.
+
+Düzeltme: iki tablo da okunuyor. Arızalarda süre metni ("15.09.2026 saat 10:49 ile 12:30 arasında") ayrıştırılıyor; bitiş tarihsiz ve başlangıçtan önceyse ertesi güne sayılıyor. Neden alanı "Arıza Tipi - Açıklama". Her bölümde ya tablo ya da "bulunmamaktadır" mesajı olmalı; ikisi de yoksa eskisi gibi hata veriliyor, arızalar sessizce GONE olmasın diye. 2026-09-15 sabahının canlı sayfası (bakım yok, 10 arıza) ikinci fixture olarak eklendi.
+
+Arıza bölümü boşken sayfanın tam olarak ne yazdığını henüz görmedim. Mesajda "bulunmamaktadır" geçmezse gece taramaları yine hata verir; sessizce yanlış veri çıkmaz, logda görünür.
+
+Ders: bir sayfanın tek bir anına bakıp fixture'daki her şeyin test edildiğini sanmamak. Test, fixture'daki kayıt sayısını sabitlemeliydi.
+
 ## Bilinen sınırlar
 
 - CK'da devam eden planlı kesinti hem planlı listede hem arıza listesinde (`Bildirimli`) görünüyor. Arızalardan sadece `Bildirimsiz` satırları alıyorum, iki kez sayılmıyor. Ama planlı kesintinin gerçekte ne zaman bittiğini arıza tarafından öğrenmiyoruz.
