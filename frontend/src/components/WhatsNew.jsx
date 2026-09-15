@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { inlineParts, parseChangelog } from '../lib/changelog.js'
 
 export const SEEN_KEY = 'kh.whatsnew.seen'
@@ -14,10 +14,12 @@ function readSeen() {
 /**
  * Kosedeki surum/ortam etiketi ve "Yenilikler" penceresi. Pencere, bu tarayicida gorulen son surum
  * simdikinden farkliysa kendiliginden aciliyor (yeni surum cikinca bir kez).
+ * Pencere acilinca odak "Kapat" dugmesine gidiyor; Esc ve arka plana tiklama pencereyi kapatiyor.
  */
 export default function WhatsNew({ text, version, environment }) {
   const releases = useMemo(() => parseChangelog(text), [text])
   const [open, setOpen] = useState(false)
+  const closeButton = useRef(null)
 
   useEffect(() => {
     if (releases.length > 0 && readSeen() !== version) {
@@ -26,13 +28,10 @@ export default function WhatsNew({ text, version, environment }) {
   }, [releases.length, version])
 
   useEffect(() => {
-    if (!open) {
-      return undefined
+    if (open) {
+      closeButton.current?.focus()
     }
-    const onKey = (e) => e.key === 'Escape' && close()
-    window.addEventListener('keydown', onKey)
-    return () => window.removeEventListener('keydown', onKey)
-  })
+  }, [open])
 
   function close() {
     try {
@@ -49,11 +48,16 @@ export default function WhatsNew({ text, version, environment }) {
         v{version} · {environment}
       </button>
       {open && (
-        <div className="modal-backdrop" onClick={close}>
-          <div className="modal" role="dialog" aria-modal="true" aria-labelledby="whatsnew-title" onClick={(e) => e.stopPropagation()}>
+        // Arka plan: sadece kendisine tiklaninca kapatir (pencerenin icindeki tiklamalar degil), Esc ile de.
+        <div
+          className="modal-backdrop"
+          onClick={(e) => e.target === e.currentTarget && close()}
+          onKeyDown={(e) => e.key === 'Escape' && close()}
+        >
+          <div className="modal" role="dialog" aria-modal="true" aria-labelledby="whatsnew-title">
             <header className="modal-head">
               <h2 id="whatsnew-title">Yenilikler</h2>
-              <button type="button" className="icon-btn" onClick={close} aria-label="Kapat">
+              <button ref={closeButton} type="button" className="icon-btn" onClick={close} aria-label="Kapat">
                 ×
               </button>
             </header>

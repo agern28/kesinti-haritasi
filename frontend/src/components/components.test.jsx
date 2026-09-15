@@ -161,6 +161,21 @@ describe('WhatsNew', () => {
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
   })
 
+  it('acilinca odak Kapat dugmesinde, Esc kapatiyor', () => {
+    render(<WhatsNew text={text} version="1.1.0" environment="PROD" />)
+    expect(screen.getByRole('button', { name: 'Kapat' })).toHaveFocus()
+    fireEvent.keyDown(screen.getByRole('dialog'), { key: 'Escape' })
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
+  })
+
+  it('arka plana tiklayinca kapaniyor, pencerenin icine tiklayinca kapanmiyor', () => {
+    const { container } = render(<WhatsNew text={text} version="1.1.0" environment="PROD" />)
+    fireEvent.click(screen.getByRole('dialog'))
+    expect(screen.getByRole('dialog')).toBeInTheDocument()
+    fireEvent.click(container.querySelector('.modal-backdrop'))
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
+  })
+
   it('surum/ortam etiketine tiklayinca aciliyor', () => {
     localStorage.setItem(SEEN_KEY, '1.1.0')
     render(<WhatsNew text={text} version="1.1.0" environment="INT" />)
