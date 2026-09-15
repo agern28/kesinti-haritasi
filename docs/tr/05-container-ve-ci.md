@@ -70,7 +70,7 @@ Quality gate yeşildi (koşulları yeni koda bakıyor), ama ilk analiz mevcut ko
 |---|---|---|
 | api `OutageRepository.search` (2 vulnerability) | Dinamik SQL | Yanlış alarm: sorguya sadece koddaki sabit parçalar ekleniyordu, kullanıcıdan gelen her değer parametreydi. Yine de arama tek bir sabit sorguya çevrildi: verilmeyen filtrenin parametresi null, koşul `(:x is null or kolon = :x)`. Filtre testleri aynen geçti. |
 | api `OutageRepository.map` (bug) | Olası NullPointerException | `starts_at` kolonu NOT NULL ama kod bunu varsayıyordu; boş gelirse kesinti aktif sayılmıyor. |
-| collector `HttpResult` (bug) | Record'da `byte[]` | Record'un kendi `equals`/`hashCode`'u dizide referansa bakıyor; gövdenin içeriğine bakacak şekilde yazıldı, `toString` gövdeyi değil boyutunu yazıyor. Testi eklendi. |
+| collector `HttpResult` (bug) | Record'da `byte[]` | Record'un kendi `equals`/`hashCode`'u dizide referansa bakıyor; gövdenin içeriğine bakacak şekilde yazıldı, `toString` gövdeyi değil boyutunu yazıyor. Testi eklendi. İlk hâlinde gate yeni kod kapsamında kırıldı (%76,5, eşik %80): `equals`'ın dört dalı (başka tür, farklı URI, farklı içerik türü, boş gövde) test edilmemişti; testler eklendi. |
 | api `SseStreamTest` (bug) | Açıklama assertion'dan sonra | Gerçek bir test hatasıydı: `.as(...)` assertion'dan sonra yazıldığı için açıklama hiç gösterilmiyordu. Sırası düzeltildi. |
 | frontend `WhatsNew` (2 küçük bug) | Tıklanan arka planda klavye yok | Arka plan artık sadece kendisine tıklanınca kapanıyor ve Esc'i dinliyor; pencere açılınca odak "Kapat" düğmesine gidiyor. İki test eklendi. |
 

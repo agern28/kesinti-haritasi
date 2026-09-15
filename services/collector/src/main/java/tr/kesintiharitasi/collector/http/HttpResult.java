@@ -45,8 +45,8 @@ public record HttpResult(int status, URI uri, String contentType, byte[] body) {
     // Record'un kendi equals/hashCode'u dizide referansa bakiyor; govdenin icerigine gore karsilastir.
     @Override
     public boolean equals(Object o) {
-        return o instanceof HttpResult r && status == r.status && Objects.equals(uri, r.uri)
-                && Objects.equals(contentType, r.contentType) && Arrays.equals(body, r.body);
+        return o instanceof HttpResult(int s, URI u, String ct, byte[] b) && status == s && Objects.equals(uri, u)
+                && Objects.equals(contentType, ct) && Arrays.equals(body, b);
     }
 
     @Override

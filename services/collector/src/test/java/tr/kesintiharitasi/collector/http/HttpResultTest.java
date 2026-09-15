@@ -23,8 +23,22 @@ class HttpResultTest {
     }
 
     @Test
+    void herAlanKarsilastirmayaGiriyor() {
+        byte[] body = "a".getBytes(StandardCharsets.UTF_8);
+        HttpResult base = new HttpResult(200, URL, "text/html", body);
+        assertThat(base)
+                .isNotEqualTo(new HttpResult(200, URI.create("https://example.org/baska"), "text/html", body))
+                .isNotEqualTo(new HttpResult(200, URL, "application/json", body))
+                .isNotEqualTo(new HttpResult(200, URL, "text/html", null))
+                .isNotEqualTo("a")
+                .isNotEqualTo(null);
+        assertThat(new HttpResult(200, URL, null, null)).isEqualTo(new HttpResult(200, URL, null, null));
+    }
+
+    @Test
     void toStringGovdeyiDegilBoyutunuYaziyor() {
         assertThat(result("gizli sayfa").toString()).contains("11 bayt").doesNotContain("gizli");
+        assertThat(new HttpResult(204, URL, null, null).toString()).contains("body=null");
     }
 
     @Test
