@@ -21,8 +21,12 @@ LABEL org.opencontainers.image.source="https://github.com/agern28/kesinti-harita
       org.opencontainers.image.title="kesinti-haritasi-frontend" \
       org.opencontainers.image.description="Kesinti haritasi arayuzu (React + Leaflet), nginx" \
       org.opencontainers.image.version="${APP_VERSION}"
-ENV APP_ENV=LOCAL
-# Sablon: nginx acilirken ${APP_ENV} doldurulup /etc/nginx/conf.d/default.conf'a yaziliyor.
+# Varsayilanlar compose icin. NGINX_RESOLVER Docker'in gomulu DNS'i; Kubernetes'te kube-dns'in
+# adresi, API_UPSTREAM de api Service'inin adi verilecek (Faz 7).
+ENV APP_ENV=LOCAL \
+    NGINX_RESOLVER=127.0.0.11 \
+    API_UPSTREAM=http://api:8080
+# Sablon: nginx acilirken bu degiskenler doldurulup /etc/nginx/conf.d/default.conf'a yaziliyor.
 COPY frontend/nginx.conf /etc/nginx/templates/default.conf.template
 COPY --from=build /app/dist /usr/share/nginx/html
 EXPOSE 8080

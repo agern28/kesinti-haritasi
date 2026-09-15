@@ -68,6 +68,7 @@ GitHub'da henüz çalışmadılar: push, SonarQube Cloud kurulumu ve ilk tag ger
 - **Trivy'nin bulduğu Tomcat açıkları** (yukarıda). Spring Boot'un yeni yamasını bekleyemezdim; sürümü tek başına yükseltmek bilinen yol.
 - **actionlint'e yanlış bayrak**: `-color=never` diye bir seçenek yok, `-no-color`. Hata çıktısı input karşılaştırmasının sonucunu da gizledi.
 - **Input karşılaştırma script'imin yanlış alarmı**: `actions/checkout`'ta `fetch-depth` yok dedi; `action.yml`'e elle bakınca var. Script'teki ayrıştırma bazı açıklama satırlarında şaşırıyor. Workflow doğru.
+- **api yeniden oluşunca frontend 502 verdi**: imajları yeniden derleyip api container'ı yeniden oluşunca, frontend'deki nginx `/api`'ye 502 dönmeye başladı, harita "Yeniden bağlanıyor"da kaldı. nginx `proxy_pass http://api:8080` içindeki adı açılışta bir kez çözüyor; yeni container'ın IP'si değişince eski IP'ye gidiyordu. Faz 4'teki "api'yi durdur, başlat" denemesi bunu yakalamadı, çünkü orada container ve IP aynı kalıyor. Artık adres bir değişkende (`API_UPSTREAM`) ve nginx adı `resolver` ile 10 saniyede bir yeniden çözüyor. Kubernetes'te Service'in IP'si sabit olduğu için bu sorun olmayacaktı, ama resolver'ın adresi orada farklı (kube-dns); ikisi de ortam değişkeni, Faz 7'de Helm values'tan verilecek.
 - **Ortam etiketi**: build argümanı olarak bırakırsam Faz 7'deki "aynı imaj INT'ten PROD'a" akışı bozulacaktı; bunu imajları tasarlarken fark ettim, Faz 7'ye kalmadı.
 
 ## Bilinen sınırlar
