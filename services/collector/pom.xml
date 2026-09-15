@@ -13,7 +13,7 @@
 
     <groupId>tr.kesintiharitasi</groupId>
     <artifactId>collector</artifactId>
-    <version>0.1.0-SNAPSHOT</version>
+    <version>1.0.0</version>
     <name>collector</name>
     <description>Kaynaklardan kesinti verisi toplayip Redis Stream'e yazar</description>
 

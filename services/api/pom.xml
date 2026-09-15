@@ -13,7 +13,7 @@
 
     <groupId>tr.kesintiharitasi</groupId>
     <artifactId>api</artifactId>
-    <version>0.1.0-SNAPSHOT</version>
+    <version>1.0.0</version>
     <name>api</name>
     <description>Kesinti stream'ini tuketir, PostgreSQL'e yazar, REST ve SSE sunar</description>
 
