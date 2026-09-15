@@ -26,3 +26,17 @@ export function fetchOutages(params) {
   }
   return getJson(`/api/outages?${q}`)
 }
+
+/**
+ * Ortam etiketi (LOCAL/INT/PROD) calisma aninda nginx'ten (/env.json, container'in APP_ENV'i).
+ * Ayni imaj INT'te ve PROD'da calistigi icin build sirasinda gomulemiyor.
+ * Yoksa (npm run dev'de Vite index.html donuyor) null.
+ */
+export async function fetchEnvironment() {
+  try {
+    const env = (await getJson('/env.json')).environment
+    return typeof env === 'string' && env.trim() ? env.trim() : null
+  } catch {
+    return null
+  }
+}

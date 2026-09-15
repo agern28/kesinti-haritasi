@@ -8,12 +8,13 @@ import OutageMap from './components/OutageMap.jsx'
 import TypeFilter from './components/TypeFilter.jsx'
 import WhatsNew from './components/WhatsNew.jsx'
 import { useNow } from './hooks/useNow.js'
-import { fetchSources, fetchSummary } from './lib/api.js'
+import { fetchEnvironment, fetchSources, fetchSummary } from './lib/api.js'
 import { countsFor, districtId, groupSummary, nameKey } from './lib/districts.js'
 import { connectLive } from './lib/live.js'
 
 const version = import.meta.env.VITE_APP_VERSION ?? 'dev'
-const environment = import.meta.env.VITE_APP_ENV ?? 'LOCAL'
+// Ortam calisma aninda /env.json'dan geliyor; gelmezse (npm run dev) bu varsayilan.
+const defaultEnvironment = import.meta.env.VITE_APP_ENV ?? 'LOCAL'
 
 // Ozet SSE ile guncelleniyor; bu aralik sadece bir olay kacarsa diye.
 const SUMMARY_REFRESH_MS = 120_000
@@ -33,7 +34,12 @@ export default function App() {
   const [status, setStatus] = useState('connecting')
   const [flash, setFlash] = useState({ seq: 0, ids: [] })
   const [panelVersion, setPanelVersion] = useState(0)
+  const [environment, setEnvironment] = useState(defaultEnvironment)
   const now = useNow()
+
+  useEffect(() => {
+    fetchEnvironment().then((env) => env && setEnvironment(env))
+  }, [])
 
   const loadSummary = useCallback(
     () =>
