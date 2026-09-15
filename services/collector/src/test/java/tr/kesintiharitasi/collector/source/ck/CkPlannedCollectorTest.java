@@ -45,13 +45,22 @@ class CkPlannedCollectorTest {
     }
 
     @Test
-    void ikiDenemedeDeEskiyseTaramaBasarisiz() throws Exception {
+    void ikiKezEskiUcuncudeGuncel() throws Exception {
+        when(http.get(CkCompany.CEDAS.plannedUrl()))
+                .thenReturn(ok(Fixtures.bytes(STALE)), ok(Fixtures.bytes(STALE)), ok(Fixtures.bytes(CURRENT)));
+        assertThat(collector.collect().outages()).isNotEmpty();
+        verify(http, times(3)).get(CkCompany.CEDAS.plannedUrl());
+    }
+
+    @Test
+    void ucDenemedeDeEskiyseTaramaBasarisiz() throws Exception {
         when(http.get(CkCompany.CEDAS.plannedUrl())).thenReturn(ok(Fixtures.bytes(STALE)));
         assertThatThrownBy(collector::collect)
                 .isInstanceOf(IllegalStateException.class)
                 .hasMessageContaining("eski veri")
-                .hasMessageContaining("2024-06-14");
-        verify(http, times(2)).get(CkCompany.CEDAS.plannedUrl());
+                .hasMessageContaining("2024-06-14")
+                .hasMessageContaining("3 denemede de");
+        verify(http, times(3)).get(CkCompany.CEDAS.plannedUrl());
     }
 
     @Test

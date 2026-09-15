@@ -20,13 +20,14 @@ import tr.kesintiharitasi.collector.source.SourceCollector;
  * <p>ÇEDAŞ'in sitesi bir yuk dengeleyicinin (F5 BIG-IP) arkasinda ve sunuculardan biri Haziran 2024'ten kalma
  * listeyi donduruyor (2026-09-15'te goruldu). Boyle bir cevap guncel listeyi tamamen GONE, eski listeyi NEW
  * yapiyordu; bir sonraki taramada tersi. En yeni kesintisi {@link #STALE_AFTER}'dan eski olan liste eski
- * sunucudan gelmis sayiliyor ve bir kez daha isteniyor. Yine eskiyse tarama basarisiz: snapshot korunuyor,
+ * sunucudan gelmis sayiliyor ve {@link #ATTEMPTS} kereye kadar yeniden isteniyor. Hep eskiyse tarama basarisiz: snapshot korunuyor,
  * hicbir sey GONE olmuyor.
  */
 public class CkPlannedCollector implements SourceCollector {
 
     static final Duration STALE_AFTER = Duration.ofDays(2);
-    static final int ATTEMPTS = 2;
+    // 2026-09-15'teki ilk canli taramada iki istegin ikisi de eski sunucuya dustu; 3 deneme.
+    static final int ATTEMPTS = 3;
 
     private static final Logger log = LoggerFactory.getLogger(CkPlannedCollector.class);
 

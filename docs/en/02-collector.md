@@ -179,7 +179,7 @@ During the "does everything work" check, ÇEDAŞ's planned feed flipped every ot
 
 The effect: current outages in Sivas, Tokat and Yozgat dropped off the map and came back every other scan, and the browser got pointless "ended"/"new" events. The `TOKAT.` / `.` record that couldn't be placed on the map in Phase 4 came from this stale list too. The 88 ÇEDAŞ records in the first Phase 4 runs may have come from the stale server.
 
-The fix (BEDAŞ, AEDAŞ and ÇEDAŞ all use the same code): if the newest outage in a planned list is more than 2 days old, the answer is taken to come from a stale server and is requested once more (PoliteHttpClient already waits between requests). If the second answer is stale too, the scan fails: the snapshot is kept and nothing goes GONE. An empty list isn't considered stale. The stale server's real answer was added as a fixture (`cedas/planned-eski-sunucu-2026-09-15.json`), with four tests.
+The fix (BEDAŞ, AEDAŞ and ÇEDAŞ all use the same code): if the newest outage in a planned list is more than 2 days old, the answer is taken to come from a stale server and is requested again, up to three times in total (PoliteHttpClient already waits between requests). If all three are stale, the scan fails: the snapshot is kept and nothing goes GONE. The first version had two attempts; on the first live scan both hit the stale server, so I raised it to three. An empty list isn't considered stale. The stale server's real answer was added as a fixture (`cedas/planned-eski-sunucu-2026-09-15.json`), with four tests.
 
 Keeping the cookie and always going to the same server would have been another option, but we still couldn't know that server isn't the stale one. A check that looks at the data works whichever server the answer comes from.
 

@@ -179,7 +179,7 @@ Ders: bir sayfanın tek bir anına bakıp fixture'daki her şeyin test edildiği
 
 Sonuç: güncel Sivas, Tokat ve Yozgat kesintileri iki taramada bir haritadan düşüp geri geliyordu, tarayıcıya da boşuna "bitti"/"yeni" olayları gidiyordu. Faz 4'te haritada yeri bulunamayan `TOKAT.` / `.` kaydı da bu eski listedenmiş. Faz 4'ün ilk denemelerinde ÇEDAŞ'ın 88 kaydı eski sunucudan gelmiş olabilir.
 
-Düzeltme (BEDAŞ, AEDAŞ, ÇEDAŞ, üçü de aynı kodu kullanıyor): planlı listedeki en yeni kesinti 2 günden eskiyse cevap eski sunucudan gelmiş sayılıyor ve bir kez daha isteniyor (istekler arası bekleme PoliteHttpClient'ta zaten var). İkinci cevap da eskiyse tarama başarısız oluyor: snapshot korunuyor, hiçbir şey GONE olmuyor. Boş liste eski sayılmıyor. Eski sunucunun gerçek cevabı fixture olarak eklendi (`cedas/planned-eski-sunucu-2026-09-15.json`), dört test yazıldı.
+Düzeltme (BEDAŞ, AEDAŞ, ÇEDAŞ, üçü de aynı kodu kullanıyor): planlı listedeki en yeni kesinti 2 günden eskiyse cevap eski sunucudan gelmiş sayılıyor ve toplam üç kereye kadar yeniden isteniyor (istekler arası bekleme PoliteHttpClient'ta zaten var). Üçü de eskiyse tarama başarısız oluyor: snapshot korunuyor, hiçbir şey GONE olmuyor. İlk sürümde iki denemeydi; ilk canlı taramada ikisi de eski sunucuya düştü, üçe çıkardım. Boş liste eski sayılmıyor. Eski sunucunun gerçek cevabı fixture olarak eklendi (`cedas/planned-eski-sunucu-2026-09-15.json`), dört test yazıldı.
 
 Çerez tutup hep aynı sunucuya gitmek de bir yol olurdu, ama o sunucunun eski olmadığını yine bilemezdik. Veriye bakan kontrol, hangi sunucudan gelirse gelsin çalışıyor.
 
