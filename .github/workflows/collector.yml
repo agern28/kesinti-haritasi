@@ -53,8 +53,10 @@ jobs:
           name: collector-jacoco
           path: services/collector/target/site/jacoco/
           if-no-files-found: ignore
+      # Tag'de Sonar yok: tag'lenen commit main'de zaten analiz edilip gate'ten geciyor. SonarCloud tag'i
+      # ayri bir dal sayiyor, o dalin ilk analizinde gate hesaplanamiyor ve adim kiriliyordu (2026-09-15).
       - name: SonarQube Cloud (quality gate)
-        if: env.SONAR_TOKEN != ''
+        if: env.SONAR_TOKEN != '' && !startsWith(github.ref, 'refs/tags/')
         run: mvn -B -ntp org.sonarsource.scanner.maven:sonar-maven-plugin:5.8.0.7211:sonar -Dsonar.qualitygate.wait=true
       - name: Sonar atlandi
         if: env.SONAR_TOKEN == ''
