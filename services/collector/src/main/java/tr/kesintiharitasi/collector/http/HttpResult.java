@@ -4,7 +4,9 @@ import java.io.IOException;
 import java.net.URI;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
+import java.util.Arrays;
 import java.util.Locale;
+import java.util.Objects;
 
 public record HttpResult(int status, URI uri, String contentType, byte[] body) {
 
@@ -38,5 +40,24 @@ public record HttpResult(int status, URI uri, String contentType, byte[] body) {
             }
         }
         return StandardCharsets.UTF_8;
+    }
+
+    // Record'un kendi equals/hashCode'u dizide referansa bakiyor; govdenin icerigine gore karsilastir.
+    @Override
+    public boolean equals(Object o) {
+        return o instanceof HttpResult r && status == r.status && Objects.equals(uri, r.uri)
+                && Objects.equals(contentType, r.contentType) && Arrays.equals(body, r.body);
+    }
+
+    @Override
+    public int hashCode() {
+        return 31 * Objects.hash(status, uri, contentType) + Arrays.hashCode(body);
+    }
+
+    /** Govdenin kendisi degil boyutu: loglar sayfanin tamamiyla dolmasin. */
+    @Override
+    public String toString() {
+        return "HttpResult[status=" + status + ", uri=" + uri + ", contentType=" + contentType + ", body="
+                + (body == null ? "null" : body.length + " bayt") + "]";
     }
 }
