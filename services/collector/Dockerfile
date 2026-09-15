@@ -1,16 +1,30 @@
-# Faz 1 icin yeterli hali. Faz 5'te katmanli jar, SBOM ve Trivy ile sikilastirilacak.
+# syntax=docker/dockerfile:1
+# Cok asamali: Maven ile build, Spring Boot katmanlarina ayirma, JRE alpine uzerinde root olmayan kullanici.
 FROM maven:3.9-eclipse-temurin-21 AS build
 WORKDIR /src
 COPY pom.xml .
-RUN mvn -q -B dependency:go-offline
+# Maven deposu BuildKit cache'inde: pom degismedikce bagimliliklar yeniden inmiyor.
+RUN --mount=type=cache,target=/root/.m2 mvn -q -B dependency:go-offline
 COPY src ./src
-RUN mvn -q -B package -DskipTests
+RUN --mount=type=cache,target=/root/.m2 mvn -q -B package -DskipTests \
+ && java -Djarmode=tools -jar target/*.jar extract --layers --launcher --destination /extracted
 
 FROM eclipse-temurin:21-jre-alpine
-RUN addgroup -S app && adduser -S -G app app
+ARG APP_VERSION=dev
+LABEL org.opencontainers.image.source="https://github.com/agern28/kesinti-haritasi" \
+      org.opencontainers.image.title="kesinti-haritasi-collector" \
+      org.opencontainers.image.description="Kaynaklardan kesinti verisi toplayip Redis Stream'e yazar" \
+      org.opencontainers.image.version="${APP_VERSION}"
+# Sayisal UID: Kubernetes runAsNonRoot kullanici adiyla kontrol edemiyor.
+RUN addgroup -S -g 10001 app && adduser -S -u 10001 -G app app
 WORKDIR /app
-COPY --from=build /src/target/*.jar app.jar
-USER app
+# Katmanlar degisme sikligina gore: bagimliliklar altta, uygulama kodu ustte.
+# Kod degisince sadece son katman yeniden cekiliyor.
+COPY --from=build /extracted/dependencies/ ./
+COPY --from=build /extracted/spring-boot-loader/ ./
+COPY --from=build /extracted/snapshot-dependencies/ ./
+COPY --from=build /extracted/application/ ./
+USER 10001
 ENV JAVA_TOOL_OPTIONS="-XX:MaxRAMPercentage=75 -XX:+ExitOnOutOfMemoryError"
 EXPOSE 8081
-ENTRYPOINT ["java", "-jar", "/app/app.jar"]
+ENTRYPOINT ["java", "org.springframework.boot.loader.launch.JarLauncher"]
