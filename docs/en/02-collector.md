@@ -173,6 +173,16 @@ I haven't yet seen exactly what the page says when the fault section is empty. I
 
 Lesson: don't assume one snapshot of a page tests everything in the fixture. The test should have pinned the number of records in the fixture.
 
+## Found later: ÇEDAŞ's stale server (during Phase 5)
+
+During the "does everything work" check, ÇEDAŞ's planned feed flipped every other scan: one scan had 142 records (142 NEW, 88 GONE), the next one 88 records (88 NEW, 142 GONE). The 88-record list was outages from June 2024. I sent 3 requests to the site 5 seconds apart: the answers come through a load balancer (F5 BIG-IP, a different server cookie on every answer), and one of the servers returns the 2024 data. 1 of the 3 requests hit it, and the two lists had no record in common. The collector doesn't keep cookies, so every scan goes to a random server.
+
+The effect: current outages in Sivas, Tokat and Yozgat dropped off the map and came back every other scan, and the browser got pointless "ended"/"new" events. The `TOKAT.` / `.` record that couldn't be placed on the map in Phase 4 came from this stale list too. The 88 ÇEDAŞ records in the first Phase 4 runs may have come from the stale server.
+
+The fix (BEDAŞ, AEDAŞ and ÇEDAŞ all use the same code): if the newest outage in a planned list is more than 2 days old, the answer is taken to come from a stale server and is requested once more (PoliteHttpClient already waits between requests). If the second answer is stale too, the scan fails: the snapshot is kept and nothing goes GONE. An empty list isn't considered stale. The stale server's real answer was added as a fixture (`cedas/planned-eski-sunucu-2026-09-15.json`), with four tests.
+
+Keeping the cookie and always going to the same server would have been another option, but we still couldn't know that server isn't the stale one. A check that looks at the data works whichever server the answer comes from.
+
 ## Known limitations
 
 - On CK, a planned outage in progress shows up both in the planned list and in the fault list (`Bildirimli`). I only take `Bildirimsiz` rows from the faults, so it isn't counted twice. But we don't learn from the fault side when a planned outage actually ended.

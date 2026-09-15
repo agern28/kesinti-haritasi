@@ -173,6 +173,16 @@ Arıza bölümü boşken sayfanın tam olarak ne yazdığını henüz görmedim.
 
 Ders: bir sayfanın tek bir anına bakıp fixture'daki her şeyin test edildiğini sanmamak. Test, fixture'daki kayıt sayısını sabitlemeliydi.
 
+## Sonradan bulunan: ÇEDAŞ'ın eski sunucusu (Faz 5 sırasında)
+
+"Her şey çalışıyor mu" kontrolünde ÇEDAŞ'ın planlı feed'i iki taramada bir gidip geldi: bir taramada 142 kayıt (142 NEW, 88 GONE), sonrakinde 88 kayıt (88 NEW, 142 GONE). 88'lik liste Haziran 2024'ten kalma kesintilerdi. Siteye 5 saniye arayla 3 istek attım: cevaplar bir yük dengeleyiciden (F5 BIG-IP, her cevapta farklı sunucu çerezi) geliyor ve sunuculardan biri 2024 verisini döndürüyor. 3 isteğin 1'i ona düştü, iki liste arasında ortak kayıt yok. Collector çerez tutmadığı için her taramada rastgele bir sunucuya gidiyor.
+
+Sonuç: güncel Sivas, Tokat ve Yozgat kesintileri iki taramada bir haritadan düşüp geri geliyordu, tarayıcıya da boşuna "bitti"/"yeni" olayları gidiyordu. Faz 4'te haritada yeri bulunamayan `TOKAT.` / `.` kaydı da bu eski listedenmiş. Faz 4'ün ilk denemelerinde ÇEDAŞ'ın 88 kaydı eski sunucudan gelmiş olabilir.
+
+Düzeltme (BEDAŞ, AEDAŞ, ÇEDAŞ, üçü de aynı kodu kullanıyor): planlı listedeki en yeni kesinti 2 günden eskiyse cevap eski sunucudan gelmiş sayılıyor ve bir kez daha isteniyor (istekler arası bekleme PoliteHttpClient'ta zaten var). İkinci cevap da eskiyse tarama başarısız oluyor: snapshot korunuyor, hiçbir şey GONE olmuyor. Boş liste eski sayılmıyor. Eski sunucunun gerçek cevabı fixture olarak eklendi (`cedas/planned-eski-sunucu-2026-09-15.json`), dört test yazıldı.
+
+Çerez tutup hep aynı sunucuya gitmek de bir yol olurdu, ama o sunucunun eski olmadığını yine bilemezdik. Veriye bakan kontrol, hangi sunucudan gelirse gelsin çalışıyor.
+
 ## Bilinen sınırlar
 
 - CK'da devam eden planlı kesinti hem planlı listede hem arıza listesinde (`Bildirimli`) görünüyor. Arızalardan sadece `Bildirimsiz` satırları alıyorum, iki kez sayılmıyor. Ama planlı kesintinin gerçekte ne zaman bittiğini arıza tarafından öğrenmiyoruz.

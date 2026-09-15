@@ -104,8 +104,8 @@ public class CollectorConfig {
     // --- Kaynaklar ---
 
     @Bean
-    SourceCollector bedasPlanned(PoliteHttpClient http, JsonMapper json) {
-        return new CkPlannedCollector(CkCompany.BEDAS, http, json);
+    SourceCollector bedasPlanned(PoliteHttpClient http, JsonMapper json, Clock clock) {
+        return new CkPlannedCollector(CkCompany.BEDAS, http, json, clock);
     }
 
     @Bean
@@ -114,8 +114,8 @@ public class CollectorConfig {
     }
 
     @Bean
-    SourceCollector aedasPlanned(PoliteHttpClient http, JsonMapper json) {
-        return new CkPlannedCollector(CkCompany.AEDAS, http, json);
+    SourceCollector aedasPlanned(PoliteHttpClient http, JsonMapper json, Clock clock) {
+        return new CkPlannedCollector(CkCompany.AEDAS, http, json, clock);
     }
 
     @Bean
@@ -124,8 +124,8 @@ public class CollectorConfig {
     }
 
     @Bean
-    SourceCollector cedasPlanned(PoliteHttpClient http, JsonMapper json) {
-        return new CkPlannedCollector(CkCompany.CEDAS, http, json);
+    SourceCollector cedasPlanned(PoliteHttpClient http, JsonMapper json, Clock clock) {
+        return new CkPlannedCollector(CkCompany.CEDAS, http, json, clock);
     }
 
     @Bean
