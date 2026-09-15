@@ -1,8 +1,8 @@
 # Changelog
 
-Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), versions: [Semantic Versioning](https://semver.org/). The "What's new" window in the app reads the Turkish file, [CHANGELOG.md](CHANGELOG.md); this file is its translation.
+Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), versions: [Semantic Versioning](https://semver.org/). The "What's new" window in the app and the GitHub Release notes read the Turkish file, [CHANGELOG.md](CHANGELOG.md); this file is its translation.
 
-## [Unreleased]
+## [1.0.0] - 2026-09-15
 
 ### Added
 - Map of Turkish districts. Districts are coloured by the number and type of active outages.
@@ -12,3 +12,8 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), versions: [Sem
 - Data freshness: time of the last update and the last scan per source. A warning shows up if a source is delayed.
 - Connection state: live or reconnecting.
 - Sources: BEDAŞ, AEDAŞ, ÇEDAŞ, KCETAŞ (electricity), İZSU (water) and İSKİ historical data from İBB Open Data.
+- İZSU fault records: water faults in İzmir are on the map too.
+
+### Fixed
+- KCETAŞ's outages in Gemerek (Sivas) were stored under Kayseri; they are in Sivas now.
+- The İZSU scan failed at times with no maintenance or faults (at night).
