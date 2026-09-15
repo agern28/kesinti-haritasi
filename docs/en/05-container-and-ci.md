@@ -62,6 +62,18 @@ The script also runs locally: as a separate compose project (`kesinti-smoke`) wi
 
 When I ran the new images through Trivy locally, collector and api had three CRITICAL vulnerabilities in Tomcat 11.0.24 (CVE-2026-65182, CVE-2026-65905, CVE-2026-68525), fixed in 11.0.25. Spring Boot 4.1.1 is the latest release and ships 11.0.24. `tomcat.version` is pinned to 11.0.25 in both poms; the line will be removed with Spring Boot's next patch (there's a note in the pom). After that all three images were clean.
 
+## Sonar's first findings
+
+The quality gate was green (its conditions look at new code), but the first analysis showed 7 findings in the existing code. I went through all of them before v1.0.0:
+
+| Where | Finding | What I did |
+|---|---|---|
+| api `OutageRepository.search` (2 vulnerabilities) | Dynamically built SQL | A false alarm: only fixed fragments from the code were added to the query, every value from the user was a parameter. Still, the search was turned into a single fixed query: a filter that isn't given has a null parameter, the condition is `(:x is null or column = :x)`. The filter tests passed unchanged. |
+| api `OutageRepository.map` (bug) | Possible NullPointerException | The `starts_at` column is NOT NULL, but the code assumed it; if it's ever empty, the outage isn't counted as active. |
+| collector `HttpResult` (bug) | `byte[]` in a record | The record's own `equals`/`hashCode` compare the array by reference; they now compare the body's content, and `toString` prints the body's size instead of the body. A test was added. |
+| api `SseStreamTest` (bug) | Description after the assertion | A real test bug: `.as(...)` came after the assertion, so the description was never shown. The order was fixed. |
+| frontend `WhatsNew` (2 minor bugs) | Clickable backdrop without keyboard support | The backdrop now only closes when it is clicked itself and listens for Esc; when the dialog opens, focus moves to the "Close" button. Two tests were added. |
+
 ## What I tried locally
 
 - `mvn verify` green in both services, JaCoCo floor met (collector 82 tests, api 24 tests).
@@ -80,6 +92,7 @@ On GitHub (2026-09-15, first push to `main`): the collector, api and frontend wo
 - **A false alarm from my input comparison script**: it said `actions/checkout` has no `fetch-depth`; looking at `action.yml` by hand, it does. The parsing in the script trips over some description lines. The workflow is correct.
 - **The frontend returned 502 after the api was recreated**: after rebuilding the images and recreating the api container, the nginx in the frontend started returning 502 on `/api` and the map stayed on "Yeniden bağlanıyor" (reconnecting). nginx resolves the name in `proxy_pass http://api:8080` once at startup; when the new container got a different IP, it kept going to the old one. The Phase 4 "stop the api, start it again" check didn't catch this, because there the container and its IP stay the same. Now the address is a variable (`API_UPSTREAM`) and nginx re-resolves the name through `resolver` every 10 seconds. On Kubernetes this wouldn't have been a problem since a Service IP is stable, but the resolver address is different there (kube-dns); both are environment variables and will come from the Helm values in Phase 7.
 - **compose-smoke failed on its first run on GitHub**: the smoke test that passed locally and in a fresh clone failed on GitHub while forcing the api onto a new IP. I gave the IP the api freed to the temporary container with `--ip`; the Docker on the GitHub runner only accepts that on networks with a user-configured subnet, and compose's default network isn't one. Now the temporary container joins the network without asking for an IP and gets the next free one; the check that the api's new IP really differs is still there. The other 13 checks had passed on the first run too.
+- **Sonar's first analysis came out red**: once `SONAR_TOKEN` was added, the Sonar step failed in all three workflows with "QUALITY GATE STATUS: FAILED"; the tests and the analysis itself had succeeded. The reason: every condition of the "Sonar way" gate looks at new code, and on the first analysis there is no period to compare with, so the gate wasn't computed (status `NONE` on SonarCloud, empty condition list) and `sonar.qualitygate.wait=true` counts that as a failure. On the second analysis the new code period started from the first one and the gate was `OK` in all three projects. It only happens once, at setup; if a new Sonar project is created, expect its first run to be red.
 - **The environment label**: if I'd left it as a build argument, the "same image from INT to PROD" flow of Phase 7 would have broken. I noticed while designing the images, so it didn't wait until Phase 7.
 
 ## Known limitations

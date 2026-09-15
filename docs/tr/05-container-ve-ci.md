@@ -62,6 +62,18 @@ Script lokalde de çalışıyor: ayrı bir compose projesi (`kesinti-smoke`) ve 
 
 Yeni imajları yerelde Trivy'den geçirince collector ve api'de Tomcat 11.0.24'te üç CRITICAL açık çıktı (CVE-2026-65182, CVE-2026-65905, CVE-2026-68525), düzeltmesi 11.0.25'te. Spring Boot 4.1.1 en yeni sürüm, 11.0.24 getiriyor. İki pom'da `tomcat.version` 11.0.25'e sabitlendi; Spring Boot'un sonraki yamasında bu satır silinecek (pom'da not var). Sonra üç imaj da temiz.
 
+## Sonar'ın ilk bulguları
+
+Quality gate yeşildi (koşulları yeni koda bakıyor), ama ilk analiz mevcut kodda 7 bulgu gösterdi. v1.0.0'dan önce hepsine baktım:
+
+| Nerede | Bulgu | Ne yaptım |
+|---|---|---|
+| api `OutageRepository.search` (2 vulnerability) | Dinamik SQL | Yanlış alarm: sorguya sadece koddaki sabit parçalar ekleniyordu, kullanıcıdan gelen her değer parametreydi. Yine de arama tek bir sabit sorguya çevrildi: verilmeyen filtrenin parametresi null, koşul `(:x is null or kolon = :x)`. Filtre testleri aynen geçti. |
+| api `OutageRepository.map` (bug) | Olası NullPointerException | `starts_at` kolonu NOT NULL ama kod bunu varsayıyordu; boş gelirse kesinti aktif sayılmıyor. |
+| collector `HttpResult` (bug) | Record'da `byte[]` | Record'un kendi `equals`/`hashCode`'u dizide referansa bakıyor; gövdenin içeriğine bakacak şekilde yazıldı, `toString` gövdeyi değil boyutunu yazıyor. Testi eklendi. |
+| api `SseStreamTest` (bug) | Açıklama assertion'dan sonra | Gerçek bir test hatasıydı: `.as(...)` assertion'dan sonra yazıldığı için açıklama hiç gösterilmiyordu. Sırası düzeltildi. |
+| frontend `WhatsNew` (2 küçük bug) | Tıklanan arka planda klavye yok | Arka plan artık sadece kendisine tıklanınca kapanıyor ve Esc'i dinliyor; pencere açılınca odak "Kapat" düğmesine gidiyor. İki test eklendi. |
+
 ## Yerelde denediklerim
 
 - `mvn verify` iki serviste yeşil, JaCoCo alt sınırı geçti (collector 82 test, api 24 test).
@@ -80,6 +92,7 @@ GitHub'da (2026-09-15, `main`'e ilk push): collector, api ve frontend workflow'l
 - **Input karşılaştırma script'imin yanlış alarmı**: `actions/checkout`'ta `fetch-depth` yok dedi; `action.yml`'e elle bakınca var. Script'teki ayrıştırma bazı açıklama satırlarında şaşırıyor. Workflow doğru.
 - **api yeniden oluşunca frontend 502 verdi**: imajları yeniden derleyip api container'ı yeniden oluşunca, frontend'deki nginx `/api`'ye 502 dönmeye başladı, harita "Yeniden bağlanıyor"da kaldı. nginx `proxy_pass http://api:8080` içindeki adı açılışta bir kez çözüyor; yeni container'ın IP'si değişince eski IP'ye gidiyordu. Faz 4'teki "api'yi durdur, başlat" denemesi bunu yakalamadı, çünkü orada container ve IP aynı kalıyor. Artık adres bir değişkende (`API_UPSTREAM`) ve nginx adı `resolver` ile 10 saniyede bir yeniden çözüyor. Kubernetes'te Service'in IP'si sabit olduğu için bu sorun olmayacaktı, ama resolver'ın adresi orada farklı (kube-dns); ikisi de ortam değişkeni, Faz 7'de Helm values'tan verilecek.
 - **compose-smoke GitHub'da ilk koşuda kırıldı**: lokalde ve temiz bir klonda geçen smoke test GitHub'da api'yi yeni IP'ye zorlarken düştü. api'nin boşalttığı IP'yi geçici container'a `--ip` ile veriyordum; GitHub runner'ındaki Docker bunu sadece alt ağı elle tanımlanmış ağlarda kabul ediyor, compose'un varsayılan ağı öyle değil. Artık geçici container IP istemeden ağa katılıyor, sıradaki boş IP'yi alıyor; api'nin yeni IP'sinin gerçekten farklı olduğu yine kontrol ediliyor. Diğer 13 kontrol ilk koşuda da geçmişti.
+- **Sonar'ın ilk analizi kırmızı çıktı**: `SONAR_TOKEN` eklenince üç workflow'da Sonar adımı "QUALITY GATE STATUS: FAILED" ile kırıldı; testler ve analizin kendisi başarılıydı. Sebep: "Sonar way" gate'inin bütün koşulları yeni koda bakıyor, ilk analizde karşılaştırılacak bir dönem olmadığı için gate hesaplanmadı (SonarCloud'da durum `NONE`, koşul listesi boş) ve `sonar.qualitygate.wait=true` bunu başarısız sayıyor. İkinci analizde yeni kod dönemi ilk analizden başladı, gate üç projede de `OK`. Sadece ilk kurulumda bir kez olan bir şey; yeni bir Sonar projesi açılırsa ilk koşunun kırmızı çıkması beklenmeli.
 - **Ortam etiketi**: build argümanı olarak bırakırsam Faz 7'deki "aynı imaj INT'ten PROD'a" akışı bozulacaktı; bunu imajları tasarlarken fark ettim, Faz 7'ye kalmadı.
 
 ## Bilinen sınırlar
