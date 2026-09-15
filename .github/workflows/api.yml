@@ -1,0 +1,136 @@
+# api: test + kapsam alt siniri (Testcontainers: PostgreSQL + Redis), SonarQube Cloud, imaj + Trivy.
+# api-vX.Y.Z tag'inde imaj GHCR'a gidiyor ve GitHub Release aciliyor.
+name: api
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - services/api/**
+      - .github/workflows/api.yml
+    # Tag push'larinda paths filtresi uygulanmiyor
+    tags: ['api-v*']
+  pull_request:
+    paths:
+      - services/api/**
+      - .github/workflows/api.yml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: api-${{ github.ref }}
+  cancel-in-progress: ${{ !startsWith(github.ref, 'refs/tags/') }}
+
+env:
+  SERVICE: api
+  IMAGE: ghcr.io/${{ github.repository }}/api
+
+jobs:
+  test:
+    runs-on: ubuntu-24.04
+    defaults:
+      run:
+        working-directory: services/api
+    env:
+      SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0 # Sonar yeni kodu ve satir sahiplerini gecmisten buluyor
+      - uses: actions/setup-java@de7274f081f381c8f8158605e0321c36c376e2e6 # v6.0.1
+        with:
+          distribution: temurin
+          java-version: '21'
+          cache: maven
+      - name: Test ve kapsam (JaCoCo alt siniri verify'da)
+        run: mvn -B -ntp verify
+      - name: Kapsam raporu
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: api-jacoco
+          path: services/api/target/site/jacoco/
+          if-no-files-found: ignore
+      - name: SonarQube Cloud (quality gate)
+        if: env.SONAR_TOKEN != ''
+        run: mvn -B -ntp org.sonarsource.scanner.maven:sonar-maven-plugin:5.8.0.7211:sonar -Dsonar.qualitygate.wait=true
+      - name: Sonar atlandi
+        if: env.SONAR_TOKEN == ''
+        run: echo "::warning::SONAR_TOKEN tanimli degil, Sonar analizi atlandi"
+
+  image:
+    needs: test
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: write # GitHub Release
+      packages: write # GHCR
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: docker/setup-buildx-action@37fe631027851001ddb9b187196cc803df7f5f0e # v4.3.0
+      - name: Surum
+        id: version
+        run: |
+          if [[ "$GITHUB_REF" == refs/tags/${SERVICE}-v* ]]; then
+            echo "version=${GITHUB_REF_NAME#"${SERVICE}"-v}" >> "$GITHUB_OUTPUT"
+            echo "release=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "version=sha-${GITHUB_SHA::7}" >> "$GITHUB_OUTPUT"
+            echo "release=false" >> "$GITHUB_OUTPUT"
+          fi
+      - name: Imaji derle
+        uses: docker/build-push-action@53b7df96c91f9c12dcc8a07bcb9ccacbed38856a # v7.3.0
+        with:
+          context: services/api
+          load: true
+          tags: ${{ env.IMAGE }}:ci
+          build-args: APP_VERSION=${{ steps.version.outputs.version }}
+          cache-from: type=gha,scope=api
+          cache-to: type=gha,mode=max,scope=api
+      - name: Trivy (duzeltmesi olan CRITICAL acik varsa kirilir)
+        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
+        with:
+          image-ref: ${{ env.IMAGE }}:ci
+          severity: CRITICAL
+          ignore-unfixed: true
+          exit-code: '1'
+          format: table
+      - name: SBOM (CycloneDX)
+        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
+        with:
+          image-ref: ${{ env.IMAGE }}:ci
+          format: cyclonedx
+          output: sbom-api.cdx.json
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: api-sbom
+          path: sbom-api.cdx.json
+      - name: GHCR girisi
+        if: steps.version.outputs.release == 'true'
+        uses: docker/login-action@dbcb813823bdd20940b903addbd779551569679f # v4.6.0
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: GHCR'a gonder
+        if: steps.version.outputs.release == 'true'
+        uses: docker/build-push-action@53b7df96c91f9c12dcc8a07bcb9ccacbed38856a # v7.3.0
+        with:
+          context: services/api
+          push: true
+          tags: |
+            ${{ env.IMAGE }}:${{ steps.version.outputs.version }}
+            ${{ env.IMAGE }}:latest
+          build-args: APP_VERSION=${{ steps.version.outputs.version }}
+          cache-from: type=gha,scope=api
+      - name: GitHub Release
+        if: steps.version.outputs.release == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          VERSION: ${{ steps.version.outputs.version }}
+        run: |
+          # CHANGELOG.md'deki "## [X.Y.Z]" bolumu release notu oluyor
+          awk -v v="[$VERSION]" 'index($0, "## ") == 1 { p = index($0, v) > 0; next } p' CHANGELOG.md > notes.md
+          [ -s notes.md ] || echo "CHANGELOG.md'de $VERSION bolumu yok." > notes.md
+          gh release create "$GITHUB_REF_NAME" --title "$SERVICE $VERSION" --notes-file notes.md "sbom-$SERVICE.cdx.json"
