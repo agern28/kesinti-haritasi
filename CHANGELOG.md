@@ -17,3 +17,5 @@ Biçim [Keep a Changelog](https://keepachangelog.com/tr-TR/1.1.0/), sürümler [
 ### Düzeltildi
 - KCETAŞ'ın Sivas'taki Gemerek kesintileri Kayseri'ye yazılıyordu, artık Sivas'ta.
 - İZSU taraması bakım ya da arıza olmayan saatlerde (gece) hata veriyordu.
+- ÇEDAŞ'ın sunucularından biri 2024'ten kalma liste döndürüyordu; Sivas, Tokat ve Yozgat'taki kesintiler haritadan düşüp geri geliyordu. Eski liste artık kabul edilmiyor.
+- Frontend, api yeniden başlatılınca bağlantısını kaybediyordu.

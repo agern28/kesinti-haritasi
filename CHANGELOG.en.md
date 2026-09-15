@@ -17,3 +17,5 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), versions: [Sem
 ### Fixed
 - KCETAŞ's outages in Gemerek (Sivas) were stored under Kayseri; they are in Sivas now.
 - The İZSU scan failed at times with no maintenance or faults (at night).
+- One of ÇEDAŞ's servers returned a list from 2024; outages in Sivas, Tokat and Yozgat dropped off the map and came back. The stale list is no longer accepted.
+- The frontend lost its connection when the api was restarted.
