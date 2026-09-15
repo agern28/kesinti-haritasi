@@ -1,0 +1,40 @@
+# Servisleri birlikte dener: butun stack compose ile sifirdan, nginx uzerinden uctan uca.
+# Servis workflow'lari her servisi tek basina test ediyor; nginx -> api gibi aradaki baglantilari bu yakalar.
+# Ayrinti: .github/scripts/compose-smoke.sh
+name: compose-smoke
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - services/**
+      - frontend/**
+      - docker-compose.yml
+      - CHANGELOG.md
+      - .github/scripts/compose-smoke.sh
+      - .github/workflows/compose-smoke.yml
+  pull_request:
+    paths:
+      - services/**
+      - frontend/**
+      - docker-compose.yml
+      - CHANGELOG.md
+      - .github/scripts/compose-smoke.sh
+      - .github/workflows/compose-smoke.yml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: compose-smoke-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  smoke:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - name: Stack'i kur ve uctan uca dene
+        run: bash .github/scripts/compose-smoke.sh

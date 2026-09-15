@@ -111,5 +111,6 @@ The original definition above stays unchanged. This section shows the decisions 
 | 2026-09-15 | Phase 5 | Trivy only fails on CRITICAL vulnerabilities that have a published fix (`ignore-unfixed`) | decided | [05-container-and-ci.md](05-container-and-ci.md) |
 | 2026-09-15 | Phase 5, 7 | The environment label (LOCAL/INT/PROD) is not a build argument but `APP_ENV` at runtime (nginx `/env.json`), so the same image can move from INT to PROD | decided | [05-container-and-ci.md](05-container-and-ci.md) |
 | 2026-09-15 | Phase 5 | The image is built and scanned on every run but only pushed to GHCR on a tag (`X.Y.Z` and `latest`). Without `SONAR_TOKEN` the Sonar step is skipped with a warning | decided | [05-container-and-ci.md](05-container-and-ci.md) |
+| 2026-09-15 | Phase 5 | A fourth workflow next to the three per-service ones: `compose-smoke` builds the whole stack with compose and tries it end to end through nginx | decided (user approved) | [05-container-and-ci.md](05-container-and-ci.md) |
 
 When a pending approval is settled, a new row is added to this table. The original definition is never changed.

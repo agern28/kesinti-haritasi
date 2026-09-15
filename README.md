@@ -3,6 +3,7 @@
 [![collector](https://github.com/agern28/kesinti-haritasi/actions/workflows/collector.yml/badge.svg)](https://github.com/agern28/kesinti-haritasi/actions/workflows/collector.yml)
 [![api](https://github.com/agern28/kesinti-haritasi/actions/workflows/api.yml/badge.svg)](https://github.com/agern28/kesinti-haritasi/actions/workflows/api.yml)
 [![frontend](https://github.com/agern28/kesinti-haritasi/actions/workflows/frontend.yml/badge.svg)](https://github.com/agern28/kesinti-haritasi/actions/workflows/frontend.yml)
+[![compose-smoke](https://github.com/agern28/kesinti-haritasi/actions/workflows/compose-smoke.yml/badge.svg)](https://github.com/agern28/kesinti-haritasi/actions/workflows/compose-smoke.yml)
 
 İstanbul'dan başlayarak Türkiye'deki elektrik, su ve doğalgaz kesintilerini resmi kaynaklardan toplayıp tek bir haritada gösteren uygulama. Harita canlı: yeni bir kesinti veritabanına düştüğü an sayfa yenilenmeden görünüyor.
 

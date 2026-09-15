@@ -40,6 +40,16 @@ Faz 4'te ortam etiketi (LOCAL/INT/PROD) build argümanıydı. Ama Faz 7'deki ak�
   - SBOM: Trivy ile CycloneDX, artifact olarak.
   - Tag'de: GHCR'a `ghcr.io/agern28/kesinti-haritasi/<servis>:X.Y.Z` ve `:latest`, ardından GitHub Release. Release notu `CHANGELOG.md`'deki `## [X.Y.Z]` bölümü, SBOM ekli.
 
+### compose-smoke: servisler birlikte
+
+Servis workflow'ları her servisi tek başına test ediyor; aradaki bağlantıları (nginx'ten api'ye, stream'den tarayıcıya) hiçbiri denemiyor. Aşağıdaki nginx 502 hatasını da elle yaptığım kontrol yakaladı. Bunun için dördüncü bir workflow var: `compose-smoke.yml`, içeriği `.github/scripts/compose-smoke.sh`. Bütün stack compose ile sıfırdan kuruluyor ve nginx üzerinden deneniyor:
+- Üç container'ın kullanıcısı (10001, 10001, 101).
+- `/`, `/geo/ilceler.topo.json`, `/env.json`, `/api/outages`, `/api/map/summary`, `/api/sources` nginx üzerinden.
+- Veri yolu: Redis Stream'e sahte bir olay yazılıyor; SSE'den `outage.created` geliyor mu, kayıt api'de ve harita özetinde var mı. Collector'ın taraması kapalı (`COLLECTOR_SCHEDULING_ENABLED=false`), CI canlı kaynaklara gitmiyor.
+- api, yeni bir IP almaya zorlanarak yeniden oluşturuluyor (boşalttığı IP'yi geçici bir container alıyor); frontend yeniden başlamadan nginx hâlâ ulaşıyor mu.
+
+Script lokalde de çalışıyor: ayrı bir compose projesi (`kesinti-smoke`) ve kendi volume'leriyle, lokal veriye dokunmuyor, sonunda siliyor. Portlar aynı olduğu için lokal stack açıkken çalışmıyor.
+
 ### Kararlar
 
 - **Action'lar SHA ile sabitlendi**: `actions/checkout@3d3c42e...  # v7.0.1` gibi. Tag'ler taşınabiliyor; bir action'ın tag'i ele geçirilirse sabit SHA etkilenmiyor. Güncellemek elle, yorumdaki sürümle birlikte.

@@ -40,6 +40,16 @@ In Phase 4 the environment label (LOCAL/INT/PROD) was a build argument. But in t
   - SBOM: CycloneDX from Trivy, as an artifact.
   - On a tag: push to GHCR as `ghcr.io/agern28/kesinti-haritasi/<service>:X.Y.Z` and `:latest`, then a GitHub Release. The release notes are the `## [X.Y.Z]` section of `CHANGELOG.md`, with the SBOM attached.
 
+### compose-smoke: the services together
+
+The service workflows test each service on its own; none of them tries the connections in between (nginx to the api, the stream to the browser). The nginx 502 bug below was also caught by a check I ran by hand. So there is a fourth workflow: `compose-smoke.yml`, with the logic in `.github/scripts/compose-smoke.sh`. The whole stack is built from scratch with compose and tried through nginx:
+- The user of the three containers (10001, 10001, 101).
+- `/`, `/geo/ilceler.topo.json`, `/env.json`, `/api/outages`, `/api/map/summary`, `/api/sources` through nginx.
+- The data path: a fake event is written to the Redis Stream; does `outage.created` arrive over SSE, and is the record in the api and in the map summary. The collector's scanning is off (`COLLECTOR_SCHEDULING_ENABLED=false`), CI doesn't go to the live sources.
+- The api is recreated and forced onto a new IP (a temporary container takes the IP it freed); does nginx still reach it without the frontend restarting.
+
+The script also runs locally: as a separate compose project (`kesinti-smoke`) with its own volumes, it doesn't touch local data and deletes everything at the end. The ports are the same, so it doesn't run while the local stack is up.
+
 ### Decisions
 
 - **Actions pinned by SHA**: like `actions/checkout@3d3c42e...  # v7.0.1`. Tags can be moved; if an action's tag is hijacked, a pinned SHA isn't affected. Updating is manual, together with the version in the comment.

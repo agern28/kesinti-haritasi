@@ -41,6 +41,8 @@ services:
     environment:
       SPRING_DATA_REDIS_HOST: redis
       SPRING_DATA_REDIS_PORT: 6379
+      # CI smoke testinde false: canli kaynaklara gidilmiyor (.github/scripts/compose-smoke.sh)
+      COLLECTOR_SCHEDULING_ENABLED: ${COLLECTOR_SCHEDULING_ENABLED:-true}
     ports:
       - "8081:8081"
     depends_on:
@@ -84,7 +86,7 @@ services:
       context: .
       dockerfile: frontend/Dockerfile
       args:
-        APP_VERSION: 0.1.0
+        APP_VERSION: 1.0.0
     environment:
       # Ortam etiketi calisma aninda (nginx /env.json); INT/PROD'da Helm values'tan gelecek.
       APP_ENV: LOCAL
