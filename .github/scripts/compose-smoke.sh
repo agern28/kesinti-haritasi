@@ -83,8 +83,10 @@ echo "--- api yeni IP ile yeniden olusunca nginx hala ulasiyor mu"
 NET=$(docker inspect -f '{{range $k, $v := .NetworkSettings.Networks}}{{$k}}{{end}}' "$(docker compose ps -q api)")
 OLD_IP=$(ip_of api)
 docker compose stop api > /dev/null 2>&1
-# api'nin bosalttigi IP'yi baska bir container alsin: api yeni IP almak zorunda kalsin
-docker run -d --rm --name smoke-ipgrab --network "$NET" --ip "$OLD_IP" alpine:3 sleep 300 > /dev/null
+# api dururken aga baska bir container katilsin, api'nin bosalttigi IP'yi ya da siradakini alsin; api yeni
+# IP almak zorunda kalsin. "--ip" ile tam o IP'yi istemek GitHub runner'indaki Docker'da olmuyor (sadece
+# alt agi elle tanimlanmis aglarda); yeni IP'nin gercekten farkli oldugu asagida kontrol ediliyor.
+docker run -d --rm --name smoke-ipgrab --network "$NET" alpine:3 sleep 300 > /dev/null
 docker compose up -d --force-recreate --wait --wait-timeout 180 api > /dev/null 2>&1
 NEW_IP=$(ip_of api)
 [ "$OLD_IP" != "$NEW_IP" ] || fail "api ayni IP'yi aldi ($OLD_IP), deneme gecersiz"
