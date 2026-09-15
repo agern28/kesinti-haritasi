@@ -8,7 +8,6 @@ import java.time.Clock;
 import java.time.Instant;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -108,40 +107,41 @@ public class OutageRepository {
     public record Query(OutageType type, String source, String il, String ilce, Boolean active) {
     }
 
+    /**
+     * Arama filtreleri tek bir sabit sorguda: verilmeyen filtrenin parametresi null, o kosul devre disi.
+     * Sorgu metni hic degismiyor, kullanicidan gelen her deger parametre olarak baglaniyor.
+     * cast'ler null parametrenin tipini PostgreSQL'e soyluyor.
+     */
+    private static final String SEARCH_WHERE = " where (cast(:type as text) is null or type = :type)"
+            + " and (cast(:source as text) is null or source = :source)"
+            + " and (cast(:ilKey as text) is null or il_key = :ilKey)"
+            + " and (cast(:ilceKey as text) is null or ilce_key = :ilceKey)"
+            + " and (cast(:active as boolean) is null or " + ACTIVE + " = cast(:active as boolean))";
+    private static final String SEARCH_COUNT = "select count(*) from outage" + SEARCH_WHERE;
+    private static final String SEARCH_PAGE = "select * from outage" + SEARCH_WHERE
+            + " order by starts_at desc, id limit :limit offset :offset";
+
     public PageResponse<Outage> search(Query q, int page, int size) {
         Instant now = clock.instant();
-        List<String> where = new ArrayList<>();
         Map<String, Object> params = new HashMap<>();
-        if (q.type() != null) {
-            where.add("type = :type");
-            params.put("type", q.type().name());
-        }
-        if (q.source() != null && !q.source().isBlank()) {
-            where.add("source = :source");
-            params.put("source", q.source().strip().toUpperCase(java.util.Locale.ROOT));
-        }
-        if (q.il() != null && !q.il().isBlank()) {
-            where.add("il_key = :ilKey");
-            params.put("ilKey", Names.key(q.il()));
-        }
-        if (q.ilce() != null && !q.ilce().isBlank()) {
-            where.add("ilce_key = :ilceKey");
-            params.put("ilceKey", Names.key(q.ilce()));
-        }
-        if (q.active() != null) {
-            where.add(q.active() ? ACTIVE : "not " + ACTIVE);
-            params.put("now", ts(now));
-        }
-        String filter = where.isEmpty() ? "" : " where " + String.join(" and ", where);
-        long total = jdbc.sql("select count(*) from outage" + filter).params(params).query(Long.class).single();
+        params.put("type", q.type() == null ? null : q.type().name());
+        params.put("source", blank(q.source()) ? null : q.source().strip().toUpperCase(java.util.Locale.ROOT));
+        params.put("ilKey", blank(q.il()) ? null : Names.key(q.il()));
+        params.put("ilceKey", blank(q.ilce()) ? null : Names.key(q.ilce()));
+        params.put("active", q.active());
+        params.put("now", ts(now));
+        long total = jdbc.sql(SEARCH_COUNT).params(params).query(Long.class).single();
         params.put("limit", size);
         params.put("offset", (long) page * size);
-        List<Outage> items = jdbc.sql("select * from outage" + filter
-                        + " order by starts_at desc, id limit :limit offset :offset")
+        List<Outage> items = jdbc.sql(SEARCH_PAGE)
                 .params(params)
                 .query((rs, n) -> map(rs, now))
                 .list();
         return new PageResponse<>(items, page, size, total);
+    }
+
+    private static boolean blank(String s) {
+        return s == null || s.isBlank();
     }
 
     /** Il/ilce bazinda aktif kesinti sayilari (harita renklendirme). */
@@ -198,7 +198,8 @@ public class OutageRepository {
         Instant gone = instant(rs, "gone_at");
         Array arr = rs.getArray("mahalleler");
         List<String> mahalleler = arr == null ? List.of() : List.of((String[]) arr.getArray());
-        boolean active = !starts.isAfter(now) && (ends == null || ends.isAfter(now)) && gone == null;
+        // starts_at kolonu NOT NULL; yine de bos gelirse kesinti aktif sayilmaz (NPE yerine).
+        boolean active = starts != null && !starts.isAfter(now) && (ends == null || ends.isAfter(now)) && gone == null;
         return new Outage(
                 rs.getObject("id", UUID.class),
                 rs.getString("source"),

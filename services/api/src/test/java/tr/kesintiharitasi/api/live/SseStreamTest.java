@@ -84,7 +84,7 @@ class SseStreamTest extends IntegrationTest {
         try (SseTestClient client = SseTestClient.connect(port, lastSeen).awaitConnected()) {
             Event a = client.next(e -> e.data().contains(ilce), WAIT);
             Event b = client.next(e -> e.data().contains(ilce), WAIT);
-            assertThat(a.data()).doesNotContain(first).as("zaten gorulen olay tekrar gelmez");
+            assertThat(a.data()).as("zaten gorulen olay tekrar gelmez").doesNotContain(first);
             assertThat(List.of(a.name(), b.name())).containsOnly(LiveEvents.CREATED);
             assertThat(StreamIds.compare(a.id(), lastSeen)).isPositive();
             assertThat(StreamIds.compare(b.id(), a.id())).isPositive();
