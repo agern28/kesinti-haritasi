@@ -129,3 +129,5 @@ git push origin collector-v1.0.0 api-v1.0.0 frontend-v1.0.0
 ```
 
 Her tag kendi workflow'unu başlatıyor: test, Trivy, GHCR'a gönderme, Release. Release notu `CHANGELOG.md`'deki `[1.0.0]` bölümünden geliyor.
+
+Sonuç (2026-09-15): ilk tag'ler Sonar adımında kırıldı (yukarıda, "Nerede takıldım"). Düzeltmeden sonra tag'ler `11f3377`'ye taşındı; üç tag koşusu yeşil, imajlar `ghcr.io/agern28/kesinti-haritasi/{collector,api,frontend}:1.0.0` ve `:latest` olarak GHCR'da, üç GitHub Release'in notu CHANGELOG'dan, her birinde SBOM. Repo public olduğu için paketler public oluştu; girişsiz çekilebiliyor, elle görünürlük değiştirmek gerekmedi.

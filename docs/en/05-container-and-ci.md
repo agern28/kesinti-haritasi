@@ -129,3 +129,5 @@ git push origin collector-v1.0.0 api-v1.0.0 frontend-v1.0.0
 ```
 
 Each tag starts its own workflow: tests, Trivy, push to GHCR, Release. The release notes come from the `[1.0.0]` section of `CHANGELOG.md`.
+
+Result (2026-09-15): the first tags failed at the Sonar step (above, "Where I got stuck"). After the fix the tags were moved to `11f3377`; all three tag runs are green, the images are on GHCR as `ghcr.io/agern28/kesinti-haritasi/{collector,api,frontend}:1.0.0` and `:latest`, the three GitHub Releases have their notes from the CHANGELOG and an SBOM each. Since the repo is public, the packages came out public; they can be pulled without logging in, no manual visibility change was needed.
