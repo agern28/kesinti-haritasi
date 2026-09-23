@@ -107,6 +107,10 @@ Stack'i canlı kaynaklarla ayağa kaldırıp arayüzü headless Chromium ile den
 - **CSS'teki bir yazım hatası build'i kırdı**: `max width:` diye bir satır kalmıştı. Testler geçti, Vite'in CSS küçültücüsü hata verdi.
 - **Wikidata'nın ilk sorgusu eksik kaldı**: ilçeleri tipine (P31) göre sorgulayınca 612 ilçe gelmedi, Wikidata'da ilçelerin tipi tutarlı değil. İllerin alt birimleri (P150) üzerinden sorgulayınca 6'ya indi.
 
+## Sonradan: sınır dosyasının cache'i (2026-09-17)
+
+`ilceler.topo.json` nginx'te 7 gün cache'li ve adı sabit. Sınırlar güncellenirse tarayıcıda bir hafta eski dosya kalabilirdi. Harita dosyayı artık `?v=<sürüm>` ile istiyor; yeni sürüm çıktığında adres değiştiği için tarayıcı yeni dosyayı alıyor.
+
 ## Bilinen sınırlar
 
 - ÇEDAŞ'ın bozuk adla gelen kaydı haritada yok, sadece lejantta sayılıyor. Collector'da ÇEDAŞ'ın serbest metin biçimi hâlâ "en iyi çaba".

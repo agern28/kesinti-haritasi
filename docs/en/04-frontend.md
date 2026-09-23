@@ -107,6 +107,10 @@ I ran the stack against the live sources and checked the UI with headless Chromi
 - **A typo in the CSS broke the build**: a line `max width:` was left in. The tests passed and Vite's CSS minifier failed.
 - **The first Wikidata query came up short**: querying districts by type (P31) missed 612 districts, because district types on Wikidata aren't consistent. Querying the subdivisions of provinces (P150) brought it down to 6.
 
+## Found later: caching of the boundary file (2026-09-17)
+
+`ilceler.topo.json` is cached for 7 days in nginx and its name never changes, so after a boundary update a browser could keep the old file for a week. The map now requests it with `?v=<version>`; when a new version ships the URL changes and the browser fetches the new file.
+
 ## Known limitations
 
 - The ÇEDAŞ record with a broken name isn't on the map, it is only counted in the legend. The free-text format of ÇEDAŞ is still "best effort" in the collector.

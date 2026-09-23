@@ -7,6 +7,8 @@ import { countsFor, TYPES } from '../lib/districts.js'
 
 // Ilce sinirlari: HGK / OCHA HDX COD-AB (CC BY-IGO), sadelestirilmis. Uretimi: scripts/ilceler.py
 export const GEO_URL = '/geo/ilceler.topo.json'
+// Surum sorgusu: dosya nginx'te 7 gun cache'li, yeni surum eski sinirlari kullanmasin.
+const GEO_VERSION = import.meta.env.VITE_APP_VERSION ?? 'dev'
 
 const TURKEY = [
   [35.8, 25.6],
@@ -74,7 +76,7 @@ export default function OutageMap({ summary, selected, selectedId, flash, onSele
     resize?.observe(container.current)
 
     let cancelled = false
-    fetch(GEO_URL)
+    fetch(`${GEO_URL}?v=${GEO_VERSION}`)
       .then((res) => {
         if (!res.ok) {
           throw new Error(`${GEO_URL}: HTTP ${res.status}`)
