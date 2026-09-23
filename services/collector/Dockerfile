@@ -1,6 +1,6 @@
 # syntax=docker/dockerfile:1
 # Cok asamali: Maven ile build, Spring Boot katmanlarina ayirma, JRE alpine uzerinde root olmayan kullanici.
-FROM maven:3.9-eclipse-temurin-21 AS build
+FROM maven:3-eclipse-temurin-26 AS build
 WORKDIR /src
 COPY pom.xml .
 # Maven deposu BuildKit cache'inde: pom degismedikce bagimliliklar yeniden inmiyor.
