@@ -69,6 +69,12 @@ class PoliteHttpClientTest {
                 UA, minDelay, Duration.ofSeconds(5), Duration.ofHours(1), Duration.ofMinutes(1), Clock.systemUTC());
     }
 
+    /** robotsTtl'i disaridan veren hali: onbellek davranisini denemek icin. */
+    private static PoliteHttpClient client(Duration minDelay, Duration robotsTtl) {
+        return new PoliteHttpClient(HttpClient.newBuilder().followRedirects(HttpClient.Redirect.NEVER).build(),
+                UA, minDelay, Duration.ofSeconds(5), robotsTtl, Duration.ofMinutes(1), Clock.systemUTC());
+    }
+
     @Test
     void izinliSayfaIndirilirUserAgentGiderSikistirmaAcilir() throws Exception {
         HttpResult r = client(Duration.ZERO).get(base + "/ok");
@@ -132,6 +138,30 @@ class PoliteHttpClientTest {
         c.get(base + "/ok");
         c.get(base + "/ok");
         assertThat(Duration.ofNanos(System.nanoTime() - t0)).isGreaterThanOrEqualTo(Duration.ofMillis(950));
+    }
+
+    @Test
+    void robotsAlinamazsaHataMesajiSebebiSoyler() {
+        robotsStatus = 503;
+        assertThatThrownBy(() -> client(Duration.ZERO).get(base + "/ok"))
+                .isInstanceOf(RobotsDisallowedException.class)
+                .hasMessageContaining("alinamadi")
+                .hasMessageContaining("HTTP 503");
+    }
+
+    @Test
+    void robotsAlinamazsaOncekiKopyaKullanilir() throws Exception {
+        // robotsTtl sifir: her istekte yeniden indirilmeye calisiliyor
+        PoliteHttpClient c = client(Duration.ZERO, Duration.ZERO);
+        assertThat(c.get(base + "/ok").status()).isEqualTo(200);
+
+        robotsStatus = 503;
+        assertThat(c.get(base + "/ok").status()).as("elde gecerli kopya varken istek durmuyor").isEqualTo(200);
+        assertThatThrownBy(() -> c.get(base + "/private/x"))
+                .as("kopyadaki yasak kurali gecerli")
+                .isInstanceOf(RobotsDisallowedException.class)
+                .hasMessageContaining("izin vermiyor");
+        assertThat(privateHits).hasValue(0);
     }
 
     private static void respond(HttpExchange ex, int status, byte[] body) throws IOException {

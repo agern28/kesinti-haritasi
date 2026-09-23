@@ -7,6 +7,12 @@ import java.net.URI;
 public class RobotsDisallowedException extends IOException {
 
     public RobotsDisallowedException(URI uri) {
-        super("robots.txt izin vermiyor: " + uri);
+        this(uri, null);
+    }
+
+    /** unavailable null degilse robots.txt alinamadigi icin yasak sayilmistir; sebebi mesaja giriyor. */
+    public RobotsDisallowedException(URI uri, String unavailable) {
+        super(unavailable == null ? "robots.txt izin vermiyor: " + uri
+                : "robots.txt alinamadi (" + unavailable + "), yasak sayildi: " + uri);
     }
 }

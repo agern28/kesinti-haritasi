@@ -33,8 +33,11 @@ public class PoliteHttpClient {
 
     private static final Logger log = LoggerFactory.getLogger(PoliteHttpClient.class);
     private static final int MAX_REDIRECTS = 5;
+    /** robots.txt alinamazsa elde kalan kopya bu sure boyunca kullanilir (RFC 9309: 24 saate kadar). */
+    private static final Duration STALE_ROBOTS_LIMIT = Duration.ofHours(24);
 
-    private record CachedRobots(RobotsTxt rules, Instant expiresAt) {
+    /** unavailable: robots.txt alinamadigi icin yasak sayildiysa sebebi, alinabildiyse null. */
+    private record CachedRobots(RobotsTxt rules, Instant fetchedAt, Instant expiresAt, String unavailable) {
     }
 
     private static final class HostGate {
@@ -78,11 +81,12 @@ public class PoliteHttpClient {
             throws IOException, InterruptedException {
         URI current = uri;
         for (int hop = 0; hop <= MAX_REDIRECTS; hop++) {
-            RobotsTxt rules = robotsFor(current);
-            if (!rules.allows(pathAndQuery(current))) {
-                throw new RobotsDisallowedException(current);
+            CachedRobots robotsTxt = robotsFor(current);
+            if (!robotsTxt.rules().allows(pathAndQuery(current))) {
+                throw new RobotsDisallowedException(current, robotsTxt.unavailable());
             }
-            HttpResponse<byte[]> resp = gated(current, rules.crawlDelay(), request(method, current, body, contentType));
+            HttpResponse<byte[]> resp = gated(current, robotsTxt.rules().crawlDelay(),
+                    request(method, current, body, contentType));
             int status = resp.statusCode();
             String location = resp.headers().firstValue("location").orElse(null);
             if (isRedirect(status) && location != null) {
@@ -99,15 +103,20 @@ public class PoliteHttpClient {
         throw new IOException("Cok fazla yonlendirme: " + uri);
     }
 
-    /** Host'un robots.txt kurallari; gerekirse indirir ve cache'ler. */
-    RobotsTxt robotsFor(URI uri) throws InterruptedException {
+    /**
+     * Host'un robots.txt kurallari; gerekirse indirir ve cache'ler.
+     * Alinamazsa (5xx, baglanti/DNS hatasi) elde gecerli bir kopya varsa o kullanilir: gecici bir ag
+     * sorunu butun kaynaklari durdurmasin. Kopya yoksa RFC 9309 geregi tamamen yasak sayilir.
+     */
+    CachedRobots robotsFor(URI uri) throws InterruptedException {
         String origin = origin(uri);
         Instant now = clock.instant();
         CachedRobots cached = robots.get(origin);
         if (cached != null && now.isBefore(cached.expiresAt())) {
-            return cached.rules();
+            return cached;
         }
         RobotsTxt rules;
+        String unavailable = null;
         Duration ttl = robotsTtl;
         try {
             URI current = URI.create(origin + "/robots.txt");
@@ -127,17 +136,30 @@ public class PoliteHttpClient {
             } else if ((status >= 400 && status < 500) || isRedirect(status)) {
                 rules = RobotsTxt.allowAll();
             } else {
+                unavailable = "HTTP " + status;
                 rules = RobotsTxt.disallowAll();
                 ttl = robotsFailureTtl;
             }
             log.info("robots.txt {} -> HTTP {}", origin, status);
         } catch (IOException e) {
-            log.warn("robots.txt {} alinamadi, tamamen yasak sayiliyor: {}", origin, e.toString());
+            unavailable = e.toString();
             rules = RobotsTxt.disallowAll();
             ttl = robotsFailureTtl;
         }
-        robots.put(origin, new CachedRobots(rules, now.plus(ttl)));
-        return rules;
+        if (unavailable != null && cached != null && cached.unavailable() == null
+                && now.isBefore(cached.fetchedAt().plus(STALE_ROBOTS_LIMIT))) {
+            log.warn("robots.txt {} alinamadi ({}), onbellekteki kopya kullaniliyor", origin, unavailable);
+            CachedRobots stale = new CachedRobots(cached.rules(), cached.fetchedAt(),
+                    now.plus(robotsFailureTtl), null);
+            robots.put(origin, stale);
+            return stale;
+        }
+        if (unavailable != null) {
+            log.warn("robots.txt {} alinamadi ({}), tamamen yasak sayiliyor", origin, unavailable);
+        }
+        CachedRobots fresh = new CachedRobots(rules, now, now.plus(ttl), unavailable);
+        robots.put(origin, fresh);
+        return fresh;
     }
 
     private HttpResponse<byte[]> gated(URI uri, Duration crawlDelay, HttpRequest request)
