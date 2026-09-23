@@ -9,6 +9,11 @@ updates:
     commit-message:
       prefix: ci
     open-pull-requests-limit: 5
+    ignore:
+      # Ana surum atlamalari bilincli karar (Java 21 ve Node 24 LTS, Spring Boot ana surumu, React).
+      # Dependabot ilk turda Node 25 ve Java 25/26 onerdi; kucuk surumler ve guvenlik yamalari yeterli.
+      - dependency-name: "*"
+        update-types: ["version-update:semver-major"]
 
   - package-ecosystem: maven
     directories:
@@ -19,6 +24,11 @@ updates:
     commit-message:
       prefix: fix
     open-pull-requests-limit: 5
+    ignore:
+      # Ana surum atlamalari bilincli karar (Java 21 ve Node 24 LTS, Spring Boot ana surumu, React).
+      # Dependabot ilk turda Node 25 ve Java 25/26 onerdi; kucuk surumler ve guvenlik yamalari yeterli.
+      - dependency-name: "*"
+        update-types: ["version-update:semver-major"]
 
   - package-ecosystem: npm
     directory: /frontend
@@ -27,6 +37,11 @@ updates:
     commit-message:
       prefix: fix
     open-pull-requests-limit: 5
+    ignore:
+      # Ana surum atlamalari bilincli karar (Java 21 ve Node 24 LTS, Spring Boot ana surumu, React).
+      # Dependabot ilk turda Node 25 ve Java 25/26 onerdi; kucuk surumler ve guvenlik yamalari yeterli.
+      - dependency-name: "*"
+        update-types: ["version-update:semver-major"]
 
   - package-ecosystem: docker
     directories:
@@ -38,3 +53,8 @@ updates:
     commit-message:
       prefix: infra
     open-pull-requests-limit: 5
+    ignore:
+      # Ana surum atlamalari bilincli karar (Java 21 ve Node 24 LTS, Spring Boot ana surumu, React).
+      # Dependabot ilk turda Node 25 ve Java 25/26 onerdi; kucuk surumler ve guvenlik yamalari yeterli.
+      - dependency-name: "*"
+        update-types: ["version-update:semver-major"]

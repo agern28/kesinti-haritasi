@@ -100,6 +100,8 @@ On GitHub (2026-09-15, first push to `main`): the collector, api and frontend wo
 
 Two things were pinned by hand in this phase: the actions by commit SHA and Tomcat to 11.0.25 in the poms. Both go stale on their own, and nobody gets told when a security patch lands. `.github/dependabot.yml` was added: GitHub Actions, the Maven dependencies of both services, the frontend's npm dependencies and the base images of the three Dockerfiles are checked weekly. The PRs it opens go through the service workflows and compose-smoke, so an update can't merge without passing the tests.
 
+The first round opened 11 PRs, all green in CI. I took six (action versions, jsdom, vitest, coverage) and closed five: they moved Node from 24 to 25, the runtime image from Java 21 to 25 and the build image from 21 to 26. Node 25 and Java 26 aren't LTS and the project targets Java 21; those moves should be a deliberate decision. So Dependabot no longer proposes major version bumps (`ignore: version-update:semver-major`), while minor versions and security patches keep coming.
+
 ## Known limitations
 
 - Until the Sonar token is added, the Sonar step is skipped with only a warning.

@@ -100,6 +100,8 @@ GitHub'da (2026-09-15, `main`'e ilk push): collector, api ve frontend workflow'l
 
 Bu fazda iki şeyi elle sabitledim: action'lar commit SHA'sıyla, Tomcat pom'da tek başına 11.0.25'e. İkisi de kendiliğinden eskiyor ve güvenlik yaması geldiğinde kimse haber vermiyor. `.github/dependabot.yml` eklendi: GitHub Actions, iki servisin Maven bağımlılıkları, frontend'in npm bağımlılıkları ve üç Dockerfile'daki base image'lar haftalık kontrol ediliyor. Açılan PR'lar servis workflow'larından ve compose-smoke'tan geçiyor, yani güncelleme testlerden geçmeden birleşmiyor.
 
+İlk turda 11 PR açıldı, hepsi CI'dan yeşil geçti. Altısını (action sürümleri, jsdom, vitest, coverage) aldım. Beşini kapattım: Node 24'ten 25'e, çalışma imajını Java 21'den 25'e, derleme imajını 21'den 26'ya çıkarıyorlardı. Node 25 ve Java 26 LTS değil, proje de Java 21 hedefliyor; bu geçişler bilinçli bir karar olmalı. Bu yüzden Dependabot artık ana sürüm atlamalarını önermiyor (`ignore: version-update:semver-major`), küçük sürümler ve güvenlik yamaları gelmeye devam ediyor.
+
 ## Bilinen sınırlar
 
 - Sonar token'ı eklenene kadar Sonar adımı atlanıyor, sadece uyarı var.
