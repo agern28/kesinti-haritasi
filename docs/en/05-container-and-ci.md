@@ -96,6 +96,10 @@ On GitHub (2026-09-15, first push to `main`): the collector, api and frontend wo
 - **The first v1.0.0 tags failed at Sonar**: tagging `944eb64`, which had passed the gate on `main`, made all three tag runs fail at the Sonar step, so the image and Release steps never ran. SonarCloud treats a tag as a separate, short-lived branch (like `refs/tags/collector-v1.0.0`); on that branch's first analysis there was no period to compare with, so the gate wasn't computed. Since the tagged commit has already been analyzed and passed the gate on `main`, the Sonar step no longer runs on tag runs. GitHub reads the workflow from the tag's commit on a tag run, so after the fix the tags were moved to the new commit; the first tags had produced neither an image nor a Release. The rule stays the same: a tag goes on a commit that is green on `main`.
 - **The environment label**: if I'd left it as a build argument, the "same image from INT to PROD" flow of Phase 7 would have broken. I noticed while designing the images, so it didn't wait until Phase 7.
 
+## Found later: keeping dependencies current (2026-09-17)
+
+Two things were pinned by hand in this phase: the actions by commit SHA and Tomcat to 11.0.25 in the poms. Both go stale on their own, and nobody gets told when a security patch lands. `.github/dependabot.yml` was added: GitHub Actions, the Maven dependencies of both services, the frontend's npm dependencies and the base images of the three Dockerfiles are checked weekly. The PRs it opens go through the service workflows and compose-smoke, so an update can't merge without passing the tests.
+
 ## Known limitations
 
 - Until the Sonar token is added, the Sonar step is skipped with only a warning.

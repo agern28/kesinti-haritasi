@@ -96,6 +96,10 @@ GitHub'da (2026-09-15, `main`'e ilk push): collector, api ve frontend workflow'l
 - **İlk v1.0.0 tag'leri Sonar'da kırıldı**: `main`'de gate'ten geçen `944eb64`'ü tag'leyince üç tag koşusu da Sonar adımında düştü, imaj ve Release adımları hiç çalışmadı. SonarCloud tag'i ayrı, kısa ömürlü bir dal sayıyor (`refs/tags/collector-v1.0.0` gibi); o dalın ilk analizinde karşılaştırılacak dönem olmadığı için gate hesaplanmadı. Tag'lenen commit `main`'de zaten analiz edilip gate'ten geçtiği için tag koşularında Sonar adımı artık çalışmıyor. GitHub tag koşusunda workflow'u tag'in commit'inden okuduğu için düzeltmeden sonra tag'ler yeni commit'e taşındı; ilk tag'ler ne imaj ne Release üretmişti. Kural değişmedi: tag, `main`'de yeşil olan bir commit'e atılıyor.
 - **Ortam etiketi**: build argümanı olarak bırakırsam Faz 7'deki "aynı imaj INT'ten PROD'a" akışı bozulacaktı; bunu imajları tasarlarken fark ettim, Faz 7'ye kalmadı.
 
+## Sonradan: bağımlılıkların güncel tutulması (2026-09-17)
+
+Bu fazda iki şeyi elle sabitledim: action'lar commit SHA'sıyla, Tomcat pom'da tek başına 11.0.25'e. İkisi de kendiliğinden eskiyor ve güvenlik yaması geldiğinde kimse haber vermiyor. `.github/dependabot.yml` eklendi: GitHub Actions, iki servisin Maven bağımlılıkları, frontend'in npm bağımlılıkları ve üç Dockerfile'daki base image'lar haftalık kontrol ediliyor. Açılan PR'lar servis workflow'larından ve compose-smoke'tan geçiyor, yani güncelleme testlerden geçmeden birleşmiyor.
+
 ## Bilinen sınırlar
 
 - Sonar token'ı eklenene kadar Sonar adımı atlanıyor, sadece uyarı var.

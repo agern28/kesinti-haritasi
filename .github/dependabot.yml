@@ -1,0 +1,40 @@
+# Bagimliliklar elle sabitli: action'lar commit SHA'si ile, Tomcat pom'da tek basina yukseltildi.
+# Dependabot bunlari haftalik PR olarak guncel tutuyor; PR'lar servis workflow'larindan geciyor.
+version: 2
+updates:
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+    commit-message:
+      prefix: ci
+    open-pull-requests-limit: 5
+
+  - package-ecosystem: maven
+    directories:
+      - /services/collector
+      - /services/api
+    schedule:
+      interval: weekly
+    commit-message:
+      prefix: fix
+    open-pull-requests-limit: 5
+
+  - package-ecosystem: npm
+    directory: /frontend
+    schedule:
+      interval: weekly
+    commit-message:
+      prefix: fix
+    open-pull-requests-limit: 5
+
+  - package-ecosystem: docker
+    directories:
+      - /services/collector
+      - /services/api
+      - /frontend
+    schedule:
+      interval: weekly
+    commit-message:
+      prefix: infra
+    open-pull-requests-limit: 5
