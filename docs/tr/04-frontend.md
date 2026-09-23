@@ -111,6 +111,8 @@ Stack'i canlı kaynaklarla ayağa kaldırıp arayüzü headless Chromium ile den
 
 `ilceler.topo.json` nginx'te 7 gün cache'li ve adı sabit. Sınırlar güncellenirse tarayıcıda bir hafta eski dosya kalabilirdi. Harita dosyayı artık `?v=<sürüm>` ile istiyor; yeni sürüm çıktığında adres değiştiği için tarayıcı yeni dosyayı alıyor.
 
+Adres ve indirme `src/lib/geo.js`'te, testleriyle. İlk hâlinde bu satırlar `OutageMap` içindeydi ve Sonar'ın quality gate'i yeni kod kapsamında kırıldı: Leaflet haritası jsdom'da test edilmediği için o dosyadaki hiçbir satır kapsanmıyor. Harita bileşeninde tek satır kaldı (`fetchDistricts()`), geri kalanı test edilen bir modülde.
+
 ## Bilinen sınırlar
 
 - ÇEDAŞ'ın bozuk adla gelen kaydı haritada yok, sadece lejantta sayılıyor. Collector'da ÇEDAŞ'ın serbest metin biçimi hâlâ "en iyi çaba".

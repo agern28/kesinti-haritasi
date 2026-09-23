@@ -111,6 +111,8 @@ I ran the stack against the live sources and checked the UI with headless Chromi
 
 `ilceler.topo.json` is cached for 7 days in nginx and its name never changes, so after a boundary update a browser could keep the old file for a week. The map now requests it with `?v=<version>`; when a new version ships the URL changes and the browser fetches the new file.
 
+The URL and the download live in `src/lib/geo.js` with tests. In the first version those lines were inside `OutageMap`, and Sonar's quality gate failed on new code coverage: the Leaflet map isn't tested in jsdom, so no line in that file is covered. One line is left in the map component (`fetchDistricts()`), the rest is in a tested module.
+
 ## Known limitations
 
 - The ÇEDAŞ record with a broken name isn't on the map, it is only counted in the legend. The free-text format of ÇEDAŞ is still "best effort" in the collector.
