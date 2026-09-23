@@ -1,7 +1,7 @@
 # syntax=docker/dockerfile:1
 # Build context repo koku (compose: context .), cunku "Yenilikler" penceresi CHANGELOG.md'yi okuyor.
 # Gonderilen dosyalar Dockerfile.dockerignore'da: sadece frontend/ ve CHANGELOG.md.
-FROM node:24-alpine AS build
+FROM node:25-alpine AS build
 WORKDIR /app
 COPY frontend/package.json frontend/package-lock.json ./
 # npm cache'i BuildKit cache'inde: lock dosyasi degismedikce paketler yeniden inmiyor.
