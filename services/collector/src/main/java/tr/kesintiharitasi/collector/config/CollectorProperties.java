@@ -33,7 +33,7 @@ public record CollectorProperties(
             @DefaultValue("10m") Duration failureTtl) {
     }
 
-    /** maxLen: Redis bellek sinirina gore; olay ~1 KB, 30 bin olay ~30 MB (application.yml). */
+    /** maxLen: Redis bellek sinirina gore; olcum olay basina ~0,56 KB, 30 bin olay ~17 MB (application.yml). */
     public record Stream(
             @DefaultValue("outage-events") String key,
             @DefaultValue("30000") long maxLen) {

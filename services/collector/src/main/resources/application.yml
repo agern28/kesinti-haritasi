@@ -42,8 +42,9 @@ collector:
     failure-ttl: 10m
   stream:
     key: outage-events
-    # Redis 96 MB ve noeviction: olay ~1 KB, 30 bin olay ~30 MB. api akisi hizli tuketiyor,
-    # bu uzunluk sadece gecikme ve yeniden okuma icin tampon. 100 bin olay Redis'i doldururdu.
+    # Redis 96 MB ve noeviction: olcum olay basina ~0,56 KB, 30 bin olay ~17 MB. Ayni bellegi
+    # sse-events (~7 MB) ve ISKI snapshot'i (~3,5 MB) paylasiyor. api akisi hizli tuketiyor,
+    # bu uzunluk sadece gecikme ve yeniden okuma icin tampon.
     max-len: 30000
   sources:
     # CK Enerji ariza kayitlarinda konum trafo numarasindan ek istekle bulunur (Redis'te 30 gun cache).

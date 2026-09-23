@@ -188,7 +188,7 @@ Keeping the cookie and always going to the same server would have been another o
 After Phase 5 I went back and looked for things that would break later; two came up.
 
 - **A temporary network error stopped every source.** When DNS broke in WSL, the collector couldn't fetch robots.txt and all 9 feeds failed with "robots.txt izin vermiyor" (robots.txt disallows). Nothing was disallowed; the file simply couldn't be fetched, and the log pointed the wrong way. Two fixes: (1) if robots.txt can't be fetched and there is still a valid copy in the cache, that copy is used (RFC 9309 allows this for up to 24 hours), otherwise it is a full disallow as before; (2) the error message now says "robots.txt alinamadi (reason), yasak sayildi" (couldn't be fetched, treated as disallowed). Tests were added.
-- **The stream could fill Redis.** `outage-events` was trimmed at 100,000 events. Measured: about 0.9 KB per event, so roughly 90 MB near the limit. Redis has 96 MB and `noeviction`, so once full the collector couldn't write at all. The limit is now 30,000 (about 30 MB); since the api consumes without falling behind (lag was 0), that buffer is enough.
+- **The stream could fill Redis.** `outage-events` was trimmed at 100,000 events. Measured: 22,223 events took 12.4 MB, about 0.56 KB per event, so 100,000 events would be around 56 MB. `sse-events` (trimmed at 10,000, about 7 MB) and İSKİ's snapshot (3.5 MB) share the same 96 MB, and Redis is `noeviction`: once full the collector can't write anything. The limit is now 30,000 (about 17 MB), for a ceiling of roughly 30 MB. Since the api consumes without falling behind (lag was 0), that buffer is enough.
 
 ## Known limitations
 

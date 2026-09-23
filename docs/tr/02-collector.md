@@ -188,7 +188,7 @@ Düzeltme (BEDAŞ, AEDAŞ, ÇEDAŞ, üçü de aynı kodu kullanıyor): planlı l
 Faz 5 bittikten sonra geriye dönüp "ileride ne patlar" diye baktım, iki şey çıktı.
 
 - **Geçici ağ hatası bütün kaynakları durduruyordu.** WSL'de DNS bozulunca collector robots.txt'i indiremedi ve 9 feed'in hepsi "robots.txt izin vermiyor" diye düştü. Site bir şey yasaklamıyordu, dosya indirilememişti; log yanlış yere baktırıyordu. İki düzeltme: (1) robots.txt alınamazsa elde geçerli bir kopya varsa o kullanılıyor (RFC 9309 bunu 24 saate kadar kabul ediyor), yoksa eskisi gibi tamamen yasak; (2) hata mesajı artık "robots.txt alınamadı (sebep), yasak sayıldı" diyor. Testleri eklendi.
-- **Stream Redis'i doldurabilirdi.** `outage-events` 100.000 olayda kırpılıyordu. Ölçtüm: olay başına ~0,9 KB, yani sınıra yaklaşınca ~90 MB. Redis 96 MB ve `noeviction`, yani dolduğunda collector yazamaz hale gelirdi. Sınır 30.000'e (~30 MB) indi; api akışı geriye kalmadan tükettiği için bu tampon yeterli, lag 0 ölçülmüştü.
+- **Stream Redis'i doldurabilirdi.** `outage-events` 100.000 olayda kırpılıyordu. Ölçtüm: 22.223 olay 12,4 MB, yani olay başına ~0,56 KB; 100.000 olay ~56 MB eder. Yanında `sse-events` (10.000 olayda kırpılıyor, ~7 MB) ve İSKİ'nin snapshot'ı (3,5 MB) da aynı 96 MB'ı paylaşıyor ve Redis `noeviction`: dolduğunda collector hiçbir şey yazamaz. Sınır 30.000'e indi (~17 MB), toplam tavan ~30 MB. api akışı geriye kalmadan tükettiği için bu tampon yeterli, lag 0 ölçülmüştü.
 
 ## Bilinen sınırlar
 
