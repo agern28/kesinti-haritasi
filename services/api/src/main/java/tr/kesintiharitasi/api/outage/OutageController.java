@@ -19,6 +19,8 @@ import org.springframework.web.server.ResponseStatusException;
 public class OutageController {
 
     static final int MAX_SIZE = 500;
+    /** Derin sayfalama: offset buyudukce sorgu yavasliyor, bu siniri gecen istek 400 aliyor. */
+    static final long MAX_OFFSET = 50_000;
 
     private final OutageRepository repository;
 
@@ -38,6 +40,10 @@ public class OutageController {
             @Parameter(description = "En fazla 500") @RequestParam(defaultValue = "100") int size) {
         if (page < 0 || size < 1) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "page >= 0 ve size >= 1 olmali");
+        }
+        if ((long) page * Math.min(size, MAX_SIZE) > MAX_OFFSET) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                    "Cok derin sayfa: page * size en fazla " + MAX_OFFSET + " olabilir");
         }
         return repository.search(new OutageRepository.Query(type, source, il, ilce, active), page,
                 Math.min(size, MAX_SIZE));

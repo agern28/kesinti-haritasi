@@ -40,6 +40,7 @@ class OutageControllerTest extends IntegrationTest {
         assertThat(get("/api/outages?size=0").statusCode()).isEqualTo(400);
         assertThat(get("/api/outages/" + UUID.randomUUID()).statusCode()).isEqualTo(404);
         assertThat(get("/api/outages/abc").statusCode()).isEqualTo(400);
+        assertThat(get("/api/outages?page=1000&size=500").statusCode()).as("cok derin sayfa").isEqualTo(400);
     }
 
     @Test

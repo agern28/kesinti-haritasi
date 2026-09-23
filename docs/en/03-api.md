@@ -179,6 +179,13 @@ I ran the whole stack (postgres, redis, collector, api, frontend) against the li
 - **Historical data would have flooded the browser.** In the first live run, 18k İSKİ historical records would have gone to the browser as `outage.created`. An outage that has already ended when it first arrives from the source is now stored in the database but not published. The initial load sent 417 events instead of 18k.
 - **Fake active outages from İSKİ.** In the same run, 39 İSKİ records showed as "active", and the top of the map summary had 15-16 active water outages in Istanbul. The cause was 39 rows in the 2022-2023 file with an empty end time: an outage without an end was counted as ongoing forever. District names were also abbreviated (G.O.PAŞA, B.ÇEKMECE, K.ÇEKMECE), and the 2022-2023 file has a different schema from 2023-2024. I missed these in Phase 2's normalization. I fixed the İBB parser (details: [02-collector.md](02-collector.md)).
 
+## Found later: active-outage indexes and deep paging (2026-09-17)
+
+The review after Phase 5 added two things (`V2__active_indexes.sql`):
+
+- **Partial indexes.** 18,000 of the 19,000 rows are İSKİ historical data, and records that disappeared from the source (`gone_at` set) count neither in the list nor in the map summary. Two indexes leave those out: `outage_active_starts_idx` (the list: `starts_at desc` ordering and the active filter) and `outage_active_district_idx` (the map summary: province/district, type, planned/fault). The k6 load test in Phase 9 will push these queries.
+- **Deep paging is rejected.** If `page * size` goes over 50,000, the api returns 400. Before that, a request like `page=100000` made the database scan a huge offset; on a public API that is a cheap way to put load on it.
+
 ## Known limitations
 
 - `last_seen_at` means "last scan in which it changed", not "last scan in which it was seen". The collector only writes changes, so the api doesn't know that an unchanged record is still listed. The plan's line "records that disappeared from the source but haven't reached their end time are tracked with last_seen_at" is covered by `gone_at`.

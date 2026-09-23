@@ -179,6 +179,13 @@ Collector tarafında 76 test var. Faz 2'deki 73 teste ek olarak kaynak durumu ya
 - **Geçmiş veri tarayıcıyı boğacaktı.** İlk canlı denemede İSKİ'nin geçmiş verisinden 18 bin kayıt tarayıcıya `outage.created` olarak gidecekti. Kaynaktan ilk geldiğinde zaten bitmiş kesinti artık veritabanına yazılıyor ama yayınlanmıyor. İlk yüklemede 18 bin yerine 417 olay gitti.
 - **İSKİ'de sahte aktif kesintiler.** Aynı denemede İSKİ'den 39 kayıt "aktif" göründü, harita özetinin başında İstanbul'da 15-16 aktif su kesintisi vardı. Sebep 2022-2023 dosyasında bitişi boş 39 satırdı: bitişsiz kesinti sonsuza kadar sürüyor sayılıyordu. Ayrıca ilçe adları kısaltılmıştı (G.O.PAŞA, B.ÇEKMECE, K.ÇEKMECE) ve 2022-2023 dosyası 2023-2024'ten farklı bir şemadaydı. Bunlar Faz 2'nin normalizasyonunda gözümden kaçmıştı. İBB parser'ını düzelttim (ayrıntı: [02-collector.md](02-collector.md)).
 
+## Sonradan: aktif kesinti indeksleri ve derin sayfalama (2026-09-17)
+
+Faz 5 sonrası gözden geçirmede iki şey eklendi (`V2__active_indexes.sql`):
+
+- **Kısmi indeksler.** Veritabanındaki 19 bin satırın 18 bini İSKİ'nin geçmiş verisi ve kaynaktan kalkmış kayıtlar (`gone_at` dolu) ne listede ne harita özetinde sayılıyor. İki indeks bu kayıtları dışarıda bırakıyor: `outage_active_starts_idx` (liste: `starts_at desc` sıralaması ve aktiflik filtresi), `outage_active_district_idx` (harita özeti: il/ilçe, tür, planlı/arıza). Faz 9'daki k6 yük testi bu sorguları zorlayacak.
+- **Derin sayfalama reddediliyor.** `page * size` 50.000'i geçerse 400 dönüyor. Öncesinde `page=100000` gibi bir istek veritabanına koca bir offset taraması yaptırırdı; dışarı açık bir API'de bu ucuz bir yük bindirme yolu.
+
 ## Bilinen sınırlar
 
 - `last_seen_at` "en son görüldüğü tarama" değil, "en son değiştiği tarama". Collector sadece değişenleri yazıyor, API değişmeyen kaydın hâlâ listede olduğunu bilmiyor. Plandaki "kaynaktan kaybolan ama bitiş saati gelmemiş kayıtlar last_seen_at ile takip edilir" cümlesini `gone_at` karşılıyor.
