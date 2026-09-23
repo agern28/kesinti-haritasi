@@ -9,7 +9,7 @@ COPY src ./src
 RUN --mount=type=cache,target=/root/.m2 mvn -q -B package -DskipTests \
  && java -Djarmode=tools -jar target/*.jar extract --layers --launcher --destination /extracted
 
-FROM eclipse-temurin:21-jre-alpine
+FROM eclipse-temurin:25-jre-alpine
 ARG APP_VERSION=dev
 LABEL org.opencontainers.image.source="https://github.com/agern28/kesinti-haritasi" \
       org.opencontainers.image.title="kesinti-haritasi-collector" \
