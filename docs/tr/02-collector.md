@@ -183,6 +183,13 @@ Düzeltme (BEDAŞ, AEDAŞ, ÇEDAŞ, üçü de aynı kodu kullanıyor): planlı l
 
 Çerez tutup hep aynı sunucuya gitmek de bir yol olurdu, ama o sunucunun eski olmadığını yine bilemezdik. Veriye bakan kontrol, hangi sunucudan gelirse gelsin çalışıyor.
 
+## Sonradan: robots.txt alınamadığında ve stream uzunluğu (2026-09-17)
+
+Faz 5 bittikten sonra geriye dönüp "ileride ne patlar" diye baktım, iki şey çıktı.
+
+- **Geçici ağ hatası bütün kaynakları durduruyordu.** WSL'de DNS bozulunca collector robots.txt'i indiremedi ve 9 feed'in hepsi "robots.txt izin vermiyor" diye düştü. Site bir şey yasaklamıyordu, dosya indirilememişti; log yanlış yere baktırıyordu. İki düzeltme: (1) robots.txt alınamazsa elde geçerli bir kopya varsa o kullanılıyor (RFC 9309 bunu 24 saate kadar kabul ediyor), yoksa eskisi gibi tamamen yasak; (2) hata mesajı artık "robots.txt alınamadı (sebep), yasak sayıldı" diyor. Testleri eklendi.
+- **Stream Redis'i doldurabilirdi.** `outage-events` 100.000 olayda kırpılıyordu. Ölçtüm: olay başına ~0,9 KB, yani sınıra yaklaşınca ~90 MB. Redis 96 MB ve `noeviction`, yani dolduğunda collector yazamaz hale gelirdi. Sınır 30.000'e (~30 MB) indi; api akışı geriye kalmadan tükettiği için bu tampon yeterli, lag 0 ölçülmüştü.
+
 ## Bilinen sınırlar
 
 - CK'da devam eden planlı kesinti hem planlı listede hem arıza listesinde (`Bildirimli`) görünüyor. Arızalardan sadece `Bildirimsiz` satırları alıyorum, iki kez sayılmıyor. Ama planlı kesintinin gerçekte ne zaman bittiğini arıza tarafından öğrenmiyoruz.

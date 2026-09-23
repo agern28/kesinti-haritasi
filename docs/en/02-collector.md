@@ -183,6 +183,13 @@ The fix (BEDAŞ, AEDAŞ and ÇEDAŞ all use the same code): if the newest outage
 
 Keeping the cookie and always going to the same server would have been another option, but we still couldn't know that server isn't the stale one. A check that looks at the data works whichever server the answer comes from.
 
+## Found later: unreachable robots.txt and the stream length (2026-09-17)
+
+After Phase 5 I went back and looked for things that would break later; two came up.
+
+- **A temporary network error stopped every source.** When DNS broke in WSL, the collector couldn't fetch robots.txt and all 9 feeds failed with "robots.txt izin vermiyor" (robots.txt disallows). Nothing was disallowed; the file simply couldn't be fetched, and the log pointed the wrong way. Two fixes: (1) if robots.txt can't be fetched and there is still a valid copy in the cache, that copy is used (RFC 9309 allows this for up to 24 hours), otherwise it is a full disallow as before; (2) the error message now says "robots.txt alinamadi (reason), yasak sayildi" (couldn't be fetched, treated as disallowed). Tests were added.
+- **The stream could fill Redis.** `outage-events` was trimmed at 100,000 events. Measured: about 0.9 KB per event, so roughly 90 MB near the limit. Redis has 96 MB and `noeviction`, so once full the collector couldn't write at all. The limit is now 30,000 (about 30 MB); since the api consumes without falling behind (lag was 0), that buffer is enough.
+
 ## Known limitations
 
 - On CK, a planned outage in progress shows up both in the planned list and in the fault list (`Bildirimli`). I only take `Bildirimsiz` rows from the faults, so it isn't counted twice. But we don't learn from the fault side when a planned outage actually ended.
