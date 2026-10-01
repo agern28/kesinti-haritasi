@@ -86,14 +86,17 @@ Durum: tamamlandı (2026-09-15). Not: [tr/05-container-ve-ci.md](tr/05-container
 
 Durum: tamamlandı (2026-10-02). Not: [tr/06-altyapi.md](tr/06-altyapi.md). `terraform validate` ve `terraform fmt` temiz, plan 4 kaynak, apply 40 saniyede bitti. `kubectl get nodes`: iki düğüm Ready. `kubectl get clusterissuers`: `selfsigned-bootstrap` ve `kesinti-ca` True, mesaj "Signing CA verified". Test Certificate'ı (`int.kesinti.localhost`) iki saniyede hazır oldu, `issuer=CN=Kesinti Haritasi Lokal CA`, 90 gün geçerli; sonra silindi (gerçek Ingress sertifikaları Faz 7'de). Traefik 80 ve 443'te cevap veriyor (Ingress olmadığı için 404). Windows `kesinti.localhost`'u kendisi ::1'e çözüyor. Küme + compose yığını 2,3 GB RAM. Takıldığım yerler: `sudo` şifre istediği için k3d `~/.local/bin`'e kuruldu; k3d v5.9.0'ın ayrı sha256 dosyası yok; cert-manager varsayılanı v1.19.2'den güncel v1.21.2'ye çekildi; `kubernetes_manifest` CRD'yi plan aşamasında aradığı için issuer'lar Helm chart'ına taşındı.
 
-## [ ] Faz 7 - Helm ve GitOps
-- [ ] helm/collector, helm/api, helm/frontend (probe, limit, ConfigMap, secret referansı, TLS Ingress, api HPA)
-- [ ] Hafif PostgreSQL ve Redis chart'ları, ortam başına ayrı veritabanı
-- [ ] Argo CD, gitops/apps altında int ve prod Application'ları, gitops/int ve gitops/prod values
-- [ ] CI'ın INT tag güncellemesi (branch kurallarıyla çakışmayan yöntem), PROD'a PR ile terfi
-- [ ] int.<domain> ve <domain>
+## [x] Faz 7 - Helm ve GitOps
+- [x] helm/collector, helm/api, helm/frontend: probe'lar servisin health gruplarına bağlı, resource limitleri, secret referansı (üretilen DB parolası), TLS Ingress (sadece frontend'de), api'de HPA
+- [x] helm/data: tek PostgreSQL ve tek Redis, ortam başına ayrı veritabanı (`kesinti_int`, `kesinti_prod`) ve ayrı Redis logical DB
+- [x] Argo CD (Terraform ile), `gitops/apps` altında 7 Application + kök Application, `gitops/int` ve `gitops/prod` values
+- [x] `promote-int` (servis tag'i → INT values → Argo CD) ve `promote-prod` (elle tetiklenen PR ile terfi)
+- [x] Adresler: https://int.kesinti.localhost ve https://kesinti.localhost, Argo CD https://argocd.localhost
+- [x] 1.0.1 çıkarıldı: GHCR'daki 1.0.0 imajları sertleştirme öncesi koddu
 
-Bitti sayılma koşulu: `helm lint` ve `helm template` temiz; Argo CD'de int ve prod Synced/Healthy; v1.0 `https://<domain>` üzerinde canlı.
+Durum: tamamlandı (2026-10-02). Not: [tr/07-helm-ve-gitops.md](tr/07-helm-ve-gitops.md). `helm lint` beş chart'ta temiz, `kubectl --dry-run=server` dördünde geçti, `terraform validate` temiz. Argo CD ilk kurulumda 8 Application'ı 3 dakikada Synced/Healthy yaptı. `make cluster-check` 25 kontrolle doğruluyor: iki ortamın ana sayfası ve `/env.json` doğru etiketle, harita özeti ve kaynak durumu 200, sınır dosyası 475 KB, SSE Ingress üzerinden bağlanıyor (`:bagli`, `retry:3000`, 15 sn kalp atışı), üç sertifika kendi CA'mızdan, INT'te tarama kapalı PROD'da açık, HPA 1-3. PROD veritabanı canlı taramalarla 18.799 satır; INT boş (orada tarama yok). Küme + compose 4,0 GB RAM. Takıldığım yerler: Ingress'ten `/api` 502 (nginx resolver kısa servis adını çözemiyor, tam alan adı gerekti); küme compose'dan eski kod çalıştırıyordu (1.0.1 bunun için); `applicationSet.enabled` anahtarı yok (replicas 0); `promote-prod.yml` ilk halinde geçersiz YAML'dı (blok skalarda girintisiz satırlar), workflow dosyalarını doğrulayan adım eklendi.
+
+Bitti sayılma koşulu (lokal haliyle karşılandı): `helm lint` ve `helm template` temiz; Argo CD'de int ve prod Synced/Healthy; uygulama alan adı yerine `https://kesinti.localhost` üzerinde canlı.
 
 ## [ ] Faz 8 - Gözlemlenebilirlik
 - [ ] 4 GB'a sığacak kube-prometheus-stack değerleri

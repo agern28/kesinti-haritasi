@@ -53,13 +53,18 @@ jobs:
           git add "gitops/prod/$servis.yaml"
           git commit -m "chore(gitops): promote $servis ${{ steps.tasi.outputs.int_tag }} to PROD"
           git push origin "$dal"
+          # Govde dosyaya yaziliyor: YAML blok skalarinin icine cok satirli metin gomulunce
+          # girintisiz satirlar blogu bitiriyor ve workflow dosyasi gecersiz oluyor.
+          printf '%s\n' \
+            "INT'te ${{ steps.tasi.outputs.int_tag }} calisiyor, PROD ${{ steps.tasi.outputs.prod_tag }} surumunde." \
+            "Bu PR birlesince Argo CD PROD'u ${{ steps.tasi.outputs.int_tag }} surumune gecirir." \
+            "" \
+            "Kontrol listesi:" \
+            "- [ ] INT'te uygulama acilip bakildi" \
+            "- [ ] Argo CD'de int-$servis Synced ve Healthy" \
+            "- [ ] CHANGELOG guncel" > /tmp/pr-body.md
           gh pr create \
             --base main \
             --head "$dal" \
             --title "Promote $servis ${{ steps.tasi.outputs.int_tag }} to PROD" \
-            --body "INT'te ${{ steps.tasi.outputs.int_tag }} calisiyor, PROD ${{ steps.tasi.outputs.prod_tag }} surumunde. Bu PR birlesince Argo CD PROD'u ${{ steps.tasi.outputs.int_tag }} surumune gecirir.
-
-Kontrol listesi:
-- [ ] INT'te uygulama acilip bakildi
-- [ ] Argo CD'de int-$servis Synced ve Healthy
-- [ ] CHANGELOG guncel"
+            --body-file /tmp/pr-body.md

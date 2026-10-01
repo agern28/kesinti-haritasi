@@ -99,7 +99,25 @@ make cluster-status  # nodes, pods, issuers
 make cluster-down    # deletes the cluster completely
 ```
 
-The services arrive on the cluster in Phase 7 with Helm and Argo CD; right now the cluster is empty and Traefik is waiting for an Ingress on 80/443. Details, and what moving to the cloud (Hetzner) would take: [docs/en/06-infrastructure.md](docs/en/06-infrastructure.md).
+The app is installed on the cluster by Argo CD: the Applications under `gitops/apps` bring up both environments.
+
+| What | Address |
+|---|---|
+| PROD | https://kesinti.localhost |
+| INT | https://int.kesinti.localhost |
+| Argo CD | https://argocd.localhost (`admin`, password: `make argocd-password`) |
+
+Certificates come from our own in-cluster CA, so the browser warns; continue anyway.
+
+```bash
+make cluster-check     # end-to-end check of the cluster install (25 checks)
+make argocd-apps       # sync and health of the Applications
+make argocd-refresh    # make Argo CD check the repo right away
+```
+
+What differs between the environments lives in the values files under `gitops/int` and `gitops/prod`: database, Redis logical DB, HPA, environment label, and the source scanning that is off in INT. Details: [docs/en/07-helm-and-gitops.md](docs/en/07-helm-and-gitops.md). The cluster itself, and what moving to the cloud (Hetzner) would take: [docs/en/06-infrastructure.md](docs/en/06-infrastructure.md).
+
+Note: a source site is only ever hit from one place at a time. While the cluster is up, the collector that scans is the PROD one; stop the compose collector (`docker compose stop collector`).
 
 ### Working outside containers
 

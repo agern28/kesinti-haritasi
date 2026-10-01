@@ -86,14 +86,17 @@ Status: done (2026-09-15). Notes: [05-container-and-ci.md](05-container-and-ci.m
 
 Status: done (2026-10-02). Notes: [06-infrastructure.md](06-infrastructure.md). `terraform validate` and `terraform fmt` are clean, the plan is 4 resources, the apply took 40 seconds. `kubectl get nodes`: both nodes Ready. `kubectl get clusterissuers`: `selfsigned-bootstrap` and `kesinti-ca` True, message "Signing CA verified". A test Certificate for `int.kesinti.localhost` was ready in two seconds with `issuer=CN=Kesinti Haritasi Lokal CA` and 90 days validity, then deleted (the real Ingress certificates come in Phase 7). Traefik answers on 80 and 443 (404, since there is no Ingress). Windows resolves `kesinti.localhost` to ::1 on its own. The cluster plus the compose stack use 2.3 GB of RAM. Where I got stuck: `sudo` asks for a password, so k3d went to `~/.local/bin`; k3d v5.9.0 publishes no separate sha256 file; the cert-manager default moved from v1.19.2 to the current v1.21.2; `kubernetes_manifest` looks for the CRD at plan time, so the issuers moved into a Helm chart.
 
-## [ ] Phase 7 - Helm and GitOps
-- [ ] helm/collector, helm/api, helm/frontend (probes, limits, ConfigMap, secret reference, TLS Ingress, HPA for api)
-- [ ] Lightweight PostgreSQL and Redis charts, one database per environment
-- [ ] Argo CD, int and prod Applications under gitops/apps, values in gitops/int and gitops/prod
-- [ ] CI bumps the INT tag (without fighting branch protection), PROD promotion through a PR
-- [ ] int.<domain> and <domain>
+## [x] Phase 7 - Helm and GitOps
+- [x] helm/collector, helm/api, helm/frontend: probes wired to the services' health groups, resource limits, secret reference (generated DB password), TLS Ingress (frontend only), HPA on the api
+- [x] helm/data: one PostgreSQL and one Redis, a database per environment (`kesinti_int`, `kesinti_prod`) and a separate Redis logical DB
+- [x] Argo CD (via Terraform), 7 Applications plus the root Application under `gitops/apps`, values in `gitops/int` and `gitops/prod`
+- [x] `promote-int` (service tag -> INT values -> Argo CD) and `promote-prod` (manual, promotes via PR)
+- [x] Addresses: https://int.kesinti.localhost and https://kesinti.localhost, Argo CD https://argocd.localhost
+- [x] 1.0.1 was cut: the GHCR 1.0.0 images predated the hardening pass
 
-Done when: `helm lint` and `helm template` are clean; int and prod are Synced/Healthy in Argo CD; v1.0 is live on `https://<domain>`.
+Status: done (2026-10-02). Notes: [07-helm-and-gitops.md](07-helm-and-gitops.md). `helm lint` is clean on all five charts, `kubectl --dry-run=server` passed on four, `terraform validate` is clean. On the first install Argo CD had all 8 Applications Synced/Healthy within 3 minutes. `make cluster-check` verifies it with 25 checks: both environments' home page and `/env.json` with the right label, map summary and source status at 200, the boundary file at 475 KB, SSE connecting through the Ingress (`:bagli`, `retry:3000`, a heartbeat every 15 s), three certificates from our own CA, scanning off in INT and on in PROD, the HPA at 1-3. The PROD database holds 18,799 rows from live scans; INT is empty (no scanning there). Cluster plus compose use 4.0 GB of RAM. Where I got stuck: `/api` returned 502 through the Ingress (nginx's resolver cannot resolve the short service name, it needed the fully qualified one); the cluster was running older code than compose (hence 1.0.1); there is no `applicationSet.enabled` key (replicas 0 instead); the first version of `promote-prod.yml` was invalid YAML (unindented lines inside a block scalar), so a step validating the workflow files was added.
+
+Done when (met, with the local wording): `helm lint` and `helm template` are clean; int and prod are Synced/Healthy in Argo CD; the app is live on `https://kesinti.localhost` instead of a public domain.
 
 ## [ ] Phase 8 - Observability
 - [ ] kube-prometheus-stack values that fit into 4 GB

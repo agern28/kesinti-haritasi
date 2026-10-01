@@ -9,14 +9,14 @@ on:
       - infra/**
       - helm/**
       - gitops/**
-      - .github/workflows/infra.yml
+      - .github/workflows/**
       - .github/scripts/check-gitops.py
   pull_request:
     paths:
       - infra/**
       - helm/**
       - gitops/**
-      - .github/workflows/infra.yml
+      - .github/workflows/**
       - .github/scripts/check-gitops.py
   workflow_dispatch:
 
@@ -84,6 +84,23 @@ jobs:
 
       - name: gitops Application'lari repoyla tutarli mi
         run: python3 .github/scripts/check-gitops.py
+
+      - name: Workflow dosyalari gecerli YAML mi
+        # promote-prod.yml bir kez gecersiz push edildi: blok skalarin icindeki girintisiz
+        # satirlar blogu bitiriyordu. GitHub bunu ancak kosu sirasinda soyluyor.
+        run: |
+          python3 - <<'PY'
+          import glob, sys, yaml
+          hata = 0
+          for dosya in sorted(glob.glob(".github/workflows/*.yml")):
+              try:
+                  yaml.safe_load(open(dosya, encoding="utf-8"))
+                  print(f"ok   {dosya}")
+              except yaml.YAMLError as e:
+                  print(f"HATA {dosya}: {e}")
+                  hata = 1
+          sys.exit(hata)
+          PY
 
       - name: Ortam values dosyalari chart'lara uyuyor mu
         # Her ortamin values'i ilgili chart'la birlikte render edilebiliyor mu:

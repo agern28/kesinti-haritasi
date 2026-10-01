@@ -99,7 +99,25 @@ make cluster-status  # düğümler, pod'lar, issuer'lar
 make cluster-down    # kümeyi tamamen siler
 ```
 
-Servisler kümeye Faz 7'de Helm ve Argo CD ile gelecek; şu an küme boş ve Traefik 80/443'te Ingress bekliyor. Ayrıntı ve buluta (Hetzner) taşımak için gerekenler: [docs/tr/06-altyapi.md](docs/tr/06-altyapi.md).
+Uygulama kümeye Argo CD ile kuruluyor: repodaki `gitops/apps` altındaki Application'lar iki ortamı ayağa kaldırıyor.
+
+| Ne | Adres |
+|---|---|
+| PROD | https://kesinti.localhost |
+| INT | https://int.kesinti.localhost |
+| Argo CD | https://argocd.localhost (`admin`, parola: `make argocd-password`) |
+
+Sertifikalar kümedeki kendi CA'mızdan, bu yüzden tarayıcı uyarı verir; "yine de devam et" diyebilirsin.
+
+```bash
+make cluster-check     # kümedeki kurulumu uçtan uca dener (25 kontrol)
+make argocd-apps       # Application'ların sync ve sağlık durumu
+make argocd-refresh    # Argo CD'ye repoyu hemen kontrol ettir
+```
+
+İki ortamın farkları `gitops/int` ve `gitops/prod` altındaki values dosyalarında: veritabanı, Redis logical DB, HPA, ortam etiketi ve INT'te kapalı olan kaynak taraması. Ayrıntı: [docs/tr/07-helm-ve-gitops.md](docs/tr/07-helm-ve-gitops.md). Kümenin kendisi ve buluta (Hetzner) taşımak için gerekenler: [docs/tr/06-altyapi.md](docs/tr/06-altyapi.md).
+
+Not: kaynak sitelere aynı anda tek yerden gidilir. Küme açıkken tarayan collector PROD'daki; compose'un collector'ını durdur (`docker compose stop collector`).
 
 ### Container dışında geliştirme
 
