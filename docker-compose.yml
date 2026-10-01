@@ -1,12 +1,16 @@
 # Lokal gelistirme ortami:
 #   cp .env.example .env   (parolayi degistir)
 #   docker compose up --build
-# Parolalar .env dosyasindan gelir, .env repoya girmez.
+# Parolalar .env dosyasindan gelir, .env repoya girmez. Kisayollar: make help
+#
+# restart: unless-stopped -> bilgisayar ya da Docker yeniden baslayinca stack kendi kalkar.
+# "docker compose stop/down" ile durdurulanlar kalkmaz, yani elle durdurmaya saygi duyar.
 name: kesinti-haritasi
 
 services:
   postgres:
     image: postgres:18-alpine
+    restart: unless-stopped
     environment:
       POSTGRES_DB: ${POSTGRES_DB:-kesinti}
       POSTGRES_USER: ${POSTGRES_USER:-kesinti}
@@ -24,6 +28,7 @@ services:
 
   redis:
     image: redis:8-alpine
+    restart: unless-stopped
     command: ["redis-server", "--appendonly", "yes", "--maxmemory", "96mb"]
     ports:
       - "6379:6379"
@@ -38,6 +43,7 @@ services:
 
   collector:
     build: ./services/collector
+    restart: unless-stopped
     environment:
       SPRING_DATA_REDIS_HOST: redis
       SPRING_DATA_REDIS_PORT: 6379
@@ -58,6 +64,7 @@ services:
 
   api:
     build: ./services/api
+    restart: unless-stopped
     environment:
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/${POSTGRES_DB:-kesinti}
       SPRING_DATASOURCE_USERNAME: ${POSTGRES_USER:-kesinti}
@@ -80,6 +87,7 @@ services:
     mem_limit: 512m
 
   frontend:
+    restart: unless-stopped
     build:
       # Kok dizin: "Yenilikler" penceresi CHANGELOG.md'yi okuyor. Gonderilen dosyalar
       # frontend/Dockerfile.dockerignore'da (sadece frontend/ ve CHANGELOG.md).

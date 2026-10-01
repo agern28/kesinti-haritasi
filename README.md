@@ -45,6 +45,13 @@ Ayrıntılı plan: [docs/plan.md](docs/plan.md). İlerleme: [docs/PROGRESS.md](d
 Gerekenler: Docker ve Docker Compose. Java ve Node sadece servisleri container dışında geliştirmek için lazım (Java 21, Maven 3.9, Node 22.12+).
 
 ```bash
+make up      # .env yoksa rastgele parolayla oluşturur, imajları derler, sağlıklı olmasını bekler
+make check   # çalışan stack'i uçtan uca dener
+```
+
+Make kullanmak istemezsen aynısının uzun hali:
+
+```bash
 cp .env.example .env   # parolayı değiştir, .env repoya girmez
 docker compose up --build
 ```
@@ -60,6 +67,26 @@ Ayağa kalkanlar:
 | redis | localhost:6379 |
 
 Metrikler her iki serviste `/actuator/prometheus` altında.
+
+### Günlük kullanım
+
+| Komut | Ne yapar |
+|---|---|
+| `make ps` | Servislerin durumu ve portları |
+| `make check` | 15 kontrol: nginx, api yolları, SSE, veritabanı, kaynak sağlığı |
+| `make logs-collector` | Hangi kaynak ne zaman tarandı, kaç kayıt geldi |
+| `make stop` / `make up` | Durdur / tekrar kaldır |
+| `make reset` | Veritabanı ve Redis dahil her şeyi silip baştan kurar |
+| `make smoke` | CI'daki uçtan uca testi lokalde koşar (lokal stack kapalı olmalı) |
+| `make test` | Servis ve frontend testleri (container dışında) |
+
+Tüm liste: `make help`.
+
+Container'lar `restart: unless-stopped` ile çalışıyor, yani bilgisayar ya da Docker yeniden başlayınca stack kendi kalkar; `make stop` ile durdurduklarınsa kalkmaz. Docker Desktop kullanıyorsan açılışta başlaması için ayarının açık olması gerekir (Settings > General > Start Docker Desktop when you sign in).
+
+Veri `pgdata` ve `redisdata` adlı Docker volume'lerinde duruyor, `make down` onlara dokunmaz. Kesinti geçmişi birikmeye devam eder; sıfırdan başlamak için `make reset`.
+
+Stack kapalı kaldığı sürede kaynaklardaki liste değiştiği için ilk taramalarda büyük NEW/GONE sayıları görmek normaldir.
 
 ### Container dışında geliştirme
 

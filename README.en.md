@@ -45,6 +45,13 @@ Full plan (Turkish): [docs/plan.md](docs/plan.md). Progress: [docs/en/PROGRESS.m
 You need Docker and Docker Compose. Java and Node are only needed to work on the services outside containers (Java 21, Maven 3.9, Node 22.12+).
 
 ```bash
+make up      # creates .env with a random password if missing, builds images, waits for health
+make check   # end-to-end check against the running stack
+```
+
+The same thing without make:
+
+```bash
 cp .env.example .env   # change the password, .env never goes into the repo
 docker compose up --build
 ```
@@ -60,6 +67,26 @@ What comes up:
 | redis | localhost:6379 |
 
 Both services expose metrics at `/actuator/prometheus`.
+
+### Day to day
+
+| Command | What it does |
+|---|---|
+| `make ps` | Service status and ports |
+| `make check` | 15 checks: nginx, api routes, SSE, database, source health |
+| `make logs-collector` | Which source was scanned when, how many records came back |
+| `make stop` / `make up` | Stop / bring back up |
+| `make reset` | Wipes everything including the database and Redis, rebuilds |
+| `make smoke` | Runs the CI end-to-end test locally (local stack must be down) |
+| `make test` | Service and frontend tests (outside containers) |
+
+Full list: `make help`.
+
+Containers run with `restart: unless-stopped`, so the stack comes back on its own after a machine or Docker restart; anything stopped with `make stop` stays down. On Docker Desktop this needs its own autostart setting (Settings > General > Start Docker Desktop when you sign in).
+
+Data lives in the `pgdata` and `redisdata` Docker volumes and `make down` leaves them alone. Outage history keeps accumulating; use `make reset` to start clean.
+
+Large NEW/GONE counts on the first scans after downtime are normal: the source lists moved on while the stack was off.
 
 ### Working outside containers
 
