@@ -80,6 +80,7 @@ Durum: tamamlandı (2026-09-15). Not: [tr/05-container-ve-ci.md](tr/05-container
 - [x] Terraform (`infra/terraform/local`): `kesinti-int` ve `kesinti-prod` namespace'leri, cert-manager v1.21.2, issuer chart'ı; `terraform.tfvars.example`
 - [x] cert-manager + kendi CA'mızdan ClusterIssuer (`helm/cluster-issuers`, `letsencrypt.enabled` ile ACME moduna geçiyor)
 - [x] Make komutları: `cluster-up`, `bootstrap`, `cluster-status`, `cluster-down`
+- [x] Beşinci workflow: `infra.yml` (terraform fmt/validate, helm lint, issuer chart'ını iki modda render, `cluster.yaml` YAML kontrolü)
 - [ ] Hetzner yolu (hcloud provider, CX23, firewall, cloud-init, Let's Encrypt): ertelendi, gereken iş [tr/06-altyapi.md](tr/06-altyapi.md) sonunda
 - Senden bir şey gerekmiyor: hesap, token, alan adı ve DNS yok
 

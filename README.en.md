@@ -4,6 +4,7 @@
 [![api](https://github.com/agern28/kesinti-haritasi/actions/workflows/api.yml/badge.svg)](https://github.com/agern28/kesinti-haritasi/actions/workflows/api.yml)
 [![frontend](https://github.com/agern28/kesinti-haritasi/actions/workflows/frontend.yml/badge.svg)](https://github.com/agern28/kesinti-haritasi/actions/workflows/frontend.yml)
 [![compose-smoke](https://github.com/agern28/kesinti-haritasi/actions/workflows/compose-smoke.yml/badge.svg)](https://github.com/agern28/kesinti-haritasi/actions/workflows/compose-smoke.yml)
+[![infra](https://github.com/agern28/kesinti-haritasi/actions/workflows/infra.yml/badge.svg)](https://github.com/agern28/kesinti-haritasi/actions/workflows/infra.yml)
 
 An app that collects electricity, water and natural gas outages in Turkey (starting with Istanbul) from official sources and shows them on a single map. The map is live: when a new outage lands in the database it shows up without a page reload.
 

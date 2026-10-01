@@ -86,6 +86,14 @@ curl http://kesinti.localhost/   ->  404 (::1)
 
 404 doğru cevap: Traefik ayakta ama henüz hiç Ingress yok.
 
+## CI
+
+Faz 5'teki dört workflow'un yol filtreleri sadece `services/**`, `frontend/**` ve `docker-compose.yml`'i dinliyor, yani bu fazda yazılan Terraform ve Helm dosyaları hiçbir koşuya girmiyordu. Beşinci workflow eklendi: `.github/workflows/infra.yml`, `infra/**` ve `helm/**` değişince çalışıyor.
+
+İki job var. `terraform`: `terraform fmt -check -recursive`, sonra `.tf` dosyası olan her dizinde `terraform init -backend=false` ve `validate`. Kümeye bağlanmıyor, bu yüzden runner'da kube bağlantısı gerekmiyor. `helm`: her chart için `helm lint`, `cluster-issuers`'ı iki modda da render etme ve `letsencrypt.enabled=true` iken e-posta zorunluluğunun gerçekten kırdığının kontrolü (render başarılı olursa job başarısız sayılıyor). Son adım `infra/k3d/cluster.yaml`'ın geçerli YAML olduğunu doğruluyor.
+
+Terraform ve Helm, GitHub runner imajında kurulu geldiği için ek action kullanılmadı; tek action `actions/checkout`, o da diğer workflow'lardaki gibi commit SHA'sıyla sabit.
+
 ## Kaynak kullanımı
 
 Küme + compose yığını birlikte 2,3 GB RAM kullanıyor (WSL'e verilen 7,6 GB'ın içinde). Faz 8'de kube-prometheus-stack gelince en çok yeri o alacak, zaten küçültülmüş değerlerle kurulacak.

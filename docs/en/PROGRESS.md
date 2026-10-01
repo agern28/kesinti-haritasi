@@ -80,6 +80,7 @@ Status: done (2026-09-15). Notes: [05-container-and-ci.md](05-container-and-ci.m
 - [x] Terraform (`infra/terraform/local`): `kesinti-int` and `kesinti-prod` namespaces, cert-manager v1.21.2, the issuer chart; `terraform.tfvars.example`
 - [x] cert-manager + a ClusterIssuer backed by our own CA (`helm/cluster-issuers`, switches to ACME with `letsencrypt.enabled`)
 - [x] Make targets: `cluster-up`, `bootstrap`, `cluster-status`, `cluster-down`
+- [x] A fifth workflow: `infra.yml` (terraform fmt/validate, helm lint, the issuer chart rendered in both modes, `cluster.yaml` YAML check)
 - [ ] The Hetzner path (hcloud provider, CX23, firewall, cloud-init, Let's Encrypt): postponed, the work it needs is at the end of [06-infrastructure.md](06-infrastructure.md)
 - Nothing needed from you: no account, token, domain or DNS
 

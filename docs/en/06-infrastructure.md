@@ -86,6 +86,14 @@ curl http://kesinti.localhost/   ->  404 (::1)
 
 404 is the correct answer: Traefik is up, there is no Ingress yet.
 
+## CI
+
+The path filters of the four workflows from Phase 5 only watch `services/**`, `frontend/**` and `docker-compose.yml`, so the Terraform and Helm files written in this phase went through no run at all. A fifth workflow was added: `.github/workflows/infra.yml`, triggered by changes under `infra/**` and `helm/**`.
+
+It has two jobs. `terraform`: `terraform fmt -check -recursive`, then `terraform init -backend=false` and `validate` in every directory that has a `.tf` file. It never connects to a cluster, so the runner needs no kube access. `helm`: `helm lint` for every chart, rendering `cluster-issuers` in both modes, and a check that the email requirement really fails the render when `letsencrypt.enabled=true` (if the render succeeds, the job fails). The last step verifies that `infra/k3d/cluster.yaml` is valid YAML.
+
+Terraform and Helm ship with the GitHub runner image, so no extra actions were needed; the only action is `actions/checkout`, pinned by commit SHA like everywhere else.
+
 ## Resource use
 
 The cluster and the compose stack together use 2.3 GB of RAM (out of the 7.6 GB WSL gets). kube-prometheus-stack in Phase 8 will be the heaviest addition, and it is planned with trimmed-down values anyway.

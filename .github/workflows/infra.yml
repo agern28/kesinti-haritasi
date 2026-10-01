@@ -1,0 +1,74 @@
+# infra: Terraform ve Helm dosyalarini dogrular. Kume kurmuyor, kimseye baglanmiyor.
+# terraform validate ve helm lint/template icin kume gerekmiyor; gercek apply lokalde elle yapiliyor.
+name: infra
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - infra/**
+      - helm/**
+      - .github/workflows/infra.yml
+  pull_request:
+    paths:
+      - infra/**
+      - helm/**
+      - .github/workflows/infra.yml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  terraform:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      # terraform ve helm runner imajinda kurulu geliyor, ayri action gerekmiyor.
+      - name: Surumler
+        run: |
+          terraform version
+          helm version --short
+
+      - name: terraform fmt
+        run: terraform fmt -check -recursive infra/
+
+      - name: terraform init ve validate
+        run: |
+          for dir in $(find infra -name '*.tf' -printf '%h\n' | sort -u); do
+            echo "--- $dir"
+            terraform -chdir="$dir" init -backend=false -input=false
+            terraform -chdir="$dir" validate
+          done
+
+  helm:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: helm lint
+        run: |
+          for chart in helm/*/Chart.yaml; do
+            echo "--- $(dirname "$chart")"
+            helm lint "$(dirname "$chart")"
+          done
+
+      - name: cluster-issuers iki modda da render ediliyor
+        run: |
+          helm template ci helm/cluster-issuers > /dev/null
+          helm template ci helm/cluster-issuers \
+            --set letsencrypt.enabled=true \
+            --set letsencrypt.email=ci@example.com > /dev/null
+          echo "iki mod da render edildi"
+
+      - name: Let's Encrypt modunda e-posta zorunlulugu
+        run: |
+          if helm template ci helm/cluster-issuers --set letsencrypt.enabled=true > /dev/null 2>&1; then
+            echo "HATA: e-posta olmadan render edilmemeliydi"
+            exit 1
+          fi
+          echo "e-posta kontrolu calisiyor"
+
+      - name: k3d yapilandirmasi gecerli YAML mi
+        run: python3 -c "import yaml,sys; yaml.safe_load(open('infra/k3d/cluster.yaml')); print('cluster.yaml okunuyor')"
