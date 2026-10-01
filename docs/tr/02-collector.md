@@ -169,7 +169,9 @@ Uygulamayı gece açınca İZSU taraması her 5 dakikada "İZSU kesinti tablosu 
 
 Düzeltme: iki tablo da okunuyor. Arızalarda süre metni ("15.09.2026 saat 10:49 ile 12:30 arasında") ayrıştırılıyor; bitiş tarihsiz ve başlangıçtan önceyse ertesi güne sayılıyor. Neden alanı "Arıza Tipi - Açıklama". Her bölümde ya tablo ya da "bulunmamaktadır" mesajı olmalı; ikisi de yoksa eskisi gibi hata veriliyor, arızalar sessizce GONE olmasın diye. 2026-09-15 sabahının canlı sayfası (bakım yok, 10 arıza) ikinci fixture olarak eklendi.
 
-Arıza bölümü boşken sayfanın tam olarak ne yazdığını henüz görmedim. Mesajda "bulunmamaktadır" geçmezse gece taramaları yine hata verir; sessizce yanlış veri çıkmaz, logda görünür.
+Doğrulama (2026-10-01 20:16 UTC): bakım bölümü boşken ("Bakım bilgisi bulunmamaktadır.") tarama hatasız çalıştı ve arıza tablosundan 2 kayıt geldi. Yani bir bölümün boş olması artık taramayı düşürmüyor.
+
+Arıza bölümü boşken sayfanın ne yazdığını hâlâ görmedim; o metni sayfanın JS paketlerinde de aradım, bulamadım (sunucu tarafında üretiliyor). Mesajda "bulunmamaktadır" geçmezse o saatlerde tarama hata verir. Sessizce yanlış veri çıkmaz: elde kalan liste korunur, log sebebi yazar.
 
 Ders: bir sayfanın tek bir anına bakıp fixture'daki her şeyin test edildiğini sanmamak. Test, fixture'daki kayıt sayısını sabitlemeliydi.
 

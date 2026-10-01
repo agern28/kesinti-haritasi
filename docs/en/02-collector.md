@@ -169,7 +169,9 @@ When I started the app at night, the İZSU scan failed every 5 minutes with "İZ
 
 The fix: both tables are read. For faults, the duration text ("15.09.2026 saat 10:49 ile 12:30 arasında", i.e. between 10:49 and 12:30) is parsed; if the end has no date and is before the start, it counts as the next day. The reason field is "Arıza Tipi - Açıklama". Each section needs either a table or a "bulunmamaktadır" message; if neither is there, it still fails as before, so the faults don't silently go GONE. The live page from the morning of 2026-09-15 (no maintenance, 10 faults) was added as a second fixture.
 
-I haven't yet seen exactly what the page says when the fault section is empty. If that message doesn't contain "bulunmamaktadır", night scans will still fail; no wrong data comes out silently, it shows in the log.
+Verified (2026-10-01, 20:16 UTC): with the maintenance section empty ("Bakım bilgisi bulunmamaktadır.") the scan ran without error and picked up 2 records from the fault table. An empty section no longer fails the scan.
+
+I still haven't seen what the page says when the fault section is empty; I also looked for that string in the page's JS bundles and didn't find it (it is rendered server-side). If the message doesn't contain "bulunmamaktadır", scans will fail at those hours. No wrong data comes out silently: the last list is kept and the log says why.
 
 Lesson: don't assume one snapshot of a page tests everything in the fixture. The test should have pinned the number of records in the fixture.
 
