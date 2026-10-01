@@ -1,14 +1,10 @@
 postgres:
   database: kesinti_int
-
 redis:
   database: 0
-
 image:
-  tag: "1.0.0"
-
+  tag: "1.0.1"
 # INT'te olcekleme denemeye gerek yok, tek pod.
 autoscaling:
   enabled: false
-
 replicas: 1
