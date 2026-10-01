@@ -1,0 +1,11 @@
+# PROD collector: kaynak siteleri tarayan tek collector.
+# Lokalde compose yigini da aciksa onun collector'ini durdur (make stop), yoksa
+# ayni kaynaga iki yerden gidilir.
+scheduling:
+  enabled: true
+
+redis:
+  database: 1
+
+image:
+  tag: "1.0.0"

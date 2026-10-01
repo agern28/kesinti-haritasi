@@ -1,0 +1,16 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: postgres-init
+data:
+  # docker-entrypoint-initdb.d: sadece bos bir veri dizininde, ilk acilista calisir.
+  # Veritabani zaten varsa CREATE DATABASE hata vermesin diye once kontrol ediliyor.
+  01-databases.sh: |
+    #!/bin/sh
+    set -e
+    {{- range .Values.postgres.databases }}
+    if ! psql -U "$POSTGRES_USER" -lqt | cut -d'|' -f1 | grep -qw {{ . }}; then
+      createdb -U "$POSTGRES_USER" -O "$POSTGRES_USER" {{ . }}
+      echo "olusturuldu: {{ . }}"
+    fi
+    {{- end }}

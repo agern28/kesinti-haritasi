@@ -1,0 +1,29 @@
+{{- if .Values.autoscaling.enabled }}
+# CPU'ya gore olcekleniyor; metrics-server k3s ile birlikte geliyor.
+# Faz 9'daki k6 senaryosu burayi deneyecek.
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: api
+  labels:
+    app.kubernetes.io/name: api
+    app.kubernetes.io/part-of: kesinti-haritasi
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: api
+  minReplicas: {{ .Values.autoscaling.minReplicas }}
+  maxReplicas: {{ .Values.autoscaling.maxReplicas }}
+  metrics:
+    - type: Resource
+      resource:
+        name: cpu
+        target:
+          type: Utilization
+          averageUtilization: {{ .Values.autoscaling.targetCPUUtilizationPercentage }}
+  behavior:
+    scaleDown:
+      # SSE baglantilari var: hemen kucultme, trafik dustukten sonra bekle.
+      stabilizationWindowSeconds: 300
+{{- end }}

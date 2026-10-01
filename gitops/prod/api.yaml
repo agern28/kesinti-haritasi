@@ -1,0 +1,15 @@
+postgres:
+  database: kesinti_prod
+
+redis:
+  database: 1
+
+image:
+  tag: "1.0.0"
+
+# PROD'da HPA acik: Faz 9'daki k6 senaryosu burayi deneyecek.
+autoscaling:
+  enabled: true
+  minReplicas: 1
+  maxReplicas: 3
+  targetCPUUtilizationPercentage: 70

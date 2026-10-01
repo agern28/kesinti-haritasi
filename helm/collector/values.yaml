@@ -1,0 +1,37 @@
+image:
+  repository: ghcr.io/agern28/kesinti-haritasi/collector
+  tag: "1.0.0"
+  pullPolicy: IfNotPresent
+
+# Tek replika: collector zamanlanmis taramalar yapiyor, ikinci replika ayni kaynaga
+# iki kez gider. Olceklenmesi gereken servis api.
+replicas: 1
+
+port: 8081
+
+redis:
+  host: redis.kesinti-data.svc.cluster.local
+  port: 6379
+  # Ortam basina ayri logical DB: int 0, prod 1 (gitops values'ta veriliyor).
+  database: 0
+
+# Kaynak sitelere nazik olma kurali: ayni anda yalnizca bir collector tarama yapar.
+# INT'te false, PROD'da true. Lokalde compose yigini da aciksa onun collector'ini durdur.
+scheduling:
+  enabled: false
+
+# JVM heap'i limitin yuzdesi olarak alir. Imajdaki varsayilanin aynisi; buradan
+# degistirilebilir ama ExitOnOutOfMemoryError kalsin (pod olmek yerine takilmasin).
+java:
+  options: "-XX:MaxRAMPercentage=75 -XX:+ExitOnOutOfMemoryError"
+
+resources:
+  requests:
+    cpu: 100m
+    memory: 256Mi
+  limits:
+    memory: 448Mi
+
+# Prometheus Faz 8'de bu etiketle bulacak.
+metrics:
+  path: /actuator/prometheus

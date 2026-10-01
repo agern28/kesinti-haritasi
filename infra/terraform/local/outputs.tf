@@ -12,3 +12,21 @@ output "cluster_issuer" {
   description = "Ingress'lerin kullanacagi ClusterIssuer adi"
   value       = "kesinti-ca"
 }
+
+output "argocd" {
+  description = "Argo CD arayuzu ve ilk parolanin nasil okunacagi"
+  value = {
+    url           = "https://argocd.localhost"
+    kullanici     = "admin"
+    parola_komutu = "kubectl -n argocd get secret argocd-initial-admin-secret -o go-template='{{index .data \"password\" | base64decode}}'"
+    chart_surumu  = helm_release.argocd.version
+  }
+}
+
+output "ortam_adresleri" {
+  description = "Ingress adresleri"
+  value = {
+    int  = "https://int.kesinti.localhost"
+    prod = "https://kesinti.localhost"
+  }
+}

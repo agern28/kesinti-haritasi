@@ -11,9 +11,21 @@ variable "kube_context" {
 }
 
 variable "namespaces" {
-  description = "Uygulama ortamlari. Faz 7'de Argo CD bu namespace'lere kuracak."
+  description = "Ortam namespace'leri ve veri katmaninin namespace'i. Argo CD bunlara kuruyor."
   type        = list(string)
-  default     = ["kesinti-int", "kesinti-prod"]
+  default     = ["kesinti-int", "kesinti-prod", "kesinti-data"]
+}
+
+variable "db_secret_name" {
+  description = "PostgreSQL parolasinin durdugu secret. Chart'lar bu adi bekliyor."
+  type        = string
+  default     = "kesinti-db"
+}
+
+variable "argocd_version" {
+  description = "Argo CD chart surumu. Sabit tutuluyor."
+  type        = string
+  default     = "10.9.6"
 }
 
 variable "cert_manager_version" {

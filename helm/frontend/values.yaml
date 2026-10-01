@@ -1,0 +1,35 @@
+image:
+  repository: ghcr.io/agern28/kesinti-haritasi/frontend
+  tag: "1.0.0"
+  pullPolicy: IfNotPresent
+
+replicas: 1
+
+port: 8080
+
+# nginx /env.json ile tarayiciya veriyor; ayni imaj INT'te ve PROD'da.
+appEnv: INT
+
+nginx:
+  # Ayni namespace'teki api Service'i.
+  apiUpstream: http://api:8080
+  # nginx'in resolver direktifi IP istiyor, isim kabul etmiyor. k3s'te CoreDNS'in
+  # ClusterIP'si varsayilan olarak bu; kontrol: kubectl -n kube-system get svc kube-dns
+  resolver: 10.43.0.10
+
+ingress:
+  enabled: true
+  className: traefik
+  host: int.kesinti.localhost
+  tls:
+    enabled: true
+    # Faz 6'da kurulan issuer. Bulutta letsencrypt olacak.
+    clusterIssuer: kesinti-ca
+    secretName: frontend-tls
+
+resources:
+  requests:
+    cpu: 25m
+    memory: 32Mi
+  limits:
+    memory: 96Mi

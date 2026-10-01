@@ -1,0 +1,31 @@
+# Veri katmani: kume basina bir kez, kendi namespace'inde.
+# Iki ortam da buradaki PostgreSQL ve Redis'i kullaniyor (ayri veritabani / ayri logical DB).
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: data
+  namespace: argocd
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: default
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: kesinti-data
+  sources:
+    - repoURL: https://github.com/agern28/kesinti-haritasi.git
+      targetRevision: main
+      path: helm/data
+      helm:
+        valueFiles:
+          - $values/gitops/data/values.yaml
+    - repoURL: https://github.com/agern28/kesinti-haritasi.git
+      targetRevision: main
+      ref: values
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    # Namespace'leri Terraform olusturuyor; Argo CD onlara dokunmasin.
+    syncOptions:
+      - CreateNamespace=false

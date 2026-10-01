@@ -1,0 +1,6 @@
+apiVersion: v2
+name: collector
+description: Kaynak sitelerden kesinti toplayip Redis Streams'e yazan servis.
+type: application
+version: 0.1.0
+appVersion: "1.0.0"

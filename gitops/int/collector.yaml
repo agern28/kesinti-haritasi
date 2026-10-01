@@ -1,0 +1,11 @@
+# INT collector: kaynak sitelere GITMIYOR.
+# Kaynaklara nazik olma kurali geregi ayni anda tek collector tarar, o da PROD'daki.
+# INT'te servis ayakta, sagligi ve metrikleri gorunuyor, sadece zamanlama kapali.
+scheduling:
+  enabled: false
+
+redis:
+  database: 0
+
+image:
+  tag: "1.0.0"

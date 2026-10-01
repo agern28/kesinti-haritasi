@@ -1,0 +1,17 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: collector
+  labels:
+    app.kubernetes.io/name: collector
+    app.kubernetes.io/part-of: kesinti-haritasi
+  annotations:
+    # Faz 8'de ServiceMonitor bu yolu kullanacak.
+    kesinti-haritasi/metrics-path: {{ .Values.metrics.path | quote }}
+spec:
+  selector:
+    app.kubernetes.io/name: collector
+  ports:
+    - name: http
+      port: {{ .Values.port }}
+      targetPort: http

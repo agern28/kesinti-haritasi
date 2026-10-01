@@ -1,0 +1,28 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: int-collector
+  namespace: argocd
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: default
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: kesinti-int
+  sources:
+    - repoURL: https://github.com/agern28/kesinti-haritasi.git
+      targetRevision: main
+      path: helm/collector
+      helm:
+        valueFiles:
+          - $values/gitops/int/collector.yaml
+    - repoURL: https://github.com/agern28/kesinti-haritasi.git
+      targetRevision: main
+      ref: values
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=false

@@ -1,0 +1,71 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: collector
+  labels:
+    app.kubernetes.io/name: collector
+    app.kubernetes.io/part-of: kesinti-haritasi
+    app.kubernetes.io/version: {{ .Values.image.tag | quote }}
+spec:
+  replicas: {{ .Values.replicas }}
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: collector
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: collector
+        app.kubernetes.io/part-of: kesinti-haritasi
+    spec:
+      securityContext:
+        # Imaj 10001 numarali kullaniciyla calisiyor (Dockerfile'da sayisal UID).
+        runAsNonRoot: true
+        runAsUser: 10001
+      containers:
+        - name: collector
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          ports:
+            - name: http
+              containerPort: {{ .Values.port }}
+          env:
+            - name: SPRING_DATA_REDIS_HOST
+              value: {{ .Values.redis.host | quote }}
+            - name: SPRING_DATA_REDIS_PORT
+              value: {{ .Values.redis.port | quote }}
+            - name: SPRING_DATA_REDIS_DATABASE
+              value: {{ .Values.redis.database | quote }}
+            - name: COLLECTOR_SCHEDULING_ENABLED
+              value: {{ .Values.scheduling.enabled | quote }}
+            - name: JAVA_TOOL_OPTIONS
+              value: {{ .Values.java.options | quote }}
+          # Redis yoksa trafik almasin ama pod yeniden baslamasin: readiness Redis'e bagli,
+          # liveness degil (application.yml'deki health group'lari).
+          readinessProbe:
+            httpGet:
+              path: /actuator/health/readiness
+              port: http
+            initialDelaySeconds: 20
+            periodSeconds: 10
+            failureThreshold: 6
+          livenessProbe:
+            httpGet:
+              path: /actuator/health/liveness
+              port: http
+            initialDelaySeconds: 60
+            periodSeconds: 20
+            failureThreshold: 3
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop: ["ALL"]
+          volumeMounts:
+            - name: tmp
+              mountPath: /tmp
+      volumes:
+        # readOnlyRootFilesystem ile JVM'in /tmp'e yazabilmesi icin.
+        - name: tmp
+          emptyDir: {}

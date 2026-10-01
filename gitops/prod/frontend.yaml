@@ -1,0 +1,7 @@
+appEnv: PROD
+
+ingress:
+  host: kesinti.localhost
+
+image:
+  tag: "1.0.0"

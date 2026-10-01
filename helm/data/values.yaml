@@ -1,0 +1,36 @@
+# Veri katmani: kume basina tek PostgreSQL ve tek Redis.
+# Ortamlar ayrilir: PostgreSQL'de ayri veritabani (kesinti_int / kesinti_prod),
+# Redis'te ayri logical DB (int 0, prod 1). Boylece 4 GB'lik bir sunucuda da calisir.
+
+postgres:
+  image: postgres:18-alpine
+  # Ilk acilista olusturulacak veritabanlari. Her biri icin ayni kullanici yetkilendirilir.
+  databases:
+    - kesinti_int
+    - kesinti_prod
+  user: kesinti
+  # Parola repoda yok: Terraform uretip bu secret'a yaziyor (infra/terraform/local).
+  existingSecret: kesinti-db
+  passwordKey: postgres-password
+  storage: 2Gi
+  # Kume ici adres: postgres.<namespace>.svc.cluster.local:5432
+  port: 5432
+  resources:
+    requests:
+      cpu: 50m
+      memory: 192Mi
+    limits:
+      memory: 384Mi
+
+redis:
+  image: redis:8-alpine
+  port: 6379
+  # Compose'daki ayarin aynisi: AOF acik, 96 MB sinir. noeviction varsayilani kaliyor.
+  maxmemory: 96mb
+  storage: 1Gi
+  resources:
+    requests:
+      cpu: 25m
+      memory: 64Mi
+    limits:
+      memory: 160Mi

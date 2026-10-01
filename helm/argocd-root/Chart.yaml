@@ -1,0 +1,6 @@
+apiVersion: v2
+name: argocd-root
+description: Argo CD'nin kok Application'i (app-of-apps) ve Argo CD arayuzunun Ingress'i.
+type: application
+version: 0.1.0
+appVersion: "1.0.0"

@@ -1,0 +1,11 @@
+# Veri katmani: kume basina tek PostgreSQL ve tek Redis (namespace kesinti-data).
+# Chart varsayilanlari bu kume icin yeterli; burada sadece acikca gormek istediklerim var.
+postgres:
+  databases:
+    - kesinti_int
+    - kesinti_prod
+  storage: 2Gi
+
+redis:
+  maxmemory: 96mb
+  storage: 1Gi

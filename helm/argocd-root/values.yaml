@@ -1,0 +1,22 @@
+# Kok Application: repodaki gitops/apps dizinini izler, oradaki her Application'i kurar.
+# Boylece yeni bir ortam ya da servis eklemek icin kumeye elle bir sey uygulanmiyor,
+# repoya dosya eklemek yetiyor.
+repo:
+  url: https://github.com/agern28/kesinti-haritasi.git
+  revision: main
+  path: gitops/apps
+
+# Argo CD'nin kendi namespace'i (Terraform kuruyor).
+namespace: argocd
+
+ingress:
+  enabled: true
+  className: traefik
+  host: argocd.localhost
+  tls:
+    enabled: true
+    clusterIssuer: kesinti-ca
+    secretName: argocd-tls
+  # Argo CD server'i TLS'i kendisi yapmasin (Terraform values'ta server.insecure=true):
+  # sertifikayi Traefik sunuyor, kume icinde http konusuluyor.
+  servicePort: 80

@@ -1,0 +1,6 @@
+apiVersion: v2
+name: data
+description: Tek PostgreSQL ve tek Redis; ortam basina ayri veritabani. Hafif tutuldu, operator yok.
+type: application
+version: 0.1.0
+appVersion: "18"
