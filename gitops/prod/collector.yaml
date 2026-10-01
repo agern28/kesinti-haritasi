@@ -3,9 +3,7 @@
 # ayni kaynaga iki yerden gidilir.
 scheduling:
   enabled: true
-
 redis:
   database: 1
-
 image:
-  tag: "1.0.0"
+  tag: "1.0.1"
