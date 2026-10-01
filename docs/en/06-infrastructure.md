@@ -92,7 +92,7 @@ The path filters of the four workflows from Phase 5 only watch `services/**`, `f
 
 It has two jobs. `terraform`: `terraform fmt -check -recursive`, then `terraform init -backend=false` and `validate` in every directory that has a `.tf` file. It never connects to a cluster, so the runner needs no kube access. `helm`: `helm lint` for every chart, rendering `cluster-issuers` in both modes, and a check that the email requirement really fails the render when `letsencrypt.enabled=true` (if the render succeeds, the job fails). The last step verifies that `infra/k3d/cluster.yaml` is valid YAML.
 
-Terraform and Helm ship with the GitHub runner image, so no extra actions were needed; the only action is `actions/checkout`, pinned by commit SHA like everywhere else.
+Helm ships with the runner image, Terraform does not: on the workflow's first run the `terraform` job failed with `terraform: command not found` (the helm job passed in the same run). Terraform is now installed with `hashicorp/setup-terraform`, pinned to the same version as locally (1.16.4) and with `terraform_wrapper: false` so step exit codes show up as they are. Actions are pinned by commit SHA like in the other workflows.
 
 ## Resource use
 

@@ -92,7 +92,7 @@ Faz 5'teki dört workflow'un yol filtreleri sadece `services/**`, `frontend/**` 
 
 İki job var. `terraform`: `terraform fmt -check -recursive`, sonra `.tf` dosyası olan her dizinde `terraform init -backend=false` ve `validate`. Kümeye bağlanmıyor, bu yüzden runner'da kube bağlantısı gerekmiyor. `helm`: her chart için `helm lint`, `cluster-issuers`'ı iki modda da render etme ve `letsencrypt.enabled=true` iken e-posta zorunluluğunun gerçekten kırdığının kontrolü (render başarılı olursa job başarısız sayılıyor). Son adım `infra/k3d/cluster.yaml`'ın geçerli YAML olduğunu doğruluyor.
 
-Terraform ve Helm, GitHub runner imajında kurulu geldiği için ek action kullanılmadı; tek action `actions/checkout`, o da diğer workflow'lardaki gibi commit SHA'sıyla sabit.
+Helm runner imajında kurulu geliyor, Terraform gelmiyor: workflow'un ilk koşusunda `terraform` job'ı `terraform: command not found` ile kırıldı (helm job'ı aynı koşuda geçti). Terraform artık `hashicorp/setup-terraform` ile kuruluyor, sürümü lokaldekiyle aynı (1.16.4) ve `terraform_wrapper: false` veriliyor ki adımların çıkış kodu olduğu gibi görünsün. Action'lar diğer workflow'lardaki gibi commit SHA'sıyla sabit.
 
 ## Kaynak kullanımı
 
