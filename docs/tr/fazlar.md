@@ -112,5 +112,8 @@ Orijinal metin yukarıda değiştirilmeden duruyor. Bu bölüm, faz tanımına d
 | 2026-09-15 | Faz 5, 7 | Ortam etiketi (LOCAL/INT/PROD) build argümanı değil, çalışma anında `APP_ENV` (nginx `/env.json`): aynı imaj INT'ten PROD'a taşınabilsin diye | karar | [05-container-ve-ci.md](05-container-ve-ci.md) |
 | 2026-09-15 | Faz 5 | İmaj her çalışmada derlenip taranıyor ama GHCR'a sadece tag'de gidiyor (`X.Y.Z` ve `latest`). `SONAR_TOKEN` yoksa Sonar adımı uyarıyla atlanıyor | karar | [05-container-ve-ci.md](05-container-ve-ci.md) |
 | 2026-09-15 | Faz 5 | Servis başına üç workflow'a ek olarak dördüncüsü: `compose-smoke`, bütün stack'i compose ile kurup nginx üzerinden uçtan uca deniyor | karar (kullanıcı onayı) | [05-container-ve-ci.md](05-container-ve-ci.md) |
+| 2026-10-02 | Faz 6 | Küme Hetzner'de değil lokalde: k3d ile k3s (aynı k3s, aynı Traefik), Terraform kümenin üstünü kuruyor (namespace'ler, cert-manager, issuer'lar). Sebep: proje lokalde çalışacak, bulut maliyeti ve alan adı gerekmiyor. Hetzner için gereken ek iş faz notunun sonunda duruyor | karar (kullanıcı onayı) | [06-altyapi.md](06-altyapi.md) |
+| 2026-10-02 | Faz 6, 7 | Sertifikalar Let's Encrypt yerine kümedeki kendi CA'mızdan (HTTP-01 gerçek alan adı istiyor). `helm/cluster-issuers` chart'ı iki modlu: `letsencrypt.enabled` ile ACME issuer'ına geçiyor | karar | [06-altyapi.md](06-altyapi.md) |
+| 2026-10-02 | Faz 6, 7 | Adresler `kesinti.localhost` ve `int.kesinti.localhost`. Windows bu adları kendisi çözüyor, hosts dosyasına dokunulmuyor | karar | [06-altyapi.md](06-altyapi.md) |
 
 Bekleyen onaylar netleşince bu tabloya yeni satır eklenir. Orijinal tanım değiştirilmez.

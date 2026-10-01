@@ -1,0 +1,21 @@
+{{- if .Values.letsencrypt.enabled }}
+{{- if not .Values.letsencrypt.email }}
+{{- fail "letsencrypt.enabled true ise letsencrypt.email zorunlu" }}
+{{- end }}
+# Bulut kurulumu icin. Once staging sunucusuyla dene (rate limit dusuk olmasin),
+# zincir dogrulandiktan sonra prod adresine gec.
+apiVersion: cert-manager.io/v1
+kind: ClusterIssuer
+metadata:
+  name: letsencrypt
+spec:
+  acme:
+    server: {{ .Values.letsencrypt.server }}
+    email: {{ .Values.letsencrypt.email | quote }}
+    privateKeySecretRef:
+      name: letsencrypt-account-key
+    solvers:
+      - http01:
+          ingress:
+            class: {{ .Values.letsencrypt.solverIngressClass }}
+{{- end }}

@@ -7,7 +7,7 @@
 
 An app that collects electricity, water and natural gas outages in Turkey (starting with Istanbul) from official sources and shows them on a single map. The map is live: when a new outage lands in the database it shows up without a page reload.
 
-This is also a DevOps internship project. How the app is run matters as much as the app itself: CI, containers, Hetzner via Terraform, k3s, Helm, GitOps with Argo CD, monitoring with Prometheus/Grafana.
+This is also a DevOps internship project. How the app is run matters as much as the app itself: CI, containers, Terraform, k3s (locally for now, via k3d), Helm, GitOps with Argo CD, monitoring with Prometheus/Grafana.
 
 Türkçe: [README.md](README.md)
 
@@ -34,9 +34,9 @@ Full plan (Turkish): [docs/plan.md](docs/plan.md). Progress: [docs/en/PROGRESS.m
 | `services/collector` | Service that collects data from the sources |
 | `services/api` | REST + SSE API |
 | `frontend` | React + Vite + Leaflet UI |
-| `helm` | Helm charts for the services |
+| `helm` | Helm charts for the services plus `cluster-issuers` (cert-manager issuers) |
 | `gitops` | Argo CD Applications and per-environment values |
-| `infra` | Terraform (Hetzner) and Ansible if needed |
+| `infra` | `k3d/` local k3s cluster definition, `terraform/local` for what runs on it |
 | `loadtest` | k6 scenarios |
 | `docs` | Phase notes (`tr/`, `en/`) |
 
@@ -87,6 +87,18 @@ Containers run with `restart: unless-stopped`, so the stack comes back on its ow
 Data lives in the `pgdata` and `redisdata` Docker volumes and `make down` leaves them alone. Outage history keeps accumulating; use `make reset` to start clean.
 
 Large NEW/GONE counts on the first scans after downtime are normal: the source lists moved on while the stack was off.
+
+### Local Kubernetes cluster
+
+Next to compose there is a k3s cluster on the same machine: k3d runs it inside Docker, and Terraform sets up everything on top of it (namespaces, cert-manager, certificate issuers). The only extra tool needed is k3d, plus `kubectl`, `helm` and `terraform`.
+
+```bash
+make cluster-up      # creates the cluster, then terraform apply for what runs on it
+make cluster-status  # nodes, pods, issuers
+make cluster-down    # deletes the cluster completely
+```
+
+The services arrive on the cluster in Phase 7 with Helm and Argo CD; right now the cluster is empty and Traefik is waiting for an Ingress on 80/443. Details, and what moving to the cloud (Hetzner) would take: [docs/en/06-infrastructure.md](docs/en/06-infrastructure.md).
 
 ### Working outside containers
 

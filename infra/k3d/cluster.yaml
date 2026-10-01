@@ -1,0 +1,43 @@
+# Lokal k3s kumesi (k3d ile, Docker icinde). Hetzner'deki kurulumun lokal karsiligi:
+# ayni k3s, ayni Traefik. Fark: gercek alan adi ve Let's Encrypt yok, sertifikalar kendi CA'mizdan.
+#
+#   k3d cluster create --config infra/k3d/cluster.yaml
+#   k3d cluster delete kesinti          # iz birakmadan siler
+#
+# Iki dugum: server + agent. Pod'larin dugumlere dagilmasi ve node affinity denemeleri icin.
+# Bellek sikisirsa agents: 0 yeter.
+apiVersion: k3d.io/v1alpha5
+kind: Simple
+metadata:
+  name: kesinti
+
+servers: 1
+agents: 1
+
+# k3d v5.9.0 ile gelen k3s surumu. Sabit tutuluyor: kume her kurulusta ayni olsun.
+image: rancher/k3s:v1.35.5-k3s1
+
+ports:
+  # Traefik'in onundeki k3d load balancer'i localhost'a baglar.
+  # Boylece http://kesinti.localhost tarayicidan dogrudan acilir.
+  - port: 80:80
+    nodeFilters:
+      - loadbalancer
+  - port: 443:443
+    nodeFilters:
+      - loadbalancer
+
+options:
+  k3d:
+    wait: true
+    timeout: 300s
+  k3s:
+    extraArgs:
+      # Ingress'i Traefik yapiyor; k3s'in kendi ServiceLB'si de kalsin, k3d onu kullaniyor.
+      # metrics-server kapatilmiyor: Faz 7'deki HPA ona bagli.
+      - arg: --tls-san=host.k3d.internal
+        nodeFilters:
+          - server:*
+  kubeconfig:
+    updateDefaultKubeconfig: true
+    switchCurrentContext: true

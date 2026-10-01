@@ -4,7 +4,14 @@
 SHELL := /usr/bin/env bash
 .DEFAULT_GOAL := help
 
-.PHONY: help env up build down stop restart ps logs logs-collector logs-api check smoke reset test
+# k3d sudo olmadan ~/.local/bin'e kuruluyor; login shell olmadan da bulunsun.
+export PATH := $(HOME)/.local/bin:$(PATH)
+
+CLUSTER := kesinti
+TF_DIR := infra/terraform/local
+
+.PHONY: help env up build down stop restart ps logs logs-collector logs-api check smoke reset test \
+	cluster-up cluster-down cluster-status bootstrap wait-traefik
 
 help: ## Komutlari listeler
 	@echo "Kesinti Haritasi - lokal komutlar"
@@ -65,3 +72,32 @@ test: ## Servis ve frontend testleri (container disinda, Java ve Node gerekir)
 	cd services/collector && mvn -q verify
 	cd services/api && mvn -q verify
 	cd frontend && npm test
+
+# --- Kubernetes (lokal k3s kumesi) ---
+
+cluster-up: ## Lokal k3s kumesini kurar (k3d) ve kume ustu kurulumu yapar
+	k3d cluster create --config infra/k3d/cluster.yaml
+	@$(MAKE) --no-print-directory wait-traefik
+	@$(MAKE) --no-print-directory bootstrap
+
+wait-traefik: ## Traefik'in k3s icindeki kurulum job'i bitene kadar bekler
+	@echo "Traefik kurulumu bekleniyor..."
+	@for i in $$(seq 1 60); do \
+		kubectl -n kube-system get deploy traefik >/dev/null 2>&1 && break; \
+		sleep 5; \
+	done
+	@kubectl -n kube-system rollout status deploy/traefik --timeout=300s
+
+bootstrap: ## Namespace'ler, cert-manager ve ClusterIssuer'lar (terraform apply)
+	cd $(TF_DIR) && terraform init -input=false -no-color && terraform apply -input=false -auto-approve -no-color
+	@$(MAKE) --no-print-directory cluster-status
+
+cluster-down: ## Lokal kumeyi tamamen siler (uygulama verisi compose'da, ona dokunmaz)
+	k3d cluster delete $(CLUSTER)
+
+cluster-status: ## Kume durumu: dugumler, pod'lar, issuer'lar
+	@kubectl get nodes
+	@echo
+	@kubectl get pods -A
+	@echo
+	@kubectl get clusterissuers

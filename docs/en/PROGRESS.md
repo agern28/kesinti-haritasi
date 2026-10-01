@@ -75,13 +75,15 @@ Done when: all three workflows are green on main; the Trivy step fails on CRITIC
 
 Status: done (2026-09-15). Notes: [05-container-and-ci.md](05-container-and-ci.md). Everything is green locally: `mvn verify` with the JaCoCo floor in both services (85%; measured 91% and 92%), frontend tests with the coverage floor, all three images, `actionlint`. On the first local scan Trivy failed on three CRITICAL vulnerabilities in Tomcat 11.0.24; clean after pinning 11.0.25. On GitHub (2026-09-15, `main`): the collector, api and frontend workflows are green (tests, coverage floor, image, Trivy); `compose-smoke` failed on its first run because of `--ip` and is green after the fix. SonarQube Cloud is set up and `SONAR_TOKEN` added: red on the first analysis because the gate couldn't be computed, `OK` in all three projects from the second analysis on. The 7 findings of the first analysis (2 of them a false alarm about dynamic SQL, 5 small bugs) were fixed. v1.0.0: the first tags failed at the Sonar step (SonarCloud treats a tag as a separate branch); once Sonar was skipped on tag runs, the tags were moved to `11f3377`. All three tag runs are green, the images are on GHCR (`1.0.0`, `latest`, public), and the three GitHub Releases took their notes from the CHANGELOG with the SBOM attached.
 
-## [ ] Phase 6 - Infrastructure
-- [ ] Terraform: Hetzner CX23, firewall (22 only from your IP, 80/443 open), SSH key, k3s via cloud-init; `terraform.tfvars.example`
-- [ ] Steps to fetch the kubeconfig locally
-- [ ] cert-manager + Let's Encrypt ClusterIssuer (staging first, then prod)
-- [ ] YAPMAN GEREKEN: Hetzner account/token, domain, DNS A record; terraform commands
+## [x] Phase 6 - Infrastructure (local)
+- [x] Local k3s cluster: `infra/k3d/cluster.yaml` (1 server + 1 agent, k3s v1.35.5 pinned, 80/443 bound to localhost, metrics-server enabled)
+- [x] Terraform (`infra/terraform/local`): `kesinti-int` and `kesinti-prod` namespaces, cert-manager v1.21.2, the issuer chart; `terraform.tfvars.example`
+- [x] cert-manager + a ClusterIssuer backed by our own CA (`helm/cluster-issuers`, switches to ACME with `letsencrypt.enabled`)
+- [x] Make targets: `cluster-up`, `bootstrap`, `cluster-status`, `cluster-down`
+- [ ] The Hetzner path (hcloud provider, CX23, firewall, cloud-init, Let's Encrypt): postponed, the work it needs is at the end of [06-infrastructure.md](06-infrastructure.md)
+- Nothing needed from you: no account, token, domain or DNS
 
-Done when: `terraform validate` and `terraform plan` are clean; after your apply `kubectl get nodes` is Ready and staging and prod certificates are issued for a test ingress.
+Status: done (2026-10-02). Notes: [06-infrastructure.md](06-infrastructure.md). `terraform validate` and `terraform fmt` are clean, the plan is 4 resources, the apply took 40 seconds. `kubectl get nodes`: both nodes Ready. `kubectl get clusterissuers`: `selfsigned-bootstrap` and `kesinti-ca` True, message "Signing CA verified". A test Certificate for `int.kesinti.localhost` was ready in two seconds with `issuer=CN=Kesinti Haritasi Lokal CA` and 90 days validity, then deleted (the real Ingress certificates come in Phase 7). Traefik answers on 80 and 443 (404, since there is no Ingress). Windows resolves `kesinti.localhost` to ::1 on its own. The cluster plus the compose stack use 2.3 GB of RAM. Where I got stuck: `sudo` asks for a password, so k3d went to `~/.local/bin`; k3d v5.9.0 publishes no separate sha256 file; the cert-manager default moved from v1.19.2 to the current v1.21.2; `kubernetes_manifest` looks for the CRD at plan time, so the issuers moved into a Helm chart.
 
 ## [ ] Phase 7 - Helm and GitOps
 - [ ] helm/collector, helm/api, helm/frontend (probes, limits, ConfigMap, secret reference, TLS Ingress, HPA for api)

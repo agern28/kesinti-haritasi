@@ -7,7 +7,7 @@
 
 İstanbul'dan başlayarak Türkiye'deki elektrik, su ve doğalgaz kesintilerini resmi kaynaklardan toplayıp tek bir haritada gösteren uygulama. Harita canlı: yeni bir kesinti veritabanına düştüğü an sayfa yenilenmeden görünüyor.
 
-Proje aynı zamanda bir DevOps staj projesi. Uygulamanın kendisi kadar onu nasıl işlettiğimiz de işin parçası: CI, container, Terraform ile Hetzner, k3s, Helm, Argo CD ile GitOps, Prometheus/Grafana ile izleme.
+Proje aynı zamanda bir DevOps staj projesi. Uygulamanın kendisi kadar onu nasıl işlettiğimiz de işin parçası: CI, container, Terraform, k3s (şimdilik lokalde, k3d ile), Helm, Argo CD ile GitOps, Prometheus/Grafana ile izleme.
 
 English: [README.en.md](README.en.md)
 
@@ -34,9 +34,9 @@ Ayrıntılı plan: [docs/plan.md](docs/plan.md). İlerleme: [docs/PROGRESS.md](d
 | `services/collector` | Kaynaklardan veri toplayan servis |
 | `services/api` | REST + SSE API |
 | `frontend` | React + Vite + Leaflet arayüzü |
-| `helm` | Servislerin Helm chart'ları |
+| `helm` | Servislerin Helm chart'ları ve `cluster-issuers` (cert-manager issuer'ları) |
 | `gitops` | Argo CD Application'ları ve ortam values dosyaları |
-| `infra` | Terraform (Hetzner) ve gerekirse Ansible |
+| `infra` | `k3d/` lokal k3s küme tanımı, `terraform/local` küme üstü kurulum |
 | `loadtest` | k6 senaryoları |
 | `docs` | Faz notları (`tr/`, `en/`) |
 
@@ -87,6 +87,18 @@ Container'lar `restart: unless-stopped` ile çalışıyor, yani bilgisayar ya da
 Veri `pgdata` ve `redisdata` adlı Docker volume'lerinde duruyor, `make down` onlara dokunmaz. Kesinti geçmişi birikmeye devam eder; sıfırdan başlamak için `make reset`.
 
 Stack kapalı kaldığı sürede kaynaklardaki liste değiştiği için ilk taramalarda büyük NEW/GONE sayıları görmek normaldir.
+
+### Lokal Kubernetes kümesi
+
+Compose'un yanında, aynı makinede bir k3s kümesi var: k3d ile Docker içinde çalışıyor, kümenin üstünü (namespace'ler, cert-manager, sertifika issuer'ları) Terraform kuruyor. Gereken tek ek araç k3d; `kubectl`, `helm` ve `terraform` de lazım.
+
+```bash
+make cluster-up      # kümeyi kurar, sonra terraform apply ile üstünü kurar
+make cluster-status  # düğümler, pod'lar, issuer'lar
+make cluster-down    # kümeyi tamamen siler
+```
+
+Servisler kümeye Faz 7'de Helm ve Argo CD ile gelecek; şu an küme boş ve Traefik 80/443'te Ingress bekliyor. Ayrıntı ve buluta (Hetzner) taşımak için gerekenler: [docs/tr/06-altyapi.md](docs/tr/06-altyapi.md).
 
 ### Container dışında geliştirme
 

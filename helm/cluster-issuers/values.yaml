@@ -1,0 +1,19 @@
+# Hangi issuer'lar kurulsun. Lokalde ca: true, bulutta letsencrypt: true olacak.
+ca:
+  # Kendi kendini imzalayan bir CA uretir, Ingress sertifikalari ondan cikar.
+  # Tarayici bu CA'yi tanimadigi icin uyari verir; sertifika zinciri yine de gercek.
+  enabled: true
+  # CA sertifikasinin durdugu secret ve gecerlilik suresi
+  secretName: kesinti-ca-tls
+  commonName: Kesinti Haritasi Lokal CA
+  duration: 8760h # 1 yil
+
+letsencrypt:
+  # Gercek alan adi olmadan calismaz (HTTP-01 dogrulamasi dışarıdan erisim ister).
+  enabled: false
+  email: ""
+  server: https://acme-staging-v02.api.letsencrypt.org/directory
+  solverIngressClass: traefik
+
+# cert-manager'in kurulu oldugu namespace: CA secret'i burada durur.
+certManagerNamespace: cert-manager

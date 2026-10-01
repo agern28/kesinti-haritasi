@@ -75,13 +75,15 @@ Bitti sayılma koşulu: üç workflow da main üzerinde yeşil; Trivy CRITICAL'd
 
 Durum: tamamlandı (2026-09-15). Not: [tr/05-container-ve-ci.md](tr/05-container-ve-ci.md). Yerelde hepsi yeşil: iki serviste `mvn verify` ve JaCoCo alt sınırı (%85; ölçülen %91 ve %92), frontend testleri ve kapsam alt sınırı, üç imaj, `actionlint`. Trivy ilk yerel taramada Tomcat 11.0.24'teki üç CRITICAL açıkta kırdı, 11.0.25'e sabitlenince temiz. GitHub'da (2026-09-15, `main`): collector, api ve frontend workflow'ları yeşil (test, kapsam alt sınırı, imaj, Trivy); `compose-smoke` ilk koşuda `--ip` yüzünden kırıldı, düzeltmeden sonra yeşil. SonarQube Cloud kuruldu, `SONAR_TOKEN` eklendi: ilk analizde gate hesaplanmadığı için kırmızı, ikinci analizden itibaren üç projede de `OK`. İlk analizin 7 bulgusu (2'si yanlış alarm olan dinamik SQL, 5 küçük bug) düzeltildi. v1.0.0: ilk tag'ler Sonar adımında kırıldı (SonarCloud tag'i ayrı bir dal sayıyor); tag koşularında Sonar atlanınca tag'ler `11f3377`'ye taşındı. Üç tag koşusu yeşil, imajlar GHCR'da (`1.0.0`, `latest`, public), üç GitHub Release notunu CHANGELOG'dan aldı ve SBOM'u ekli.
 
-## [ ] Faz 6 - Altyapı
-- [ ] Terraform: Hetzner CX23, firewall (22 sadece senin IP'n, 80/443 açık), SSH key, cloud-init ile k3s; `terraform.tfvars.example`
-- [ ] Kubeconfig'i lokale alma adımları
-- [ ] cert-manager + Let's Encrypt ClusterIssuer (staging, sonra prod)
-- [ ] YAPMAN GEREKEN: Hetzner hesabı/token, alan adı, DNS A kaydı; terraform komutları
+## [x] Faz 6 - Altyapı (lokalde)
+- [x] Lokal k3s kümesi: `infra/k3d/cluster.yaml` (1 server + 1 agent, k3s v1.35.5 sabit, 80/443 localhost'a bağlı, metrics-server açık)
+- [x] Terraform (`infra/terraform/local`): `kesinti-int` ve `kesinti-prod` namespace'leri, cert-manager v1.21.2, issuer chart'ı; `terraform.tfvars.example`
+- [x] cert-manager + kendi CA'mızdan ClusterIssuer (`helm/cluster-issuers`, `letsencrypt.enabled` ile ACME moduna geçiyor)
+- [x] Make komutları: `cluster-up`, `bootstrap`, `cluster-status`, `cluster-down`
+- [ ] Hetzner yolu (hcloud provider, CX23, firewall, cloud-init, Let's Encrypt): ertelendi, gereken iş [tr/06-altyapi.md](tr/06-altyapi.md) sonunda
+- Senden bir şey gerekmiyor: hesap, token, alan adı ve DNS yok
 
-Bitti sayılma koşulu: `terraform validate` ve `terraform plan` temiz; kullanıcı apply ettikten sonra `kubectl get nodes` Ready, staging ve prod sertifikası test ingress'te alınmış.
+Durum: tamamlandı (2026-10-02). Not: [tr/06-altyapi.md](tr/06-altyapi.md). `terraform validate` ve `terraform fmt` temiz, plan 4 kaynak, apply 40 saniyede bitti. `kubectl get nodes`: iki düğüm Ready. `kubectl get clusterissuers`: `selfsigned-bootstrap` ve `kesinti-ca` True, mesaj "Signing CA verified". Test Certificate'ı (`int.kesinti.localhost`) iki saniyede hazır oldu, `issuer=CN=Kesinti Haritasi Lokal CA`, 90 gün geçerli; sonra silindi (gerçek Ingress sertifikaları Faz 7'de). Traefik 80 ve 443'te cevap veriyor (Ingress olmadığı için 404). Windows `kesinti.localhost`'u kendisi ::1'e çözüyor. Küme + compose yığını 2,3 GB RAM. Takıldığım yerler: `sudo` şifre istediği için k3d `~/.local/bin`'e kuruldu; k3d v5.9.0'ın ayrı sha256 dosyası yok; cert-manager varsayılanı v1.19.2'den güncel v1.21.2'ye çekildi; `kubernetes_manifest` CRD'yi plan aşamasında aradığı için issuer'lar Helm chart'ına taşındı.
 
 ## [ ] Faz 7 - Helm ve GitOps
 - [ ] helm/collector, helm/api, helm/frontend (probe, limit, ConfigMap, secret referansı, TLS Ingress, api HPA)
