@@ -83,13 +83,24 @@ Aynı sebeple compose'daki collector durduruldu (`docker compose stop collector`
 
 Dal kurallarıyla çakışma sorusu: bu workflow `GITHUB_TOKEN` ile doğrudan `main`'e push ediyor. `main` korumalı hale gelirse (zorunlu review ya da status check) doğrudan push reddedilir; o durumda adımı PR açmaya çevirmek gerekir, `promote-prod.yml`'deki yöntemin aynısı. Sonsuz döngü riski yok: hiçbir workflow `gitops/**` yolunu dinlemiyor, yani bu commit yeni bir koşu başlatmıyor.
 
+Küçük bir yan etki: `yq -i` dosyayı yeniden yazdığı için values dosyalarındaki boş satırlar kayboluyor ve bazı yorumlar yer değiştiriyor. Yorumlar duruyor, anlam değişmiyor; sadece commit'te beklenenden fazla satır görünüyor.
+
 **promote-prod.yml**: elle tetiklenir. INT'te duran sürümü `gitops/prod/<servis>.yaml`'a yazan bir PR açar. PROD'a geçiş bir karar olduğu için otomatik değil; PR birleşince Argo CD PROD'u o sürüme geçirir.
 
 ## 1.0.1: hattın gerçekten çalıştırılması
 
 Kurulum bittiğinde `make cluster-check` bir şeyi yakaladı: derin sayfa isteği compose'da 400 dönüyordu, kümede 200. Sebep, kümedeki imajların GHCR'daki `1.0.0` etiketli imajlar olması; onlar v1.0.0 tag'inde, sertleştirme turundan önce derlenmişti. Yani küme, compose'dan eski kod çalıştırıyordu.
 
-Doğru çözüm yeni sürüm çıkarmaktı, bu da terfi hattını baştan sona denemek demek: CHANGELOG'a 1.0.1 bölümü (iki dilde), üç servis için `-v1.0.1` tag'i, CI'ın imajları derleyip GHCR'a göndermesi ve Release açması, `promote-int`'in INT values'larını güncellemesi, Argo CD'nin INT'e kurması, sonra `promote-prod` ile PROD'a terfi.
+Doğru çözüm yeni sürüm çıkarmaktı, bu da terfi hattını baştan sona denemek demek. Olanlar:
+
+1. CHANGELOG'a 1.0.1 bölümü (iki dilde), sonra üç servis için `collector-v1.0.1`, `api-v1.0.1`, `frontend-v1.0.1` tag'leri.
+2. Her tag'de servis workflow'u imajı derledi, Trivy taradı, GHCR'a gönderdi ve notlarını CHANGELOG'dan alan bir GitHub Release açtı. Üçü de yeşil.
+3. `promote-int` her tag'de `gitops/int/<servis>.yaml`'daki `image.tag`'i 1.0.1'e çekip `main`'e commit etti (üç commit: `f59e59b`, `e264d4b`, `b47440e`).
+4. Argo CD o commit'leri görüp INT'e kurdu. Doğrulama: INT'te derin sayfa isteği artık 400 dönüyor, yani çalışan kod gerçekten yeni.
+5. `promote-prod` üç servis için elle tetiklendi. Dalları push etti ama PR açarken kırıldı: deponun ayarı Actions'ın PR açmasına izin vermiyor ("GitHub Actions is not permitted to create or approve pull requests"). Workflow artık bu durumda dalın adını, karşılaştırma linkini ve açılması gereken ayarı hata mesajında yazıyor. Üç PR elle açıldı (#16, #17, #18) ve birleştirildi.
+6. Argo CD PROD'u 1.0.1'e geçirdi. Doğrulama: PROD'da derin sayfa 400 ve mesajı doğru, `size=9999` isteği 500 kayda kırpılıyor, özet 200, collector taramaya devam ediyor.
+
+Yani hat uçtan uca çalışıyor; tek eksik, PR'ı Actions'ın kendisinin açabilmesi için deponun ayarının değişmesi.
 
 ## Doğrulama
 

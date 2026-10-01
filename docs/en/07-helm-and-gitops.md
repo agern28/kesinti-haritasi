@@ -83,13 +83,24 @@ Two workflows were added.
 
 On conflicts with branch rules: this workflow pushes to `main` directly with `GITHUB_TOKEN`. If `main` becomes protected (required reviews or status checks), a direct push is rejected; the step then has to become a pull request, the same way `promote-prod.yml` does it. There is no risk of a loop: no workflow watches `gitops/**`, so this commit starts no new run.
 
+One small side effect: `yq -i` rewrites the file, so blank lines in the values files disappear and some comments move. The comments survive and nothing changes in meaning; the commit just touches more lines than expected.
+
 **promote-prod.yml**: triggered by hand. It opens a PR that writes the version running in INT into `gitops/prod/<service>.yaml`. Going to PROD is a decision, so it is not automatic; when the PR merges, Argo CD moves PROD to that version.
 
 ## 1.0.1: actually running the path
 
 When the install was done, `make cluster-check` caught something: a deep-paging request returned 400 under compose but 200 in the cluster. The reason is that the cluster runs the GHCR images tagged `1.0.0`, which were built at the v1.0.0 tag, before the hardening pass. The cluster was running older code than compose.
 
-The right fix was to cut a new release, which also meant exercising the whole promotion path: a 1.0.1 section in both CHANGELOGs, a `-v1.0.1` tag for each of the three services, CI building the images, pushing them to GHCR and opening Releases, `promote-int` updating the INT values, Argo CD deploying them to INT, then `promote-prod` promoting to PROD.
+The right fix was to cut a new release, which also meant exercising the whole promotion path. What happened:
+
+1. A 1.0.1 section in both CHANGELOGs, then `collector-v1.0.1`, `api-v1.0.1` and `frontend-v1.0.1`.
+2. On each tag the service workflow built the image, scanned it with Trivy, pushed it to GHCR and opened a GitHub Release with notes from the CHANGELOG. All three green.
+3. `promote-int` set `image.tag` to 1.0.1 in `gitops/int/<service>.yaml` and committed to `main` on each tag (three commits: `f59e59b`, `e264d4b`, `b47440e`).
+4. Argo CD picked those commits up and deployed them to INT. Proof: a deep-paging request in INT now returns 400, so the running code really is the new one.
+5. `promote-prod` was triggered by hand for all three services. It pushed the branches but failed at the pull request: the repository does not allow Actions to open PRs ("GitHub Actions is not permitted to create or approve pull requests"). The workflow now prints the branch name, the compare link and the setting to flip in its error output. The three PRs were opened by hand (#16, #17, #18) and merged.
+6. Argo CD moved PROD to 1.0.1. Proof: deep paging returns 400 with the right message, `size=9999` is clamped to 500 records, the summary is 200, and the collector keeps scanning.
+
+So the path works end to end; the only missing piece is the repository setting that would let Actions open the PR itself.
 
 ## Verification
 

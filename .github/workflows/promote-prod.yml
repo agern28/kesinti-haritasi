@@ -63,8 +63,18 @@ jobs:
             "- [ ] INT'te uygulama acilip bakildi" \
             "- [ ] Argo CD'de int-$servis Synced ve Healthy" \
             "- [ ] CHANGELOG guncel" > /tmp/pr-body.md
-          gh pr create \
+          # Dal her durumda push edildi. PR acmak depo ayarina bagli:
+          # Settings > Actions > General > Workflow permissions >
+          # "Allow GitHub Actions to create and approve pull requests".
+          # Kapaliysa adim burada kiriliyor, dal duruyor, PR elle acilabiliyor.
+          if ! gh pr create \
             --base main \
             --head "$dal" \
             --title "Promote $servis ${{ steps.tasi.outputs.int_tag }} to PROD" \
             --body-file /tmp/pr-body.md
+          then
+            echo "::error::PR acilamadi. Dal push edildi: $dal"
+            echo "::error::Elle acmak icin: ${{ github.server_url }}/${{ github.repository }}/compare/main...$dal"
+            echo "::error::Actions'in PR acmasina izin vermek icin: Settings > Actions > General > Workflow permissions > Allow GitHub Actions to create and approve pull requests"
+            exit 1
+          fi
