@@ -2,6 +2,21 @@
 
 Biçim [Keep a Changelog](https://keepachangelog.com/tr-TR/1.1.0/), sürümler [Semantic Versioning](https://semver.org/lang/tr/). Uygulamadaki "Yenilikler" penceresi bu dosyadan okunuyor. GitHub Release notları da buradan, sürümün bölümünden alınıyor. İngilizcesi: [CHANGELOG.en.md](CHANGELOG.en.md).
 
+## [1.0.1] - 2026-10-02
+
+Uygulamanın görünen davranışı aynı; bu sürüm dayanıklılık ve işletme tarafı. Kubernetes'e kurulan imajların 1.0.0'dan sonraki düzeltmeleri içermesi için çıkarıldı.
+
+### Düzeltildi
+- Kaynak sitenin robots.txt dosyasına geçici olarak ulaşılamadığında bütün kaynaklar "izin verilmiyor" sayılıyordu. Artık elde geçerli bir kopya varsa o kullanılıyor, log da sebebi doğru yazıyor.
+- Kubernetes'te arayüzden api'ye giden istekler 502 veriyordu: nginx'in isim çözücüsü kısa servis adını çözemiyor, tam alan adı gerekiyordu.
+- İlçe sınırları dosyasının adresi sürümlü: yeni sınır dosyası çıkınca tarayıcı bir hafta eski dosyada kalmıyor.
+
+### Değişti
+- Çok derin sayfa isteği (`page * size` 50.000'den büyük) artık 400 dönüyor; dışa açık api'de ucuz bir yük bindirme yoluydu.
+- Aktif kesinti listesi ve harita özeti için iki veritabanı indeksi eklendi.
+- Redis olay akışının uzunluğu ölçüme göre 100.000'den 30.000'e indirildi (olay başına ~0,56 KB).
+- Bağımlılıklar güncellendi; Dependabot artık ana sürüm atlamalarını önermiyor.
+
 ## [1.0.0] - 2026-09-15
 
 ### Eklendi

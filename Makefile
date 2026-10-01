@@ -11,7 +11,8 @@ CLUSTER := kesinti
 TF_DIR := infra/terraform/local
 
 .PHONY: help env up build down stop restart ps logs logs-collector logs-api check smoke reset test \
-	cluster-up cluster-down cluster-status bootstrap wait-traefik
+	cluster-up cluster-down cluster-status cluster-check bootstrap wait-traefik \
+	argocd-password argocd-apps argocd-refresh
 
 help: ## Komutlari listeler
 	@echo "Kesinti Haritasi - lokal komutlar"
@@ -95,9 +96,25 @@ bootstrap: ## Namespace'ler, cert-manager ve ClusterIssuer'lar (terraform apply)
 cluster-down: ## Lokal kumeyi tamamen siler (uygulama verisi compose'da, ona dokunmaz)
 	k3d cluster delete $(CLUSTER)
 
-cluster-status: ## Kume durumu: dugumler, pod'lar, issuer'lar
+cluster-status: ## Kume durumu: dugumler, pod'lar, issuer'lar, Argo CD applicationlari
 	@kubectl get nodes
 	@echo
 	@kubectl get pods -A
 	@echo
 	@kubectl get clusterissuers
+	@echo
+	@kubectl -n argocd get applications 2>/dev/null || true
+
+cluster-check: ## Kumedeki kurulumu uctan uca dener (Argo CD, iki ortam, sertifikalar, SSE)
+	@bash scripts/cluster-check.sh
+
+argocd-password: ## Argo CD admin parolasini yazdirir (ilk kurulum secret'i)
+	@kubectl -n argocd get secret argocd-initial-admin-secret \
+		-o go-template='{{index .data "password" | base64decode}}{{"\n"}}'
+
+argocd-apps: ## Argo CD applicationlarinin durumu
+	@kubectl -n argocd get applications \
+		-o custom-columns='AD:.metadata.name,SYNC:.status.sync.status,SAGLIK:.status.health.status,REVISION:.status.sync.revisions[0]'
+
+argocd-refresh: ## Argo CD'ye repoyu hemen kontrol ettirir (varsayilan dongu 3 dakika)
+	@kubectl -n argocd annotate applications --all argocd.argoproj.io/refresh=hard --overwrite
