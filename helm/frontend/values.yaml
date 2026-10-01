@@ -11,8 +11,15 @@ port: 8080
 appEnv: INT
 
 nginx:
-  # Ayni namespace'teki api Service'i.
-  apiUpstream: http://api:8080
+  # Bos birakilirsa chart'in kuruldugu namespace'teki api Service'inin tam adi kullanilir:
+  # http://api.<namespace>.svc.cluster.local:8080
+  #
+  # Kisa ad ("http://api:8080") burada CALISMIYOR: nginx'in resolver direktifi
+  # /etc/resolv.conf'taki search listesini kullanmiyor, adi oldugu gibi soruyor ve
+  # CoreDNS bos cevap veriyor. Sonuc 502. (Compose'da Docker DNS kisa adi coziyor.)
+  apiUpstream: ""
+  # Bos apiUpstream icin kullanilacak api Service portu.
+  apiPort: 8080
   # nginx'in resolver direktifi IP istiyor, isim kabul etmiyor. k3s'te CoreDNS'in
   # ClusterIP'si varsayilan olarak bu; kontrol: kubectl -n kube-system get svc kube-dns
   resolver: 10.43.0.10

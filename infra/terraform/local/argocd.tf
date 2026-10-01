@@ -24,9 +24,11 @@ resource "helm_release" "argocd" {
       name  = "notifications.enabled"
       value = "false"
     },
+    # ApplicationSet kullanilmiyor (app-of-apps yeterli). Chart 10.x'te applicationSet.enabled
+    # diye bir anahtar yok, kapatmanin yolu replica sayisini sifira cekmek.
     {
-      name  = "applicationSet.enabled"
-      value = "false"
+      name  = "applicationSet.replicas"
+      value = "0"
     },
     # Kaynak sinirlari
     {

@@ -1,0 +1,88 @@
+# Bir servis icin surum tag'i atildiginda (ornek: api-v1.1.0) INT'in image tag'ini gunceller.
+# Argo CD gitops/int/*.yaml dosyalarini izliyor, commit main'e dustugu an INT'e kuruyor.
+#
+# Dal kurallariyla cakisma: bu workflow main'e dogrudan commit atiyor ve bunu GITHUB_TOKEN ile
+# yapiyor. main korumali hale gelirse (zorunlu review ya da status check) dogrudan push reddedilir;
+# o durumda asagidaki adimi PR acmaya cevirmek gerekir (promote-prod.yml'deki yontem).
+# Dongu riski yok: hicbir workflow gitops/** yolunu dinlemiyor.
+name: promote-int
+
+on:
+  push:
+    tags:
+      - collector-v*
+      - api-v*
+      - frontend-v*
+  workflow_dispatch:
+    inputs:
+      service:
+        description: Servis (collector, api, frontend)
+        required: true
+        type: choice
+        options: [collector, api, frontend]
+      version:
+        description: "Surum (ornek: 1.1.0)"
+        required: true
+        type: string
+
+permissions:
+  contents: write
+
+jobs:
+  promote:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          # Tag degil main: commit main'in ucuna gidecek.
+          ref: main
+
+      - name: Servis ve surumu belirle
+        id: hedef
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            servis="${{ inputs.service }}"
+            surum="${{ inputs.version }}"
+          else
+            tag="${GITHUB_REF_NAME}"
+            servis="${tag%%-v*}"
+            surum="${tag#*-v}"
+          fi
+          case "$servis" in
+            collector|api|frontend) ;;
+            *) echo "bilinmeyen servis: $servis"; exit 1 ;;
+          esac
+          echo "servis=$servis" >> "$GITHUB_OUTPUT"
+          echo "surum=$surum" >> "$GITHUB_OUTPUT"
+          echo "$servis -> $surum"
+
+      - name: INT values dosyasini guncelle
+        env:
+          SURUM: ${{ steps.hedef.outputs.surum }}
+        run: |
+          dosya="gitops/int/${{ steps.hedef.outputs.servis }}.yaml"
+          eski=$(yq '.image.tag' "$dosya")
+          yq -i '.image.tag = strenv(SURUM)' "$dosya"
+          yeni=$(yq '.image.tag' "$dosya")
+          echo "$dosya: $eski -> $yeni"
+          if [ "$eski" = "$yeni" ]; then
+            echo "degisiklik yok, commit atlanacak"
+            echo "DEGISTI=false" >> "$GITHUB_ENV"
+          else
+            echo "DEGISTI=true" >> "$GITHUB_ENV"
+          fi
+
+      - name: Commit ve push
+        if: env.DEGISTI == 'true'
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add "gitops/int/${{ steps.hedef.outputs.servis }}.yaml"
+          git commit -m "chore(gitops): promote ${{ steps.hedef.outputs.servis }} ${{ steps.hedef.outputs.surum }} to INT"
+          # Arada baska bir commit dustuyse yeniden dene.
+          for deneme in 1 2 3; do
+            if git push origin main; then exit 0; fi
+            git pull --rebase origin main
+          done
+          echo "push basarisiz"
+          exit 1

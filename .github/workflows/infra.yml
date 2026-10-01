@@ -8,12 +8,16 @@ on:
     paths:
       - infra/**
       - helm/**
+      - gitops/**
       - .github/workflows/infra.yml
+      - .github/scripts/check-gitops.py
   pull_request:
     paths:
       - infra/**
       - helm/**
+      - gitops/**
       - .github/workflows/infra.yml
+      - .github/scripts/check-gitops.py
   workflow_dispatch:
 
 permissions:
@@ -77,3 +81,19 @@ jobs:
 
       - name: k3d yapilandirmasi gecerli YAML mi
         run: python3 -c "import yaml,sys; yaml.safe_load(open('infra/k3d/cluster.yaml')); print('cluster.yaml okunuyor')"
+
+      - name: gitops Application'lari repoyla tutarli mi
+        run: python3 .github/scripts/check-gitops.py
+
+      - name: Ortam values dosyalari chart'lara uyuyor mu
+        # Her ortamin values'i ilgili chart'la birlikte render edilebiliyor mu:
+        # yanlis anahtar ya da bozuk YAML burada cikar.
+        run: |
+          for env in int prod; do
+            for svc in collector api frontend; do
+              helm template "$env-$svc" "helm/$svc" -f "gitops/$env/$svc.yaml" > /dev/null
+              echo "ok   $env/$svc"
+            done
+          done
+          helm template data helm/data -f gitops/data/values.yaml > /dev/null
+          echo "ok   data"

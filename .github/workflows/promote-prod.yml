@@ -1,0 +1,65 @@
+# INT'te duran surumu PROD'a tasiyan PR'i acar. Elle tetiklenir: PROD'a gecis bir karar,
+# otomatik olmasin. PR birlesince Argo CD gitops/prod/*.yaml'i gorup PROD'a kurar.
+name: promote-prod
+
+on:
+  workflow_dispatch:
+    inputs:
+      service:
+        description: Servis (collector, api, frontend)
+        required: true
+        type: choice
+        options: [collector, api, frontend]
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  pr:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: main
+
+      - name: INT'teki surumu PROD values'a yaz
+        id: tasi
+        run: |
+          servis="${{ inputs.service }}"
+          int_tag=$(yq '.image.tag' "gitops/int/$servis.yaml")
+          prod_tag=$(yq '.image.tag' "gitops/prod/$servis.yaml")
+          echo "INT: $int_tag, PROD: $prod_tag"
+          if [ "$int_tag" = "$prod_tag" ]; then
+            echo "PROD zaten $prod_tag, yapilacak bir sey yok"
+            echo "degisti=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          SURUM="$int_tag" yq -i '.image.tag = strenv(SURUM)' "gitops/prod/$servis.yaml"
+          echo "degisti=true" >> "$GITHUB_OUTPUT"
+          echo "int_tag=$int_tag" >> "$GITHUB_OUTPUT"
+          echo "prod_tag=$prod_tag" >> "$GITHUB_OUTPUT"
+
+      - name: PR ac
+        if: steps.tasi.outputs.degisti == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          servis="${{ inputs.service }}"
+          dal="promote/$servis-${{ steps.tasi.outputs.int_tag }}"
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git checkout -b "$dal"
+          git add "gitops/prod/$servis.yaml"
+          git commit -m "chore(gitops): promote $servis ${{ steps.tasi.outputs.int_tag }} to PROD"
+          git push origin "$dal"
+          gh pr create \
+            --base main \
+            --head "$dal" \
+            --title "Promote $servis ${{ steps.tasi.outputs.int_tag }} to PROD" \
+            --body "INT'te ${{ steps.tasi.outputs.int_tag }} calisiyor, PROD ${{ steps.tasi.outputs.prod_tag }} surumunde. Bu PR birlesince Argo CD PROD'u ${{ steps.tasi.outputs.int_tag }} surumune gecirir.
+
+Kontrol listesi:
+- [ ] INT'te uygulama acilip bakildi
+- [ ] Argo CD'de int-$servis Synced ve Healthy
+- [ ] CHANGELOG guncel"

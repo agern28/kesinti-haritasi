@@ -32,7 +32,7 @@ spec:
             - name: APP_ENV
               value: {{ .Values.appEnv | quote }}
             - name: API_UPSTREAM
-              value: {{ .Values.nginx.apiUpstream | quote }}
+              value: {{ .Values.nginx.apiUpstream | default (printf "http://api.%s.svc.cluster.local:%v" .Release.Namespace .Values.nginx.apiPort) | quote }}
             - name: NGINX_RESOLVER
               value: {{ .Values.nginx.resolver | quote }}
           readinessProbe:
