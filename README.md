@@ -106,14 +106,19 @@ Uygulama kümeye Argo CD ile kuruluyor: repodaki `gitops/apps` altındaki Applic
 | PROD | https://kesinti.localhost |
 | INT | https://int.kesinti.localhost |
 | Argo CD | https://argocd.localhost (`admin`, parola: `make argocd-password`) |
+| Grafana | https://grafana.localhost (`admin`, parola: `make grafana-password`) |
 
 Sertifikalar kümedeki kendi CA'mızdan, bu yüzden tarayıcı uyarı verir; "yine de devam et" diyebilirsin.
 
 ```bash
-make cluster-check     # kümedeki kurulumu uçtan uca dener (25 kontrol)
+make cluster-check     # kümedeki kurulumu uçtan uca dener
 make argocd-apps       # Application'ların sync ve sağlık durumu
 make argocd-refresh    # Argo CD'ye repoyu hemen kontrol ettir
+make alerts            # alarm kurallarının durumu
+make prometheus        # Prometheus arayüzü (localhost:9090)
 ```
+
+İzleme: Prometheus, Alertmanager ve Grafana kümede çalışıyor; üç pano repoda JSON olarak duruyor (kaynak sağlığı, uygulama, küme). Taramalar durduğunda alarm üretiliyor; Telegram'a bildirim için `terraform.tfvars`'a bot token ve chat id yazmak gerekiyor. Ayrıntı: [docs/tr/08-gozlemlenebilirlik.md](docs/tr/08-gozlemlenebilirlik.md).
 
 İki ortamın farkları `gitops/int` ve `gitops/prod` altındaki values dosyalarında: veritabanı, Redis logical DB, HPA, ortam etiketi ve INT'te kapalı olan kaynak taraması. Ayrıntı: [docs/tr/07-helm-ve-gitops.md](docs/tr/07-helm-ve-gitops.md). Kümenin kendisi ve buluta (Hetzner) taşımak için gerekenler: [docs/tr/06-altyapi.md](docs/tr/06-altyapi.md).
 

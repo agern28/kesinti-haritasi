@@ -98,6 +98,36 @@ else
   fail "compose collector de calisiyor: ayni kaynaga iki yerden gidiliyor (docker compose stop collector)"
 fi
 
+echo "--- izleme"
+izleme_pod=$(kubectl -n monitoring get pods --no-headers 2>/dev/null | grep -cE "Running")
+izleme_toplam=$(kubectl -n monitoring get pods --no-headers 2>/dev/null | wc -l | tr -d ' ')
+if [ "${izleme_toplam:-0}" -gt 0 ] && [ "$izleme_pod" = "$izleme_toplam" ]; then
+  ok "monitoring: $izleme_pod/$izleme_toplam Running"
+else
+  fail "monitoring: $izleme_pod/${izleme_toplam:-0} Running"
+fi
+bekle "Grafana" "200" "$(istek "${GRAFANA_HOST:-grafana.localhost}" /login)"
+kural=$(kubectl -n monitoring get prometheusrule kesinti-haritasi -o jsonpath='{.metadata.name}' 2>/dev/null)
+bekle "alarm kurallari kurulu" "kesinti-haritasi" "${kural:-yok}"
+pano=$(kubectl -n monitoring get configmap -l grafana_dashboard=1 --no-headers 2>/dev/null | grep -c '^pano-')
+bekle "kendi panolarimiz" "3" "${pano:-0}"
+# Hedefler: kendi iki servisimiz iki ortamda, yani dort tane up olmali.
+# Prometheus container'inda curl/wget yok, API'ye port-forward ile bakiliyor.
+if command -v python3 >/dev/null 2>&1; then
+  kubectl -n monitoring port-forward svc/monitoring-kube-prometheus-prometheus 9090:9090 >/dev/null 2>&1 &
+  pf=$!
+  sleep 5
+  up=$(curl -s --max-time 15 'http://localhost:9090/api/v1/query?query=count(up%7Bjob%3D~%22collector%7Capi%22%2Cnamespace%3D~%22kesinti-.%2A%22%7D%20%3D%3D%201)' \
+    | python3 -c 'import json,sys
+try:
+    d=json.load(sys.stdin); r=d["data"]["result"]
+    print(int(float(r[0]["value"][1])) if r else 0)
+except Exception:
+    print(0)' 2>/dev/null)
+  kill "$pf" 2>/dev/null
+  bekle "toplanan hedef (collector+api, iki ortam)" "4" "${up:-0}"
+fi
+
 echo "--- HPA"
 hpa=$(kubectl -n kesinti-prod get hpa api -o jsonpath='{.spec.minReplicas}-{.spec.maxReplicas}' 2>/dev/null)
 bekle "PROD api HPA" "1-3" "${hpa:-yok}"

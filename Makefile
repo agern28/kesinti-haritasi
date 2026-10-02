@@ -12,7 +12,8 @@ TF_DIR := infra/terraform/local
 
 .PHONY: help env up build down stop restart ps logs logs-collector logs-api check smoke reset test \
 	cluster-up cluster-down cluster-status cluster-check bootstrap wait-traefik \
-	argocd-password argocd-apps argocd-refresh
+	argocd-password argocd-apps argocd-refresh \
+	grafana-password alerts prometheus alertmanager alarm-testi alarm-testi-bitir
 
 help: ## Komutlari listeler
 	@echo "Kesinti Haritasi - lokal komutlar"
@@ -118,3 +119,32 @@ argocd-apps: ## Argo CD applicationlarinin durumu
 
 argocd-refresh: ## Argo CD'ye repoyu hemen kontrol ettirir (varsayilan dongu 3 dakika)
 	@kubectl -n argocd annotate applications --all argocd.argoproj.io/refresh=hard --overwrite
+
+# --- Izleme ---
+
+grafana-password: ## Grafana admin parolasini yazdirir
+	@kubectl -n monitoring get secret monitoring-grafana \
+		-o go-template='{{index .data "admin-password" | base64decode}}{{"\n"}}'
+
+alerts: ## Alarm kurallarinin durumu ve Alertmanager'daki aktif alarmlar
+	@bash scripts/alerts.sh
+
+prometheus: ## Prometheus arayuzunu localhost:9090'a baglar (Ctrl+C ile biter)
+	kubectl -n monitoring port-forward svc/monitoring-kube-prometheus-prometheus 9090:9090
+
+alertmanager: ## Alertmanager arayuzunu localhost:9093'e baglar (Ctrl+C ile biter)
+	kubectl -n monitoring port-forward svc/monitoring-kube-prometheus-alertmanager 9093:9093
+
+alarm-testi: ## Alarm denemesi: PROD collector'i durdurur (geri acmak icin alarm-testi-bitir)
+	@echo "PROD collector durduruluyor. Ariza alarmi ~35 dakika sonra ALARM durumuna gecer."
+	@echo "Izlemek icin: make alerts"
+	kubectl -n kesinti-prod scale deploy/collector --replicas=0
+	@echo "Argo CD selfHeal'i kapatiliyor (yoksa hemen geri acar)."
+	@kubectl -n argocd patch app prod-collector --type merge \
+		-p '{"spec":{"syncPolicy":{"automated":{"prune":true,"selfHeal":false}}}}'
+
+alarm-testi-bitir: ## Alarm denemesini bitirir, collector'i geri acar
+	@kubectl -n argocd patch app prod-collector --type merge \
+		-p '{"spec":{"syncPolicy":{"automated":{"prune":true,"selfHeal":true}}}}'
+	kubectl -n kesinti-prod scale deploy/collector --replicas=1
+	@kubectl -n kesinti-prod rollout status deploy/collector --timeout=180s

@@ -106,14 +106,19 @@ The app is installed on the cluster by Argo CD: the Applications under `gitops/a
 | PROD | https://kesinti.localhost |
 | INT | https://int.kesinti.localhost |
 | Argo CD | https://argocd.localhost (`admin`, password: `make argocd-password`) |
+| Grafana | https://grafana.localhost (`admin`, password: `make grafana-password`) |
 
 Certificates come from our own in-cluster CA, so the browser warns; continue anyway.
 
 ```bash
-make cluster-check     # end-to-end check of the cluster install (25 checks)
+make cluster-check     # end-to-end check of the cluster install
 make argocd-apps       # sync and health of the Applications
 make argocd-refresh    # make Argo CD check the repo right away
+make alerts            # state of the alert rules
+make prometheus        # Prometheus UI (localhost:9090)
 ```
+
+Observability: Prometheus, Alertmanager and Grafana run on the cluster, and three dashboards live in the repo as JSON (source health, application, cluster). Alerts fire when scanning stops; to get Telegram notifications, put a bot token and chat id into `terraform.tfvars`. Details: [docs/en/08-observability.md](docs/en/08-observability.md).
 
 What differs between the environments lives in the values files under `gitops/int` and `gitops/prod`: database, Redis logical DB, HPA, environment label, and the source scanning that is off in INT. Details: [docs/en/07-helm-and-gitops.md](docs/en/07-helm-and-gitops.md). The cluster itself, and what moving to the cloud (Hetzner) would take: [docs/en/06-infrastructure.md](docs/en/06-infrastructure.md).
 

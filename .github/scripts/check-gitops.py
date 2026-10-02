@@ -14,8 +14,9 @@ import yaml
 
 KOK = pathlib.Path(__file__).resolve().parents[2]
 APPS = KOK / "gitops" / "apps"
-# Terraform'un olusturdugu namespace'ler (infra/terraform/local/variables.tf) ve argocd.
-BILINEN_NAMESPACE = {"kesinti-int", "kesinti-prod", "kesinti-data", "argocd"}
+# Terraform'un olusturdugu namespace'ler (infra/terraform/local/variables.tf ve
+# monitoring.tf) ile Argo CD'nin kendi namespace'i.
+BILINEN_NAMESPACE = {"kesinti-int", "kesinti-prod", "kesinti-data", "argocd", "monitoring"}
 
 hatalar: list[str] = []
 

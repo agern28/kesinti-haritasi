@@ -35,14 +35,14 @@
   "panels": [
     {
       "type": "stat",
-      "title": "En eski basarili tarama (dakika)",
-      "description": "Butun feed'ler arasinda en uzun suredir taranmayan. Ariza sayfalarinda 30 dakikayi gecmemeli.",
+      "title": "En eski tarama - ariza ve planli (dakika)",
+      "description": "Gunde bir taranan acik veri kaynagi (feed=daily) haric; o 24 saate kadar normal ve ayri gosterilir.",
       "gridPos": { "h": 5, "w": 6, "x": 0, "y": 0 },
       "datasource": { "type": "prometheus", "uid": "${datasource}" },
       "targets": [
         {
           "refId": "A",
-          "expr": "max((time() - collector_last_success_timestamp{namespace=\"$ortam\"}) / 60)",
+          "expr": "max((time() - collector_last_success_timestamp{namespace=\"$ortam\", feed!=\"daily\"}) / 60)",
           "instant": true
         }
       ],
@@ -93,14 +93,33 @@
     },
     {
       "type": "stat",
-      "title": "Takip edilen feed",
+      "title": "Acik veri kaynagi - son tarama (saat)",
+      "description": "Gunde bir taranan kaynak (İBB / İSKİ). Esik 26 saat.",
       "gridPos": { "h": 5, "w": 6, "x": 12, "y": 0 },
       "datasource": { "type": "prometheus", "uid": "${datasource}" },
       "targets": [
-        { "refId": "A", "expr": "count(collector_last_success_timestamp{namespace=\"$ortam\"})", "instant": true }
+        {
+          "refId": "A",
+          "expr": "max((time() - collector_last_success_timestamp{namespace=\"$ortam\", feed=\"daily\"}) / 3600)",
+          "instant": true
+        }
       ],
-      "fieldConfig": { "defaults": { "decimals": 0 }, "overrides": [] },
-      "options": { "colorMode": "value", "graphMode": "none", "reduceOptions": { "calcs": ["lastNotNull"] } }
+      "fieldConfig": {
+        "defaults": {
+          "unit": "h",
+          "decimals": 1,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "orange", "value": 24 },
+              { "color": "red", "value": 26 }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "options": { "colorMode": "background", "graphMode": "none", "reduceOptions": { "calcs": ["lastNotNull"] } }
     },
     {
       "type": "stat",

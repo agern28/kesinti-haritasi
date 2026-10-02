@@ -114,3 +114,20 @@ jobs:
           done
           helm template data helm/data -f gitops/data/values.yaml > /dev/null
           echo "ok   data"
+          helm template monitoring helm/monitoring -f gitops/monitoring/values.yaml > /dev/null
+          echo "ok   monitoring"
+
+      - name: Panolar gecerli JSON mu
+        run: |
+          python3 - <<'PY'
+          import glob, json, sys
+          hata = 0
+          for dosya in sorted(glob.glob("helm/monitoring/dashboards/*.json")):
+              try:
+                  pano = json.load(open(dosya, encoding="utf-8"))
+                  print(f"ok   {dosya} -> {pano['uid']} ({len(pano['panels'])} panel)")
+              except Exception as e:
+                  print(f"HATA {dosya}: {e}")
+                  hata = 1
+          sys.exit(hata)
+          PY

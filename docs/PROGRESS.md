@@ -99,15 +99,15 @@ Durum: tamamlandı (2026-10-02). Not: [tr/07-helm-ve-gitops.md](tr/07-helm-ve-gi
 
 Bitti sayılma koşulu (lokal haliyle karşılandı): `helm lint` ve `helm template` temiz; Argo CD'de int ve prod Synced/Healthy; uygulama alan adı yerine `https://kesinti.localhost` üzerinde canlı.
 
-## [ ] Faz 8 - Gözlemlenebilirlik
-- [ ] 4 GB'a sığacak kube-prometheus-stack değerleri
-- [ ] ServiceMonitor'lar
-- [ ] Grafana panelleri (JSON, provisioning): kaynak sağlığı, uygulama, cluster, SSE istemci sayısı, DB -> tarayıcı gecikmesi
-- [ ] Telegram alarmı (arıza 30 dk, planlı 3 saat, günlük açık veri kaynağı 26 saat)
-- [ ] Alarm testi için kaynak bozma yöntemi
-- [ ] YAPMAN GEREKEN: Telegram bot token ve chat id
+## [x] Faz 8 - Gözlemlenebilirlik
+- [x] kube-prometheus-stack (Terraform ile), 4 GB'a göre kısıldı: k3s'te olmayan bileşenlerin izlenmesi kapalı, 2 gün / 3 GiB retention, her bileşene bellek limiti
+- [x] ServiceMonitor'lar: `monitoring` namespace'inden iki ortamdaki collector ve api, dört hedef `up`
+- [x] Üç Grafana panosu repoda JSON, ConfigMap + sidecar ile yükleniyor: kaynak sağlığı, uygulama (SSE istemci sayısı ve DB → tarayıcı gecikmesi dahil), küme
+- [x] Alarmlar: arıza 30 dk, planlı 3 saat, günlük açık veri 26 saat, tarama hatası, servis toplanamıyor, SSE gecikmesi, api 5xx oranı
+- [x] Alarm testi: `make alarm-testi` / `make alarm-testi-bitir` (Argo CD selfHeal'i de kapatıyor)
+- [ ] YAPMAN GEREKEN: Telegram bot token ve chat id (`terraform.tfvars`). Boşken alarmlar Alertmanager'da ve `make alerts` çıktısında görünüyor, bildirim gitmiyor
 
-Bitti sayılma koşulu: paneller Grafana'da veriyle doluyor; kaynak bilerek bozulunca Telegram'a alarm düşüyor ve düzelince resolved geliyor; node bellek kullanımı makul seviyede.
+Durum: tamamlandı (2026-10-02). Not: [tr/08-gozlemlenebilirlik.md](tr/08-gozlemlenebilirlik.md). Servislere metrik eklemek gerekmedi, Faz 3'teki metrikler yetti. Grafana https://grafana.localhost üzerinde, üç pano da yüklü (her biri 8 panel). Prometheus'ta dört hedef `up`, yedi alarm kuralı yüklü. Alarmlar yalnızca `kesinti-prod`'a bakıyor: INT'te tarama kapalı olduğundan oradaki değer sıfır kalıyor ve `time() - 0` 29 milyon dakika veriyor. İzleme yığınıyla birlikte toplam bellek 5,2 GB (compose kapalı). Takıldığım yerler: Grafana 256 MiB ve 60 saniyelik liveness probe ile açılamıyordu (384 MiB + 120 saniye); Helm Grafana'yı beklerken WSL yanıt vermedi ve Terraform state kilidi kaldı (çözüm: çalışan süreci kontrol et, Grafana'yı sağlıklı hale getir, apply kendi bitiyor); `job` etiketi Service adından geliyor (`api`, `collector`); `AlertmanagerConfig`'in `chatID` alanı secret'tan okunamıyor.
 
 ## [ ] Faz 9 - v1.1 ve dayanıklılık
 - [ ] Doğalgaz kaynağı: BEKLEMEDE. İGDAŞ robots.txt `Disallow: /`, İBB'de İGDAŞ kesinti verisi yok, Başkentgaz sitesinde kesinti yayınlamıyor, İzmirgaz sadece sokak bazlı sorgu veriyor (ayrıntı: [tr/01-kesif-ve-iskelet.md](tr/01-kesif-ve-iskelet.md)). Faz 9 başında yeniden bakılacak; kaynak bulunursa: collector, doğalgaz filtresi ve rengi, CHANGELOG, INT'e otomatik, PROD'a PR ile. Bulunamazsa v1.1'in yeni kaynağı ASKİ (Ankara canlı su arızaları, 2026-09-13 onaylandı); aynı hattan geçecek.

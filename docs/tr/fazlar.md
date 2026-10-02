@@ -120,5 +120,9 @@ Orijinal metin yukarıda değiştirilmeden duruyor. Bu bölüm, faz tanımına d
 | 2026-10-02 | Faz 7 | Veri katmanı tek PostgreSQL ve tek Redis (namespace `kesinti-data`): ortam başına ayrı veritabanı ve ayrı Redis logical DB. Operator, replikasyon ve yedek yok | karar | [07-helm-ve-gitops.md](07-helm-ve-gitops.md) |
 | 2026-10-02 | Faz 7 | `promote-int` INT values'ını `main`'e doğrudan commit ediyor (`GITHUB_TOKEN`). `main` korumalı hale gelirse adım PR açmaya çevrilecek; `gitops/**` hiçbir workflow'un yolunda olmadığı için döngü yok | karar | [07-helm-ve-gitops.md](07-helm-ve-gitops.md) |
 | 2026-10-02 | Faz 7 | 1.0.1 çıkarıldı: GHCR'daki `1.0.0` imajları sertleştirme turundan önce derlenmişti, küme compose'dan eski kod çalıştırıyordu | karar | [07-helm-ve-gitops.md](07-helm-ve-gitops.md), [../../CHANGELOG.md](../../CHANGELOG.md) |
+| 2026-10-02 | Faz 8 | kube-prometheus-stack'i Terraform kuruyor, bizim objelerimizi (ServiceMonitor, alarm kuralları, panolar) Argo CD kuruyor. Sebep: Alertmanager'ın Telegram token'ı ve chat id'si tfvars'ta kalmalı | karar | [08-gozlemlenebilirlik.md](08-gozlemlenebilirlik.md) |
+| 2026-10-02 | Faz 8 | Telegram alıcısı `AlertmanagerConfig` CRD'si ile değil Alertmanager'ın kendi `config` bloğuyla: CRD'nin `chatID` alanı sayı bekliyor ve secret'tan okunamıyor, chat id repoya girerdi | karar | [08-gozlemlenebilirlik.md](08-gozlemlenebilirlik.md) |
+| 2026-10-02 | Faz 8 | Alarmlar yalnızca `kesinti-prod` namespace'ine bakıyor: INT'te tarama kapalı olduğu için son başarılı tarama değeri sıfır kalıyor ve sürekli alarm üretirdi | karar | [08-gozlemlenebilirlik.md](08-gozlemlenebilirlik.md) |
+| 2026-10-02 | Faz 8 | Panolar repoda JSON, ConfigMap olarak kuruluyor ve Grafana sidecar'ı yüklüyor. Arayüzden yapılan değişiklik kalıcı değil | karar | [08-gozlemlenebilirlik.md](08-gozlemlenebilirlik.md) |
 
 Bekleyen onaylar netleşince bu tabloya yeni satır eklenir. Orijinal tanım değiştirilmez.

@@ -99,15 +99,15 @@ Status: done (2026-10-02). Notes: [07-helm-and-gitops.md](07-helm-and-gitops.md)
 
 Done when (met, with the local wording): `helm lint` and `helm template` are clean; int and prod are Synced/Healthy in Argo CD; the app is live on `https://kesinti.localhost` instead of a public domain.
 
-## [ ] Phase 8 - Observability
-- [ ] kube-prometheus-stack values that fit into 4 GB
-- [ ] ServiceMonitors
-- [ ] Grafana dashboards (JSON, provisioned): source health, application, cluster, SSE client count, DB -> browser latency
-- [ ] Telegram alert (unplanned 30 min, planned 3 h, daily open data source 26 h)
-- [ ] A way to break a source on purpose to test the alert
-- [ ] YAPMAN GEREKEN: Telegram bot token and chat id
+## [x] Phase 8 - Observability
+- [x] kube-prometheus-stack (via Terraform), trimmed for 4 GB: monitoring of components k3s does not expose is off, 2 days / 3 GiB retention, a memory limit on every component
+- [x] ServiceMonitors: collector and api in both namespaces from the `monitoring` namespace, four targets `up`
+- [x] Three Grafana dashboards as JSON in the repo, installed as ConfigMaps and loaded by the sidecar: source health, application (including SSE client count and DB -> browser latency), cluster
+- [x] Alerts: faults 30 min, planned 3 h, daily open data 26 h, scan errors, service unscrapable, SSE latency, api 5xx ratio
+- [x] Alert test: `make alarm-testi` / `make alarm-testi-bitir` (which also turns Argo CD's selfHeal off)
+- [ ] YAPMAN GEREKEN: Telegram bot token and chat id (`terraform.tfvars`). While empty, alerts show in Alertmanager and in `make alerts` but no notification is sent
 
-Done when: dashboards show data; breaking a source sends an alert to Telegram and a resolved message after the fix; node memory stays reasonable.
+Status: done (2026-10-02). Notes: [08-observability.md](08-observability.md). No metrics had to be added to the services; what Phase 3 instrumented was enough. Grafana is on https://grafana.localhost with all three dashboards loaded (8 panels each). Prometheus has four targets `up` and seven alert rules loaded. The alerts only look at `kesinti-prod`: scanning is off in INT, so its value stays at zero and `time() - 0` evaluates to 29 million minutes. With the monitoring stack up, total memory is 5.2 GB (compose stopped). Where I got stuck: Grafana could not boot with a 256 MiB limit and a 60 s liveness probe (now 384 MiB and 120 s); WSL stopped responding while Helm waited for Grafana and left a Terraform state lock (the fix is to check for a running process and make Grafana healthy, then the apply finishes on its own); the `job` label comes from the Service name (`api`, `collector`); `AlertmanagerConfig`'s `chatID` cannot come from a secret.
 
 ## [ ] Phase 9 - v1.1 and resilience
 - [ ] Natural gas source: ON HOLD. İGDAŞ robots.txt `Disallow: /`, no İGDAŞ outage data on İBB, Başkentgaz doesn't publish outages on its site, İzmirgaz only offers per-street queries (details: [01-discovery-and-skeleton.md](01-discovery-and-skeleton.md)). To be revisited at the start of Phase 9; if a source is found: collector, gas filter and colour, CHANGELOG, automatic to INT, PR to PROD. If not, the new v1.1 source is ASKİ (Ankara live water faults, approved 2026-09-13); it goes through the same pipeline.

@@ -137,12 +137,23 @@ resource "helm_release" "kube_prometheus_stack" {
     # --- Grafana
     { name = "grafana.adminPassword", value = random_password.grafana_admin.result },
     { name = "grafana.resources.requests.cpu", value = "50m" },
-    { name = "grafana.resources.requests.memory", value = "128Mi" },
-    { name = "grafana.resources.limits.memory", value = "256Mi" },
+    { name = "grafana.resources.requests.memory", value = "160Mi" },
+    # 256Mi ile acilisi tamamlayamadi; Grafana 12 acilista cok sayida API kaydediyor.
+    { name = "grafana.resources.limits.memory", value = "384Mi" },
+    # Ayni sebeple probe'lar gevsetildi: 256Mi'lik ilk denemede liveness probe Grafana'yi
+    # henuz 3000'i dinlemeye baslamadan oldurdu (bir kez restart).
+    { name = "grafana.livenessProbe.initialDelaySeconds", value = "120" },
+    { name = "grafana.livenessProbe.failureThreshold", value = "15" },
+    { name = "grafana.readinessProbe.initialDelaySeconds", value = "30" },
+    { name = "grafana.readinessProbe.failureThreshold", value = "20" },
     # Panolar repoda: sidecar, grafana_dashboard etiketli ConfigMap'leri okuyor.
     { name = "grafana.sidecar.dashboards.enabled", value = "true" },
     { name = "grafana.sidecar.dashboards.searchNamespace", value = "ALL" },
     { name = "grafana.sidecar.dashboards.label", value = "grafana_dashboard" },
+    # Panolar "Kesinti Haritasi" klasorunde toplanir: ConfigMap'teki
+    # k8s-sidecar-target-directory annotation'i ancak bu iki ayarla klasore donusuyor.
+    { name = "grafana.sidecar.dashboards.folderAnnotation", value = "k8s-sidecar-target-directory" },
+    { name = "grafana.sidecar.dashboards.provider.foldersFromFilesStructure", value = "true" },
     { name = "grafana.sidecar.resources.requests.memory", value = "48Mi" },
     { name = "grafana.sidecar.resources.limits.memory", value = "128Mi" },
     { name = "grafana.ingress.enabled", value = "true" },
