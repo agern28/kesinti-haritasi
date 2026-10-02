@@ -127,7 +127,13 @@ try:
 except Exception:
     print(0)' 2>/dev/null)
   kill "$pf" 2>/dev/null
-  bekle "toplanan hedef (collector+api, iki ortam)" "4" "${up:-0}"
+  # En az dort: iki ortamda collector + api. HPA api'yi olceklediyse ya da yeniden
+  # baslatmadan hemen sonra eski seriler hala lookback icindeyse bu sayi daha yuksek olur.
+  if [ "${up:-0}" -ge 4 ]; then
+    ok "toplanan hedef (collector+api, iki ortam) ($up)"
+  else
+    fail "toplanan hedef: en az 4 beklenir, gelen ${up:-0}"
+  fi
 fi
 
 echo "--- HPA"

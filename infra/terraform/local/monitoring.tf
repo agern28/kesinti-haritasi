@@ -137,9 +137,13 @@ resource "helm_release" "kube_prometheus_stack" {
     # --- Grafana
     { name = "grafana.adminPassword", value = random_password.grafana_admin.result },
     { name = "grafana.resources.requests.cpu", value = "50m" },
-    { name = "grafana.resources.requests.memory", value = "160Mi" },
-    # 256Mi ile acilisi tamamlayamadi; Grafana 12 acilista cok sayida API kaydediyor.
-    { name = "grafana.resources.limits.memory", value = "384Mi" },
+    { name = "grafana.resources.requests.memory", value = "256Mi" },
+    # Bellek: 256Mi ile acilisi hic tamamlayamadi, 384Mi ile de WSL yeniden baslatildiktan
+    # sonra kullanim limite yaklasip (279/384 MiB) Go'nun GC'si surekli calismaya basladi;
+    # grafana container'i 7,5 cekirdek harcayip hazir olamadi. 768Mi'de rahat.
+    { name = "grafana.resources.limits.memory", value = "768Mi" },
+    # CPU limiti: boyle bir donguye girerse dugumun tamamini almasin (yuk 16'ya cikmisti).
+    { name = "grafana.resources.limits.cpu", value = "1" },
     # Ayni sebeple probe'lar gevsetildi: 256Mi'lik ilk denemede liveness probe Grafana'yi
     # henuz 3000'i dinlemeye baslamadan oldurdu (bir kez restart).
     { name = "grafana.livenessProbe.initialDelaySeconds", value = "120" },
