@@ -62,6 +62,30 @@ spec:
             summary: "{{ `{{ $labels.source }}/{{ $labels.feed }}` }} taramaları hata veriyor"
             description: "Son 15 dakikada {{ `{{ $value | printf \"%.0f\" }}` }} başarısız tarama."
 
+    - name: kesinti-eksik
+      rules:
+        # Pod tamamen yok olursa (silinmis, sifira indirilmis, planlanamiyor) metrik serileri
+        # de Prometheus'tan dusuyor. O durumda ne "son basarili tarama" ifadesi bir seri
+        # buluyor ne de up == 0 oluyor: hedef servis keşfinden cikiyor. Bu bosluk ancak
+        # absent() ile kapaniyor.
+        - alert: KesintiCollectorEksik
+          expr: absent(up{job="collector", namespace="{{ .Values.alerts.namespace }}"})
+          for: 10m
+          labels:
+            severity: critical
+          annotations:
+            summary: "PROD collector hic toplanamiyor"
+            description: "10 dakikadir collector hedefi yok: pod silinmis, sifira indirilmis ya da planlanamiyor olabilir. kubectl -n {{ .Values.alerts.namespace }} get pods"
+
+        - alert: KesintiApiEksik
+          expr: absent(up{job="api", namespace="{{ .Values.alerts.namespace }}"})
+          for: 10m
+          labels:
+            severity: critical
+          annotations:
+            summary: "PROD api hic toplanamiyor"
+            description: "10 dakikadir api hedefi yok. kubectl -n {{ .Values.alerts.namespace }} get pods"
+
     - name: kesinti-uygulama
       rules:
         # job etiketi Service adindan geliyor: "collector" ve "api". ServiceMonitor'in adi degil.

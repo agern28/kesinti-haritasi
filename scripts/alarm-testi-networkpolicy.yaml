@@ -1,0 +1,42 @@
+# Alarm denemesi icin: PROD collector'in internet cikisini keser.
+# Pod ayakta kalir ve metrikleri toplanmaya devam eder; taramalar basarisiz olur.
+# Gercek senaryonun karsiligi budur (kaynak siteye ulasilamiyor), pod'u silmek degil.
+#
+# Argo CD bu objeyi silmez: kendi takip etiketi olmadigi icin prune kapsamina girmiyor.
+#
+#   kubectl apply -f scripts/alarm-testi-networkpolicy.yaml     (make alarm-testi)
+#   kubectl delete -f scripts/alarm-testi-networkpolicy.yaml    (make alarm-testi-bitir)
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: alarm-testi-collector-egress
+  namespace: kesinti-prod
+  labels:
+    kesinti-haritasi/gecici: "alarm-testi"
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/name: collector
+  policyTypes:
+    - Egress
+  egress:
+    # DNS acik kalsin, yoksa pod kendi kume ici adreslerini de cozemez.
+    - to:
+        - namespaceSelector: {}
+          podSelector:
+            matchLabels:
+              k8s-app: kube-dns
+      ports:
+        - protocol: UDP
+          port: 53
+        - protocol: TCP
+          port: 53
+    # Redis acik kalsin: readiness Redis'e bagli, yoksa pod trafik almaz diye isaretlenir
+    # ve olcmek istedigimiz sey degisir.
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: kesinti-data
+      ports:
+        - protocol: TCP
+          port: 6379

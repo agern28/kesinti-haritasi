@@ -135,16 +135,14 @@ prometheus: ## Prometheus arayuzunu localhost:9090'a baglar (Ctrl+C ile biter)
 alertmanager: ## Alertmanager arayuzunu localhost:9093'e baglar (Ctrl+C ile biter)
 	kubectl -n monitoring port-forward svc/monitoring-kube-prometheus-alertmanager 9093:9093
 
-alarm-testi: ## Alarm denemesi: PROD collector'i durdurur (geri acmak icin alarm-testi-bitir)
-	@echo "PROD collector durduruluyor. Ariza alarmi ~35 dakika sonra ALARM durumuna gecer."
+alarm-testi: ## Alarm denemesi: PROD collector'in internet cikisini keser (bitirmek icin alarm-testi-bitir)
+	kubectl apply -f scripts/alarm-testi-networkpolicy.yaml
+	@echo
+	@echo "Collector ayakta kaliyor ama kaynak sitelere ulasamiyor."
+	@echo "  ~15 dakika sonra: KesintiTaramaHatasiArtiyor"
+	@echo "  ~35 dakika sonra: KesintiArizaTaramasiDurdu"
 	@echo "Izlemek icin: make alerts"
-	kubectl -n kesinti-prod scale deploy/collector --replicas=0
-	@echo "Argo CD selfHeal'i kapatiliyor (yoksa hemen geri acar)."
-	@kubectl -n argocd patch app prod-collector --type merge \
-		-p '{"spec":{"syncPolicy":{"automated":{"prune":true,"selfHeal":false}}}}'
 
-alarm-testi-bitir: ## Alarm denemesini bitirir, collector'i geri acar
-	@kubectl -n argocd patch app prod-collector --type merge \
-		-p '{"spec":{"syncPolicy":{"automated":{"prune":true,"selfHeal":true}}}}'
-	kubectl -n kesinti-prod scale deploy/collector --replicas=1
-	@kubectl -n kesinti-prod rollout status deploy/collector --timeout=180s
+alarm-testi-bitir: ## Alarm denemesini bitirir, internet cikisini geri acar
+	kubectl delete -f scripts/alarm-testi-networkpolicy.yaml
+	@echo "Ilk basarili taramayla alarmlar kendiliginden kapanir (birkac dakika)."
