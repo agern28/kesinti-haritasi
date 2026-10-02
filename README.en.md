@@ -116,7 +116,11 @@ make argocd-apps       # sync and health of the Applications
 make argocd-refresh    # make Argo CD check the repo right away
 make alerts            # state of the alert rules
 make prometheus        # Prometheus UI (localhost:9090)
+make loadtest          # k6 spike scenario and HPA measurement
+make alarm-testi       # alert drill (end it with: make alarm-testi-bitir)
 ```
+
+A command-by-command walkthrough of the whole project: [docs/en/demo-runbook.md](docs/en/demo-runbook.md).
 
 Observability: Prometheus, Alertmanager and Grafana run on the cluster, and three dashboards live in the repo as JSON (source health, application, cluster). Alerts fire when scanning stops; to get Telegram notifications, put a bot token and chat id into `terraform.tfvars`. Details: [docs/en/08-observability.md](docs/en/08-observability.md).
 

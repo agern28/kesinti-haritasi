@@ -111,8 +111,11 @@ Status: done (2026-10-02). Notes: [08-observability.md](08-observability.md). No
 
 ## [ ] Phase 9 - v1.1 and resilience
 - [ ] Natural gas source: ON HOLD. İGDAŞ robots.txt `Disallow: /`, no İGDAŞ outage data on İBB, Başkentgaz doesn't publish outages on its site, İzmirgaz only offers per-street queries (details: [01-discovery-and-skeleton.md](01-discovery-and-skeleton.md)). To be revisited at the start of Phase 9; if a source is found: collector, gas filter and colour, CHANGELOG, automatic to INT, PR to PROD. If not, the new v1.1 source is ASKİ (Ankara live water faults, approved 2026-09-13); it goes through the same pipeline.
-- [ ] k6 spike scenario, HPA and cache measurements, results in docs
-- [ ] Rollback exercise
-- [ ] Demo runbook (TR/EN)
+- [x] Every candidate including gas and ASKİ was re-checked (2026-10-02): none of them suits polite crawling, the table is in [09-v11-and-resilience.md](09-v11-and-resilience.md). The map stays at six sources
+- [x] k6 spike scenario (`loadtest/spike.js`, `make loadtest`), HPA and cache measurements, results in docs
+- [x] Rollback exercise: 1.0.1 → 1.0.0 → 1.0.1 through git, verified by a behaviour difference
+- [x] Demo runbook: [demo-runbook.md](demo-runbook.md) and [../tr/demo-runbook.md](../tr/demo-runbook.md)
 
-Done when: v1.1 (with the new source) is on PROD; k6 results (req/s, p95, error rate, pod count) are in docs; rollback and roll-forward tried step by step; the runbook covers the demo scenario from the plan command by command.
+Status: done (2026-10-02). Notes: [09-v11-and-resilience.md](09-v11-and-resilience.md). Load test: 16,661 requests, 0 errors, 55 req/s, 100 virtual users; summary endpoint p95 6.73 ms (10 minute Redis cache), district list p95 7.15 ms (the database-backed endpoint, with the partial indexes). The HPA decided 90 seconds after the spike and reached 3 replicas within 21 seconds (peak CPU 196%), then went back to one replica. Rollback: 30 seconds after the push every pod was on 1.0.0 and a deep-paging request returned 200 (the old behaviour); coming back took 34 seconds and returned 400. No new source: gas is still `Disallow: /`, ASKİ and UEDAŞ are form based, Başkent EDAŞ is behind reCAPTCHA. Where I got stuck: `yq` is not installed locally (edited with Python), rebase on a dirty tree (autostash), the first rollback measurement was wrong mid-rollout, and dead hostnames were confirmed over DoH.
+
+Done when: v1.1 could not ship with a new source (table above); everything else is met: k6 results (req/s, p95, error rate, pod count) are in docs; rollback and roll-forward were tried step by step and verified by a behaviour difference; the runbook covers the demo scenario command by command.

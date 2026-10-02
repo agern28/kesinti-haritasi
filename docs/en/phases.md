@@ -124,5 +124,7 @@ The original definition above stays unchanged. This section shows the decisions 
 | 2026-10-02 | Phase 8 | The Telegram receiver uses Alertmanager's own `config` block rather than the `AlertmanagerConfig` CRD: the CRD's `chatID` is a number and cannot come from a secret, so the chat id would land in the repo | decided | [08-observability.md](08-observability.md) |
 | 2026-10-02 | Phase 8 | Alerts only look at the `kesinti-prod` namespace: scanning is off in INT, so its last-success value stays at zero and would alert forever | decided | [08-observability.md](08-observability.md) |
 | 2026-10-02 | Phase 8 | Dashboards are JSON in the repo, installed as ConfigMaps and loaded by the Grafana sidecar. UI edits do not stick | decided | [08-observability.md](08-observability.md) |
+| 2026-10-02 | Phase 8 | The alert drill cuts the collector's egress with a NetworkPolicy instead of deleting the pod: deleting it is reverted by GitOps, and with the series gone no alert fires at all. `absent()` alerts were added for the vanished-series case | decided | [08-observability.md](08-observability.md) |
+| 2026-10-02 | Phase 9 | v1.1 ships without a new source. Gas (İGDAŞ) is still `Disallow: /`; the approved fallback ASKİ and UEDAŞ are form/POST based, Başkent EDAŞ is behind reCAPTCHA, KCETAŞ has no fault list. Phase 9 closed with the resilience work (k6, rollback drill, demo runbook) | decided | [09-v11-and-resilience.md](09-v11-and-resilience.md) |
 
 When a pending approval is settled, a new row is added to this table. The original definition is never changed.

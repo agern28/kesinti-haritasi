@@ -97,6 +97,24 @@ make alarm-testi-bitir  # geri acar
 
 Beklenen akış: tarama durduktan 30 dakika sonra kural eşiği aşıyor, `for: 5m` yüzünden önce `pending`, sonra `firing` oluyor. Telegram kuruluysa mesaj düşüyor. `make alarm-testi-bitir` sonrası ilk başarılı taramayla alarm kendiliğinden kapanıyor ve "COZULDU" mesajı gidiyor.
 
+Gerçekten koşturdum, zaman çizgisi (2026-10-02, UTC):
+
+| Saat | Ne oldu |
+|---|---|
+| 07:24:57 | NetworkPolicy uygulandı, collector'ın internet çıkışı kesildi |
+| 07:27:37 | İlk başarısız taramalar metriklerde göründü (`java.net.ConnectException`) |
+| 07:42:14 | `KesintiTaramaHatasiArtiyor` aktif oldu |
+| 07:47:39 | Aynı alarm `firing`, Alertmanager'da dört feed için aktif |
+| 07:51:44 | Gecikme 30 dakikayı geçti, `KesintiArizaTaramasiDurdu` aktif |
+| 07:57:40 | O alarm da `firing` |
+| 07:58:42 | NetworkPolicy silindi (`make alarm-testi-bitir`) |
+| 08:05:23 | En son düzelen feed: AEDAŞ arıza taraması başarıyla bitti |
+| 08:05:48 | `KesintiArizaTaramasiDurdu` kendiliğinden `inactive` |
+
+Düzelmenin 7 dakika sürmesinin sebebi tarama aralığı ve bir ayrıntı: AEDAŞ'ın arıza taraması 208 saniye sürüyor. CK Enerji arıza kayıtlarında konum trafo numarasından ayrı isteklerle bulunuyor (tarama başına en fazla 40 istek) ve host başına en az 2 saniye bekliyoruz. Yani bu feed'in kendi süresi 3,5 dakika; 5 dakikalık aralıkla arasında pek pay yok. İzlenmesi gereken bir şey: kaynak yavaşlarsa tarama kendi takvimine yetişemez.
+
+`KesintiTaramaHatasiArtiyor` düzelmeden sonra da bir süre açık kalıyor, çünkü 30 dakikalık pencerede hâlâ hata sayıyor. Beklenen davranış.
+
 Bu testte çalışmayan alarmı da not etmek lazım: `KesintiServisAyaktaDegil` kuralı `up == 0` arıyor, ama deployment sıfıra indirildiğinde hedef servis keşfinden tamamen çıkıyor ve sıfır olacak bir `up` serisi kalmıyor. O alarm "pod ayakta ama metrik verilemiyor" durumunu yakalıyor; "pod hiç yok" durumunu tarama gecikmesi alarmları yakalıyor.
 
 ## Telegram

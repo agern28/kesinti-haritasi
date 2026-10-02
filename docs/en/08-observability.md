@@ -97,6 +97,24 @@ make alarm-testi-bitir  # bring it back
 
 Expected flow: 30 minutes after scanning stops the rule's threshold is crossed, and because of `for: 5m` it goes `pending` first and then `firing`. With Telegram configured a message arrives. After `make alarm-testi-bitir` the first successful scan clears the alert on its own and a "resolved" message follows.
 
+I ran it for real; the timeline (2026-10-02, UTC):
+
+| Time | What happened |
+|---|---|
+| 07:24:57 | The NetworkPolicy went on, cutting the collector's egress |
+| 07:27:37 | The first failed scans showed up in the metrics (`java.net.ConnectException`) |
+| 07:42:14 | `KesintiTaramaHatasiArtiyor` became active |
+| 07:47:39 | The same alert went `firing`, active in Alertmanager for four feeds |
+| 07:51:44 | Staleness crossed 30 minutes, `KesintiArizaTaramasiDurdu` became active |
+| 07:57:40 | That alert went `firing` too |
+| 07:58:42 | The NetworkPolicy was deleted (`make alarm-testi-bitir`) |
+| 08:05:23 | The last feed to recover: the AEDAŞ fault scan finished successfully |
+| 08:05:48 | `KesintiArizaTaramasiDurdu` went `inactive` on its own |
+
+Recovery took 7 minutes because of the scan interval plus one detail: the AEDAŞ fault scan takes 208 seconds. CK Enerji fault records only carry a transformer number, so locations are fetched with separate requests (up to 40 per scan) and we wait at least 2 seconds per host. That makes this feed's own duration 3.5 minutes, which leaves little room inside its 5 minute interval. Worth watching: if the source gets slower, the scan will not keep up with its own schedule.
+
+`KesintiTaramaHatasiArtiyor` stays up for a while after the fix because it still counts errors inside its 30 minute window. That is expected.
+
 Note what does *not* fire: `KesintiServisAyaktaDegil` compares `up == 0`, and scaling a deployment to zero removes the target from service discovery entirely, so there is no `up` series to be zero. That alert covers a pod that is up but unscrapable, not a pod that is gone. A deployment scaled to zero is caught by the staleness alerts.
 
 ## Telegram

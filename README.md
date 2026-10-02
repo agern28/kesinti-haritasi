@@ -116,7 +116,11 @@ make argocd-apps       # Application'ların sync ve sağlık durumu
 make argocd-refresh    # Argo CD'ye repoyu hemen kontrol ettir
 make alerts            # alarm kurallarının durumu
 make prometheus        # Prometheus arayüzü (localhost:9090)
+make loadtest          # k6 ile ani trafik senaryosu ve HPA ölçümü
+make alarm-testi       # alarm denemesi (bitirmek için: make alarm-testi-bitir)
 ```
+
+Projeyi baştan sona göstermek için komut komut akış: [docs/tr/demo-runbook.md](docs/tr/demo-runbook.md).
 
 İzleme: Prometheus, Alertmanager ve Grafana kümede çalışıyor; üç pano repoda JSON olarak duruyor (kaynak sağlığı, uygulama, küme). Taramalar durduğunda alarm üretiliyor; Telegram'a bildirim için `terraform.tfvars`'a bot token ve chat id yazmak gerekiyor. Ayrıntı: [docs/tr/08-gozlemlenebilirlik.md](docs/tr/08-gozlemlenebilirlik.md).
 

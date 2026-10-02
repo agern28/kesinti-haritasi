@@ -111,8 +111,11 @@ Durum: tamamlandı (2026-10-02). Not: [tr/08-gozlemlenebilirlik.md](tr/08-gozlem
 
 ## [ ] Faz 9 - v1.1 ve dayanıklılık
 - [ ] Doğalgaz kaynağı: BEKLEMEDE. İGDAŞ robots.txt `Disallow: /`, İBB'de İGDAŞ kesinti verisi yok, Başkentgaz sitesinde kesinti yayınlamıyor, İzmirgaz sadece sokak bazlı sorgu veriyor (ayrıntı: [tr/01-kesif-ve-iskelet.md](tr/01-kesif-ve-iskelet.md)). Faz 9 başında yeniden bakılacak; kaynak bulunursa: collector, doğalgaz filtresi ve rengi, CHANGELOG, INT'e otomatik, PROD'a PR ile. Bulunamazsa v1.1'in yeni kaynağı ASKİ (Ankara canlı su arızaları, 2026-09-13 onaylandı); aynı hattan geçecek.
-- [ ] k6 ani trafik senaryosu, HPA ve cache ölçümü, sonuçlar docs'ta
-- [ ] Rollback denemesi
-- [ ] Demo runbook'u (TR/EN)
+- [x] Doğalgaz ve ASKİ dahil bütün adaylar yeniden yoklandı (2026-10-02): hiçbiri nazik taramaya uygun değil, tablo [tr/09-v11-ve-dayaniklilik.md](tr/09-v11-ve-dayaniklilik.md) içinde. Harita altı kaynakta kalıyor
+- [x] k6 ani trafik senaryosu (`loadtest/spike.js`, `make loadtest`), HPA ve cache ölçümü, sonuçlar docs'ta
+- [x] Rollback denemesi: git üzerinden 1.0.1 → 1.0.0 → 1.0.1, davranış farkıyla doğrulandı
+- [x] Demo runbook'u: [tr/demo-runbook.md](tr/demo-runbook.md) ve [en/demo-runbook.md](en/demo-runbook.md)
 
-Bitti sayılma koşulu: v1.1 (yeni kaynakla) PROD'da; k6 sonuçları (istek/sn, p95, hata oranı, pod sayısı) docs'ta; rollback ve geri alma adım adım denenmiş; runbook plan'daki demo senaryosunu komut komut kapsıyor.
+Durum: tamamlandı (2026-10-02). Not: [tr/09-v11-ve-dayaniklilik.md](tr/09-v11-ve-dayaniklilik.md). Yük testi: 16.661 istek, 0 hata, 55 istek/sn, 100 sanal kullanıcı; özet ucu p95 6,73 ms (10 dakikalık Redis cache), ilçe listesi p95 7,15 ms (veritabanına giden uç, kısmi indekslerle). HPA sıçramadan 90 saniye sonra karar verdi, 21 saniye içinde 3 replikaya çıktı (tepe CPU %196), test sonrası tek replikaya döndü. Geri alma: push'tan 30 saniye sonra bütün pod'lar 1.0.0'da ve derin sayfa isteği 200 (eski davranış), geri dönüşte 34 saniye ve 400. Yeni kaynak çıkmadı: doğalgaz hâlâ `Disallow: /`, ASKİ ve UEDAŞ form tabanlı, Başkent EDAŞ reCAPTCHA'lı. Takıldığım yerler: `yq` lokalde yok (python ile düzenledim), kirli dizinde rebase (autostash), ilk geri alma ölçümü rollout ortasında yanlış sonuç verdi, ölü host adlarını DoH ile doğruladım.
+
+Bitti sayılma koşulu: v1.1 yeni kaynakla çıkamadı (yukarıdaki tablo), kalan maddeler karşılandı: k6 sonuçları (istek/sn, p95, hata oranı, pod sayısı) docs'ta; geri alma ve ileri alma adım adım denendi ve davranış farkıyla doğrulandı; runbook demo senaryosunu komut komut kapsıyor.
