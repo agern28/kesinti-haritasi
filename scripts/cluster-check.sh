@@ -28,8 +28,10 @@ dugum=$(kubectl get nodes --no-headers 2>/dev/null | grep -c " Ready ")
 bekle "dugumler Ready" "2" "$dugum"
 
 echo "--- Argo CD"
+# Beklenen sayi repodan: gitops/apps altindaki her dosya bir Application, bir de kok Application.
+beklenen_app=$(( $(ls gitops/apps/*.yaml 2>/dev/null | wc -l) + 1 ))
 toplam=$(kubectl -n argocd get applications --no-headers 2>/dev/null | wc -l | tr -d ' ')
-bekle "application sayisi" "8" "$toplam"
+bekle "application sayisi" "$beklenen_app" "$toplam"
 bozuk=$(kubectl -n argocd get applications -o jsonpath='{range .items[*]}{.metadata.name}={.status.sync.status}/{.status.health.status} {end}' 2>/dev/null | tr ' ' '\n' | grep -v 'Synced/Healthy' | grep -v '^$')
 if [ -z "$bozuk" ]; then ok "hepsi Synced/Healthy"; else fail "Synced/Healthy olmayanlar: $bozuk"; fi
 bekle "Argo CD arayuzu" "200" "$(istek "$ARGOCD_HOST" /)"
