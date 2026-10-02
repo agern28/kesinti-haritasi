@@ -6,6 +6,8 @@ Full definition of the phases: [phases.md](phases.md). The items here are a summ
 
 Common condition for every phase: tests and build green, committed, `docs/tr/NN-...md` and `docs/en/NN-...md` written, this file updated. Work stops at the end of each phase; the next one starts only after approval.
 
+**Status (2026-10-02): all nine phases are done.** The app collects from six sources and runs in two environments (INT/PROD) on the local k3s cluster through Argo CD; monitoring, alerts, the load test, the rollback drill and the demo runbook are all in place. The infrastructure was built locally instead of on Hetzner (decided 2026-10-02, [06-infrastructure.md](06-infrastructure.md)); what moving to the cloud needs is at the end of that note. The one open item is v1.1's new source: every candidate is closed to polite crawling ([09-v11-and-resilience.md](09-v11-and-resilience.md)).
+
 ## [x] Phase 1 - Discovery and skeleton
 - [x] Outage pages of BEDAŞ, AYEDAŞ, İSKİ, İGDAŞ examined (URL, format, fields, planned/unplanned split, difficulties)
 - [x] Sample responses from each source saved as fixtures

@@ -6,6 +6,8 @@ Fazların tam tanımı: [tr/fazlar.md](tr/fazlar.md). Bu dosyadaki maddeler öze
 
 Her faz için ortak koşul: testler ve build yeşil, commit atılmış, `docs/tr/NN-...md` ve `docs/en/NN-...md` yazılmış, bu dosya güncellenmiş. Faz bitince durulur, sonraki faza onaysız geçilmez.
 
+**Durum (2026-10-02): dokuz fazın hepsi tamamlandı.** Uygulama altı kaynaktan veri topluyor ve lokal k3s kümesinde iki ortamda (INT/PROD) Argo CD ile işletiliyor; izleme, alarmlar, yük testi, geri alma denemesi ve demo runbook'u yerinde. Altyapı Hetzner yerine lokalde kuruldu (2026-10-02 kararı, [tr/06-altyapi.md](tr/06-altyapi.md)); buluta taşımak için gereken iş o notun sonunda. Bekleyen tek madde v1.1'in yeni kaynağı: bütün adaylar nazik taramaya kapalı ([tr/09-v11-ve-dayaniklilik.md](tr/09-v11-ve-dayaniklilik.md)).
+
 ## [x] Faz 1 - Keşif ve iskelet
 - [x] BEDAŞ, AYEDAŞ, İSKİ, İGDAŞ kesinti sayfaları incelendi (URL, format, alanlar, planlı/arıza ayrımı, zorluklar)
 - [x] Her kaynaktan örnek yanıtlar fixture olarak kaydedildi
