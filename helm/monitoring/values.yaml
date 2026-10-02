@@ -16,6 +16,12 @@ alerts:
   dailyStaleSeconds: 93600
   # Olayin veritabanindan tarayiciya ulasmasi bu kadar uzun surerse (p95) uyari.
   sseDeliveryP95Seconds: 5
+  # Tarama hatasi alarmi: bu pencerede bu kadar hata. Pencere 15 dakika iken deger
+  # esigin tam ustune oturuyordu (5 dakikalik feed icin increase ~3,1) ve increase()
+  # ekstrapolasyonu bir olcumde 3'un altina dusurup "for" sayacini sifirliyordu;
+  # alarm sonsuza kadar pending kaliyordu. 30 dakikada deger ~6, esikle arada pay var.
+  errorWindow: 30m
+  errorCount: 3
 
 scrape:
   interval: 30s

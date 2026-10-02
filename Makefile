@@ -13,7 +13,7 @@ TF_DIR := infra/terraform/local
 .PHONY: help env up build down stop restart ps logs logs-collector logs-api check smoke reset test \
 	cluster-up cluster-down cluster-status cluster-check bootstrap wait-traefik \
 	argocd-password argocd-apps argocd-refresh \
-	grafana-password alerts prometheus alertmanager alarm-testi alarm-testi-bitir
+	grafana-password alerts prometheus alertmanager alarm-testi alarm-testi-bitir loadtest
 
 help: ## Komutlari listeler
 	@echo "Kesinti Haritasi - lokal komutlar"
@@ -134,6 +134,9 @@ prometheus: ## Prometheus arayuzunu localhost:9090'a baglar (Ctrl+C ile biter)
 
 alertmanager: ## Alertmanager arayuzunu localhost:9093'e baglar (Ctrl+C ile biter)
 	kubectl -n monitoring port-forward svc/monitoring-kube-prometheus-alertmanager 9093:9093
+
+loadtest: ## Ani trafik senaryosu (k6) ve HPA olcumu
+	@bash scripts/loadtest.sh
 
 alarm-testi: ## Alarm denemesi: PROD collector'in internet cikisini keser (bitirmek icin alarm-testi-bitir)
 	kubectl apply -f scripts/alarm-testi-networkpolicy.yaml

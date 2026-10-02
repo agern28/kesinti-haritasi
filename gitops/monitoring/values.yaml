@@ -11,6 +11,8 @@ alerts:
   plannedStaleSeconds: 10800
   dailyStaleSeconds: 93600
   sseDeliveryP95Seconds: 5
+  errorWindow: 30m
+  errorCount: 3
 
 scrape:
   interval: 30s

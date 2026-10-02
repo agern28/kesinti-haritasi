@@ -54,13 +54,13 @@ spec:
         # Tarama hata veriyor ama henüz eşiği aşmadıysa da görmek istiyorum.
         - alert: KesintiTaramaHatasiArtiyor
           expr: |
-            increase(collector_errors_total{namespace="{{ .Values.alerts.namespace }}"}[15m]) >= 3
+            increase(collector_errors_total{namespace="{{ .Values.alerts.namespace }}"}[{{ .Values.alerts.errorWindow }}]) >= {{ .Values.alerts.errorCount }}
           for: 5m
           labels:
             severity: warning
           annotations:
             summary: "{{ `{{ $labels.source }}/{{ $labels.feed }}` }} taramaları hata veriyor"
-            description: "Son 15 dakikada {{ `{{ $value | printf \"%.0f\" }}` }} başarısız tarama."
+            description: "Son {{ .Values.alerts.errorWindow }} içinde {{ `{{ $value | printf \"%.0f\" }}` }} başarısız tarama."
 
     - name: kesinti-eksik
       rules:
