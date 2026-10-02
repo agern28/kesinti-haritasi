@@ -1,0 +1,22 @@
+# Panolar repoda JSON olarak duruyor (helm/monitoring/dashboards/) ve ConfigMap olarak
+# kuruluyor. Grafana'nin sidecar'i grafana_dashboard etiketli ConfigMap'leri bulup yukluyor,
+# yani Grafana arayuzunden elle pano eklemeye gerek yok ve panolar surum kontrolunde.
+#
+# Arayuzde yapilan degisiklik kalici degil: sidecar dosyayi yeniden yukledigi an geri doner.
+# Degisiklik repodaki JSON'a yazilmali.
+{{- range $yol, $_ := .Files.Glob "dashboards/*.json" }}
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: pano-{{ base $yol | trimSuffix ".json" }}
+  labels:
+    {{ $.Values.grafana.dashboardLabel }}: "1"
+    app.kubernetes.io/part-of: kesinti-haritasi
+  annotations:
+    # Sidecar panoyu bu klasore koyuyor.
+    k8s-sidecar-target-directory: {{ $.Values.grafana.folder | quote }}
+data:
+  {{ base $yol }}: |
+{{ $.Files.Get $yol | indent 4 }}
+{{- end }}

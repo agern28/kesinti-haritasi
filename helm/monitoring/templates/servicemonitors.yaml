@@ -1,0 +1,33 @@
+# ServiceMonitor'lar monitoring namespace'inde durup baska namespace'lerdeki servisleri
+# topluyor (namespaceSelector). Boylece ortam basina chart kurmak gerekmiyor.
+#
+# Servislerin metrik yolu /actuator/prometheus; chart'lar bunu Service annotation'ina da
+# yaziyor ama ServiceMonitor yolu burada acikca veriliyor.
+{{- range $servis := list "collector" "api" }}
+---
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: kesinti-{{ $servis }}
+  labels:
+    app.kubernetes.io/part-of: kesinti-haritasi
+spec:
+  namespaceSelector:
+    matchNames:
+      {{- range $.Values.targetNamespaces }}
+      - {{ . }}
+      {{- end }}
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: {{ $servis }}
+      app.kubernetes.io/part-of: kesinti-haritasi
+  endpoints:
+    - port: http
+      path: /actuator/prometheus
+      interval: {{ $.Values.scrape.interval }}
+      # Hangi ortamdan geldigi ayirt edilebilsin: namespace etiketi zaten eklenir,
+      # pod adini da tasiyoruz ki HPA ile acilan replikalar ayri gorunsun.
+      relabelings:
+        - sourceLabels: [__meta_kubernetes_pod_name]
+          targetLabel: pod
+{{- end }}

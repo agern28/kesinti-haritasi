@@ -1,0 +1,16 @@
+# Izleme objelerimiz. kube-prometheus-stack'i Terraform kuruyor, bu chart onun ustune
+# bizim ServiceMonitor'larimizi, alarm kurallarimizi ve panolarimizi koyuyor.
+targetNamespaces:
+  - kesinti-int
+  - kesinti-prod
+
+alerts:
+  # Alarmlar sadece tarama yapan ortam icin: INT'te zamanlama kapali.
+  namespace: kesinti-prod
+  unplannedStaleSeconds: 1800
+  plannedStaleSeconds: 10800
+  dailyStaleSeconds: 93600
+  sseDeliveryP95Seconds: 5
+
+scrape:
+  interval: 30s

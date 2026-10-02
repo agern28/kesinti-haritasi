@@ -23,6 +23,19 @@ output "argocd" {
   }
 }
 
+output "izleme" {
+  description = "Grafana, Prometheus ve Alertmanager'a nasil ulasilir"
+  value = {
+    grafana_url       = "https://${var.grafana_host}"
+    grafana_kullanici = "admin"
+    grafana_parola    = "kubectl -n monitoring get secret monitoring-grafana -o go-template='{{index .data \"admin-password\" | base64decode}}'"
+    prometheus        = "kubectl -n monitoring port-forward svc/monitoring-kube-prometheus-prometheus 9090:9090"
+    alertmanager      = "kubectl -n monitoring port-forward svc/monitoring-kube-prometheus-alertmanager 9093:9093"
+    # Hassas degiskene bakmiyoruz: Terraform boyle bir cikti icin sensitive isaretlemek istiyor.
+    telegram = "terraform.tfvars'ta telegram_bot_token ve telegram_chat_id doluysa Telegram alicisi kurulur"
+  }
+}
+
 output "ortam_adresleri" {
   description = "Ingress adresleri"
   value = {

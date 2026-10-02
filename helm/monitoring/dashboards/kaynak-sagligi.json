@@ -1,0 +1,195 @@
+{
+  "uid": "kesinti-kaynaklar",
+  "title": "Kesinti Haritasi - Kaynak sagligi",
+  "description": "Hangi kaynak ne zaman tarandi, kac kayit geldi, hata var mi. Esikler: ariza 30 dk, planli 3 saat, gunluk acik veri 26 saat.",
+  "tags": ["kesinti-haritasi"],
+  "timezone": "Europe/Istanbul",
+  "editable": true,
+  "schemaVersion": 39,
+  "version": 1,
+  "refresh": "1m",
+  "time": { "from": "now-6h", "to": "now" },
+  "templating": {
+    "list": [
+      {
+        "type": "datasource",
+        "name": "datasource",
+        "label": "Veri kaynagi",
+        "query": "prometheus",
+        "hide": 0,
+        "current": {}
+      },
+      {
+        "type": "query",
+        "name": "ortam",
+        "label": "Ortam",
+        "datasource": { "type": "prometheus", "uid": "${datasource}" },
+        "query": "label_values(collector_last_success_timestamp, namespace)",
+        "refresh": 1,
+        "includeAll": false,
+        "multi": false,
+        "current": { "text": "kesinti-prod", "value": "kesinti-prod" }
+      }
+    ]
+  },
+  "panels": [
+    {
+      "type": "stat",
+      "title": "En eski basarili tarama (dakika)",
+      "description": "Butun feed'ler arasinda en uzun suredir taranmayan. Ariza sayfalarinda 30 dakikayi gecmemeli.",
+      "gridPos": { "h": 5, "w": 6, "x": 0, "y": 0 },
+      "datasource": { "type": "prometheus", "uid": "${datasource}" },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "max((time() - collector_last_success_timestamp{namespace=\"$ortam\"}) / 60)",
+          "instant": true
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "m",
+          "decimals": 0,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "orange", "value": 30 },
+              { "color": "red", "value": 180 }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "options": { "colorMode": "background", "graphMode": "none", "reduceOptions": { "calcs": ["lastNotNull"] } }
+    },
+    {
+      "type": "stat",
+      "title": "Son 1 saatte basarisiz tarama",
+      "gridPos": { "h": 5, "w": 6, "x": 6, "y": 0 },
+      "datasource": { "type": "prometheus", "uid": "${datasource}" },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "sum(increase(collector_errors_total{namespace=\"$ortam\"}[1h]))",
+          "instant": true
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "decimals": 0,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "orange", "value": 1 },
+              { "color": "red", "value": 5 }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "options": { "colorMode": "background", "graphMode": "none", "reduceOptions": { "calcs": ["lastNotNull"] } }
+    },
+    {
+      "type": "stat",
+      "title": "Takip edilen feed",
+      "gridPos": { "h": 5, "w": 6, "x": 12, "y": 0 },
+      "datasource": { "type": "prometheus", "uid": "${datasource}" },
+      "targets": [
+        { "refId": "A", "expr": "count(collector_last_success_timestamp{namespace=\"$ortam\"})", "instant": true }
+      ],
+      "fieldConfig": { "defaults": { "decimals": 0 }, "overrides": [] },
+      "options": { "colorMode": "value", "graphMode": "none", "reduceOptions": { "calcs": ["lastNotNull"] } }
+    },
+    {
+      "type": "stat",
+      "title": "Son taramalarda toplam kayit",
+      "gridPos": { "h": 5, "w": 6, "x": 18, "y": 0 },
+      "datasource": { "type": "prometheus", "uid": "${datasource}" },
+      "targets": [
+        { "refId": "A", "expr": "sum(collector_items_last_scan{namespace=\"$ortam\"})", "instant": true }
+      ],
+      "fieldConfig": { "defaults": { "decimals": 0 }, "overrides": [] },
+      "options": { "colorMode": "value", "graphMode": "area", "reduceOptions": { "calcs": ["lastNotNull"] } }
+    },
+    {
+      "type": "timeseries",
+      "title": "Son basarili taramadan bu yana gecen sure (dakika)",
+      "description": "Her tarama bu degeri sifirlar. Testere disi gorunum normaldir; duz yukari giden bir cizgi tarama durmus demektir.",
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 5 },
+      "datasource": { "type": "prometheus", "uid": "${datasource}" },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "(time() - collector_last_success_timestamp{namespace=\"$ortam\"}) / 60",
+          "legendFormat": "{{source}}/{{feed}}"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "m",
+          "custom": { "lineWidth": 1, "fillOpacity": 5, "showPoints": "never" }
+        },
+        "overrides": []
+      },
+      "options": { "legend": { "displayMode": "table", "placement": "right", "calcs": ["max"] }, "tooltip": { "mode": "multi" } }
+    },
+    {
+      "type": "timeseries",
+      "title": "Son taramada bulunan kayit sayisi",
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 5 },
+      "datasource": { "type": "prometheus", "uid": "${datasource}" },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "collector_items_last_scan{namespace=\"$ortam\"}",
+          "legendFormat": "{{source}}/{{feed}}"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": { "custom": { "lineWidth": 1, "fillOpacity": 5, "showPoints": "never" } },
+        "overrides": []
+      },
+      "options": { "legend": { "displayMode": "table", "placement": "right", "calcs": ["lastNotNull"] }, "tooltip": { "mode": "multi" } }
+    },
+    {
+      "type": "timeseries",
+      "title": "Stream'e yazilan olaylar (15 dakikalik)",
+      "description": "NEW yeni kesinti, UPDATED degisen, GONE kaynaktan dusen.",
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 13 },
+      "datasource": { "type": "prometheus", "uid": "${datasource}" },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "sum by (event) (increase(collector_events_total{namespace=\"$ortam\"}[15m]))",
+          "legendFormat": "{{event}}"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": { "custom": { "lineWidth": 1, "fillOpacity": 15, "showPoints": "never", "stacking": { "mode": "normal" } } },
+        "overrides": []
+      },
+      "options": { "legend": { "displayMode": "list", "placement": "bottom" }, "tooltip": { "mode": "multi" } }
+    },
+    {
+      "type": "timeseries",
+      "title": "Ortalama tarama suresi",
+      "description": "Timer'da histogram kovasi yok, bu yuzden p95 degil ortalama: rate(sum)/rate(count).",
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 13 },
+      "datasource": { "type": "prometheus", "uid": "${datasource}" },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "rate(collector_scan_duration_seconds_sum{namespace=\"$ortam\"}[15m]) / clamp_min(rate(collector_scan_duration_seconds_count{namespace=\"$ortam\"}[15m]), 0.0001)",
+          "legendFormat": "{{source}}/{{feed}}"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": { "unit": "s", "custom": { "lineWidth": 1, "fillOpacity": 0, "showPoints": "never" } },
+        "overrides": []
+      },
+      "options": { "legend": { "displayMode": "table", "placement": "right", "calcs": ["mean", "max"] }, "tooltip": { "mode": "multi" } }
+    }
+  ]
+}

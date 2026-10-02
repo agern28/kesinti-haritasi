@@ -1,0 +1,34 @@
+# kube-prometheus-stack'i Terraform kuruyor; bu chart yalnizca bizim objelerimizi kuruyor.
+
+# Hangi namespace'lerdeki servisler toplanacak.
+targetNamespaces:
+  - kesinti-int
+  - kesinti-prod
+
+# Alarmlar sadece gercekten tarama yapan ortam icin anlamli: INT'te zamanlama kapali,
+# oradaki "son basarili tarama" degeri hep 0 kalir.
+alerts:
+  namespace: kesinti-prod
+  # Esikler plandan: ariza sayfalari 30 dakika, planli kesinti duyurulari 3 saat,
+  # gunde bir taranan acik veri kaynagi 26 saat (2026-09-11 karari).
+  unplannedStaleSeconds: 1800
+  plannedStaleSeconds: 10800
+  dailyStaleSeconds: 93600
+  # Olayin veritabanindan tarayiciya ulasmasi bu kadar uzun surerse (p95) uyari.
+  sseDeliveryP95Seconds: 5
+
+scrape:
+  interval: 30s
+
+# Telegram alicisi: secret'ta token varsa kuruluyor.
+# Secret'i Terraform olusturuyor (infra/terraform/local/monitoring.tf), icerigi tfvars'tan geliyor.
+telegram:
+  enabled: true
+  secretName: kesinti-telegram
+  botTokenKey: bot-token
+  chatIdKey: chat-id
+
+grafana:
+  # Panolari sidecar bu etikete bakarak yukluyor.
+  dashboardLabel: grafana_dashboard
+  folder: Kesinti Haritasi

@@ -1,0 +1,101 @@
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: kesinti-haritasi
+  labels:
+    app.kubernetes.io/part-of: kesinti-haritasi
+spec:
+  groups:
+    - name: kesinti-kaynaklar
+      rules:
+        # Arıza / anlık kesinti sayfaları 5 dakikada bir taranıyor: 30 dakika sessizlik sorun.
+        # IZSU'nun "all" feed'i de arıza sayfası, o yüzden aynı eşikte.
+        - alert: KesintiArizaTaramasiDurdu
+          expr: |
+            time() - max by (source, feed) (
+              collector_last_success_timestamp{namespace="{{ .Values.alerts.namespace }}", feed=~"unplanned|all"}
+            ) > {{ .Values.alerts.unplannedStaleSeconds }}
+          for: 5m
+          labels:
+            severity: critical
+            kaynak_tipi: ariza
+          annotations:
+            summary: "{{ `{{ $labels.source }}/{{ $labels.feed }}` }} arıza taraması durdu"
+            description: "{{ `{{ $labels.source }}/{{ $labels.feed }}` }} için son başarılı tarama {{ `{{ $value | humanizeDuration }}` }} önce. Arıza sayfaları 5 dakikada bir taranmalı."
+
+        # Planlı kesinti duyuruları 15 dakikada bir taranıyor: 3 saat sessizlik sorun.
+        - alert: KesintiPlanliTaramasiDurdu
+          expr: |
+            time() - max by (source, feed) (
+              collector_last_success_timestamp{namespace="{{ .Values.alerts.namespace }}", feed="planned"}
+            ) > {{ .Values.alerts.plannedStaleSeconds }}
+          for: 10m
+          labels:
+            severity: warning
+            kaynak_tipi: planli
+          annotations:
+            summary: "{{ `{{ $labels.source }}/{{ $labels.feed }}` }} planlı kesinti taraması durdu"
+            description: "Son başarılı tarama {{ `{{ $value | humanizeDuration }}` }} önce. Planlı duyurular 15 dakikada bir taranmalı."
+
+        # Günde bir taranan açık veri kaynağı (İBB / İSKİ): 26 saat (2026-09-11 kararı).
+        - alert: KesintiAcikVeriTaramasiDurdu
+          expr: |
+            time() - max by (source, feed) (
+              collector_last_success_timestamp{namespace="{{ .Values.alerts.namespace }}", feed="daily"}
+            ) > {{ .Values.alerts.dailyStaleSeconds }}
+          for: 30m
+          labels:
+            severity: warning
+            kaynak_tipi: acik_veri
+          annotations:
+            summary: "{{ `{{ $labels.source }}/{{ $labels.feed }}` }} günlük taraması durdu"
+            description: "Son başarılı tarama {{ `{{ $value | humanizeDuration }}` }} önce. Bu kaynak günde bir taranıyor, eşik 26 saat."
+
+        # Tarama hata veriyor ama henüz eşiği aşmadıysa da görmek istiyorum.
+        - alert: KesintiTaramaHatasiArtiyor
+          expr: |
+            increase(collector_errors_total{namespace="{{ .Values.alerts.namespace }}"}[15m]) >= 3
+          for: 5m
+          labels:
+            severity: warning
+          annotations:
+            summary: "{{ `{{ $labels.source }}/{{ $labels.feed }}` }} taramaları hata veriyor"
+            description: "Son 15 dakikada {{ `{{ $value | printf \"%.0f\" }}` }} başarısız tarama."
+
+    - name: kesinti-uygulama
+      rules:
+        # job etiketi Service adindan geliyor: "collector" ve "api". ServiceMonitor'in adi degil.
+        - alert: KesintiServisAyaktaDegil
+          expr: |
+            up{job=~"collector|api", namespace=~"kesinti-.*"} == 0
+          for: 5m
+          labels:
+            severity: critical
+          annotations:
+            summary: "{{ `{{ $labels.job }}` }} ({{ `{{ $labels.namespace }}` }}) toplanamıyor"
+            description: "Prometheus 5 dakikadır metrik alamıyor. Pod ayakta mı: kubectl -n {{ `{{ $labels.namespace }}` }} get pods"
+
+        - alert: KesintiSseGecikmesiYuksek
+          expr: |
+            histogram_quantile(0.95,
+              sum by (le, namespace) (rate(api_sse_delivery_seconds_bucket[10m]))
+            ) > {{ .Values.alerts.sseDeliveryP95Seconds }}
+          for: 10m
+          labels:
+            severity: warning
+          annotations:
+            summary: "Olay tarayıcıya geç ulaşıyor ({{ `{{ $labels.namespace }}` }})"
+            description: "p95 {{ `{{ $value | humanizeDuration }}` }}, eşik {{ .Values.alerts.sseDeliveryP95Seconds }} saniye. Veritabanına düşen olayın SSE ile gitmesi gecikiyor."
+
+        - alert: KesintiApiHataOrani
+          expr: |
+            sum by (namespace) (rate(http_server_requests_seconds_count{job="api", status=~"5.."}[10m]))
+            /
+            sum by (namespace) (rate(http_server_requests_seconds_count{job="api"}[10m]))
+            > 0.05
+          for: 10m
+          labels:
+            severity: warning
+          annotations:
+            summary: "api 5xx oranı yüksek ({{ `{{ $labels.namespace }}` }})"
+            description: "Son 10 dakikada isteklerin {{ `{{ $value | humanizePercentage }}` }} kadarı 5xx."

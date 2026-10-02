@@ -1,0 +1,30 @@
+# Bizim izleme objelerimiz. kube-prometheus-stack'in kendisi Terraform'da
+# (infra/terraform/local/monitoring.tf), cunku Telegram token'i orada duruyor.
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: monitoring
+  namespace: argocd
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: default
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: monitoring
+  sources:
+    - repoURL: https://github.com/agern28/kesinti-haritasi.git
+      targetRevision: main
+      path: helm/monitoring
+      helm:
+        valueFiles:
+          - $values/gitops/monitoring/values.yaml
+    - repoURL: https://github.com/agern28/kesinti-haritasi.git
+      targetRevision: main
+      ref: values
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=false

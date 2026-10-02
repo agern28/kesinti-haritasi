@@ -1,0 +1,193 @@
+{
+  "uid": "kesinti-uygulama",
+  "title": "Kesinti Haritasi - Uygulama",
+  "description": "api istekleri, SSE bagli istemci sayisi ve olayin tarayiciya ulasma suresi, ozet cache isabeti.",
+  "tags": ["kesinti-haritasi"],
+  "timezone": "Europe/Istanbul",
+  "editable": true,
+  "schemaVersion": 39,
+  "version": 1,
+  "refresh": "1m",
+  "time": { "from": "now-6h", "to": "now" },
+  "templating": {
+    "list": [
+      {
+        "type": "datasource",
+        "name": "datasource",
+        "label": "Veri kaynagi",
+        "query": "prometheus",
+        "hide": 0,
+        "current": {}
+      },
+      {
+        "type": "query",
+        "name": "ortam",
+        "label": "Ortam",
+        "datasource": { "type": "prometheus", "uid": "${datasource}" },
+        "query": "label_values(api_sse_clients, namespace)",
+        "refresh": 1,
+        "includeAll": false,
+        "multi": false,
+        "current": { "text": "kesinti-prod", "value": "kesinti-prod" }
+      }
+    ]
+  },
+  "panels": [
+    {
+      "type": "stat",
+      "title": "SSE bagli istemci",
+      "description": "Haritayi acik tutan tarayici sayisi (api_sse_clients).",
+      "gridPos": { "h": 5, "w": 6, "x": 0, "y": 0 },
+      "datasource": { "type": "prometheus", "uid": "${datasource}" },
+      "targets": [
+        { "refId": "A", "expr": "sum(api_sse_clients{namespace=\"$ortam\"})", "instant": true }
+      ],
+      "fieldConfig": { "defaults": { "decimals": 0 }, "overrides": [] },
+      "options": { "colorMode": "value", "graphMode": "area", "reduceOptions": { "calcs": ["lastNotNull"] } }
+    },
+    {
+      "type": "stat",
+      "title": "Olayin tarayiciya ulasma suresi (p95)",
+      "description": "Veritabanina dusen olayin SSE ile istemciye gitmesi. api_sse_delivery_seconds histogramindan.",
+      "gridPos": { "h": 5, "w": 6, "x": 6, "y": 0 },
+      "datasource": { "type": "prometheus", "uid": "${datasource}" },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "histogram_quantile(0.95, sum by (le) (rate(api_sse_delivery_seconds_bucket{namespace=\"$ortam\"}[30m])))",
+          "instant": true
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "s",
+          "decimals": 3,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "orange", "value": 1 },
+              { "color": "red", "value": 5 }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "options": { "colorMode": "background", "graphMode": "none", "reduceOptions": { "calcs": ["lastNotNull"] } }
+    },
+    {
+      "type": "stat",
+      "title": "Ozet cache isabet orani",
+      "description": "api_summary_cache_total{result}. Harita ozeti 10 dakika cache'li.",
+      "gridPos": { "h": 5, "w": 6, "x": 12, "y": 0 },
+      "datasource": { "type": "prometheus", "uid": "${datasource}" },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "sum(increase(api_summary_cache_total{namespace=\"$ortam\", result=\"hit\"}[1h])) / clamp_min(sum(increase(api_summary_cache_total{namespace=\"$ortam\"}[1h])), 1)",
+          "instant": true
+        }
+      ],
+      "fieldConfig": { "defaults": { "unit": "percentunit", "decimals": 2 }, "overrides": [] },
+      "options": { "colorMode": "value", "graphMode": "none", "reduceOptions": { "calcs": ["lastNotNull"] } }
+    },
+    {
+      "type": "stat",
+      "title": "api istek hizi",
+      "gridPos": { "h": 5, "w": 6, "x": 18, "y": 0 },
+      "datasource": { "type": "prometheus", "uid": "${datasource}" },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "sum(rate(http_server_requests_seconds_count{job=\"api\", namespace=\"$ortam\"}[5m]))",
+          "instant": true
+        }
+      ],
+      "fieldConfig": { "defaults": { "unit": "reqps", "decimals": 2 }, "overrides": [] },
+      "options": { "colorMode": "value", "graphMode": "area", "reduceOptions": { "calcs": ["lastNotNull"] } }
+    },
+    {
+      "type": "timeseries",
+      "title": "Istekler (duruma gore)",
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 5 },
+      "datasource": { "type": "prometheus", "uid": "${datasource}" },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "sum by (status) (rate(http_server_requests_seconds_count{job=\"api\", namespace=\"$ortam\", uri!~\"/actuator.*\"}[5m]))",
+          "legendFormat": "{{status}}"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": { "unit": "reqps", "custom": { "lineWidth": 1, "fillOpacity": 15, "showPoints": "never", "stacking": { "mode": "normal" } } },
+        "overrides": []
+      },
+      "options": { "legend": { "displayMode": "list", "placement": "bottom" }, "tooltip": { "mode": "multi" } }
+    },
+    {
+      "type": "timeseries",
+      "title": "Ortalama yanit suresi (yola gore)",
+      "description": "http_server_requests histogram kovasi yayinlamiyor, bu yuzden ortalama.",
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 5 },
+      "datasource": { "type": "prometheus", "uid": "${datasource}" },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "sum by (uri) (rate(http_server_requests_seconds_sum{job=\"api\", namespace=\"$ortam\", uri!~\"/actuator.*\"}[5m])) / clamp_min(sum by (uri) (rate(http_server_requests_seconds_count{job=\"api\", namespace=\"$ortam\", uri!~\"/actuator.*\"}[5m])), 0.0001)",
+          "legendFormat": "{{uri}}"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": { "unit": "s", "custom": { "lineWidth": 1, "fillOpacity": 0, "showPoints": "never" } },
+        "overrides": []
+      },
+      "options": { "legend": { "displayMode": "table", "placement": "right", "calcs": ["mean", "max"] }, "tooltip": { "mode": "multi" } }
+    },
+    {
+      "type": "timeseries",
+      "title": "SSE teslim suresi (p50 ve p95)",
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 13 },
+      "datasource": { "type": "prometheus", "uid": "${datasource}" },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "histogram_quantile(0.5, sum by (le) (rate(api_sse_delivery_seconds_bucket{namespace=\"$ortam\"}[10m])))",
+          "legendFormat": "p50"
+        },
+        {
+          "refId": "B",
+          "expr": "histogram_quantile(0.95, sum by (le) (rate(api_sse_delivery_seconds_bucket{namespace=\"$ortam\"}[10m])))",
+          "legendFormat": "p95"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": { "unit": "s", "custom": { "lineWidth": 1, "fillOpacity": 5, "showPoints": "never" } },
+        "overrides": []
+      },
+      "options": { "legend": { "displayMode": "list", "placement": "bottom" }, "tooltip": { "mode": "multi" } }
+    },
+    {
+      "type": "timeseries",
+      "title": "Stream'den islenen olaylar ve tarayiciya gonderilenler",
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 13 },
+      "datasource": { "type": "prometheus", "uid": "${datasource}" },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "sum by (event) (increase(api_stream_events_total{namespace=\"$ortam\"}[15m]))",
+          "legendFormat": "stream {{event}}"
+        },
+        {
+          "refId": "B",
+          "expr": "sum(increase(api_sse_events_sent_total{namespace=\"$ortam\"}[15m]))",
+          "legendFormat": "SSE ile gonderilen"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": { "custom": { "lineWidth": 1, "fillOpacity": 5, "showPoints": "never" } },
+        "overrides": []
+      },
+      "options": { "legend": { "displayMode": "list", "placement": "bottom" }, "tooltip": { "mode": "multi" } }
+    }
+  ]
+}

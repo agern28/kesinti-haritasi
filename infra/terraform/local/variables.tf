@@ -28,6 +28,48 @@ variable "argocd_version" {
   default     = "10.9.6"
 }
 
+variable "kube_prometheus_version" {
+  description = "kube-prometheus-stack chart surumu."
+  type        = string
+  default     = "91.8.2"
+}
+
+variable "prometheus_retention" {
+  description = "Prometheus veri saklama suresi. Lokal kumede kisa tutuluyor."
+  type        = string
+  default     = "2d"
+}
+
+variable "prometheus_retention_size" {
+  description = "Disk tarafindan sinir; retention suresinden once dolarsa eski veri silinir."
+  type        = string
+  default     = "3GiB"
+}
+
+variable "grafana_host" {
+  description = "Grafana'nin Ingress adresi."
+  type        = string
+  default     = "grafana.localhost"
+}
+
+variable "telegram_bot_token" {
+  description = <<-EOT
+    Alarmlarin gidecegi Telegram botunun token'i. Repoya girmez: terraform.tfvars
+    dosyasina yazilir (.gitignore'da). Bos birakilirsa Telegram alicisi kurulmaz,
+    alarmlar yalnizca Alertmanager arayuzunde gorunur.
+  EOT
+  type        = string
+  default     = ""
+  sensitive   = true
+}
+
+variable "telegram_chat_id" {
+  description = "Alarmlarin gidecegi Telegram sohbetinin id'si. Bos birakilabilir."
+  type        = string
+  default     = ""
+  sensitive   = true
+}
+
 variable "cert_manager_version" {
   description = "cert-manager chart surumu. Sabit tutuluyor: kume her kurulusta ayni olsun."
   type        = string

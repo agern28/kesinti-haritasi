@@ -5,3 +5,8 @@
 # kube_context         = "k3d-kesinti"
 # namespaces           = ["kesinti-int", "kesinti-prod"]
 # cert_manager_version = "v1.21.2"
+#
+# Alarmlarin Telegram'a gitmesi icin (ikisi de bos kalabilir, o zaman alarmlar
+# sadece Alertmanager arayuzunde gorunur):
+# telegram_bot_token = "123456:ABC..."
+# telegram_chat_id   = "-1001234567890"
