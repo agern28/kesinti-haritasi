@@ -3,7 +3,7 @@ postgres:
 redis:
   database: 0
 image:
-  tag: "1.0.1"
+  tag: "1.0.4"
 # INT'te olcekleme denemeye gerek yok, tek pod.
 autoscaling:
   enabled: false
