@@ -19,6 +19,7 @@ import tools.jackson.databind.json.JsonMapper;
 import tr.kesintiharitasi.api.ingest.OutageEventProcessor;
 import tr.kesintiharitasi.api.ingest.OutageStreamConsumer;
 import tr.kesintiharitasi.api.live.LiveEvents;
+import tr.kesintiharitasi.api.live.SseFanoutHealthIndicator;
 import tr.kesintiharitasi.api.live.SseHub;
 import tr.kesintiharitasi.api.live.TransitionSweeper;
 import tr.kesintiharitasi.api.outage.OutageRepository;
@@ -63,6 +64,16 @@ public class ApiConfig {
         container.addMessageListener((message, pattern) -> hub.onMessage(new String(message.getBody(), StandardCharsets.UTF_8)),
                 new ChannelTopic(props.sse().channel()));
         return container;
+    }
+
+    /**
+     * Readiness'a ekli (application.yml): abonelik kurulmadan pod trafik almasin, yoksa o aralikta
+     * yayinlanan olaylar bagli istemcilere hic ulasmaz. Saglik anahtari "sseFanout".
+     */
+    @Bean
+    SseFanoutHealthIndicator sseFanoutHealthIndicator(RedisMessageListenerContainer outageUpdatesListener,
+                                                      ApiProperties props) {
+        return new SseFanoutHealthIndicator(outageUpdatesListener, props.sse().channel());
     }
 
     @Bean

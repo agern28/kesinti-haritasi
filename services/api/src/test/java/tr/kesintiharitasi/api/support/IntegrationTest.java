@@ -6,16 +6,20 @@ import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
+import java.time.Duration;
 import java.time.Instant;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import org.junit.jupiter.api.BeforeEach;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.data.redis.connection.stream.StreamRecords;
 import org.springframework.data.redis.core.StringRedisTemplate;
+import org.springframework.data.redis.listener.RedisMessageListenerContainer;
 import org.springframework.jdbc.core.simple.JdbcClient;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.DynamicPropertyRegistry;
@@ -42,6 +46,11 @@ public abstract class IntegrationTest {
     @Autowired
     protected StringRedisTemplate redis;
 
+    // Iki container bean'i var: bizim kanalimizi dinleyen bu, bir de Boot'un otomatik kurdugu.
+    @Autowired
+    @Qualifier("outageUpdatesListener")
+    protected RedisMessageListenerContainer pubsub;
+
     @Autowired
     protected JdbcClient jdbc;
 
@@ -49,6 +58,20 @@ public abstract class IntegrationTest {
     protected JsonMapper json;
 
     protected final HttpClient http = HttpClient.newHttpClient();
+
+    /**
+     * Pub/Sub aboneligi acilista asenkron kuruluyor ve Pub/Sub'in gecmisi yok: abone olmadan once
+     * yayinlanan olay kayboluyor. 2026-09-23'te CI'da TransitionSweeperTest tam bu yarista
+     * "beklenen olay gelmedi" diye kirilmisti. Uygulamada aynisi readiness'a bagli (sseFanout).
+     */
+    @BeforeEach
+    void pubsubAbonesiHazirOlsun() throws InterruptedException {
+        long bitis = System.nanoTime() + Duration.ofSeconds(15).toNanos();
+        while (!pubsub.isListening() && System.nanoTime() < bitis) {
+            Thread.sleep(50);
+        }
+        assertThat(pubsub.isListening()).as("Pub/Sub aboneligi kuruldu").isTrue();
+    }
 
     protected HttpResponse<String> get(String path) throws Exception {
         return http.send(HttpRequest.newBuilder(URI.create("http://localhost:" + port + path)).build(),

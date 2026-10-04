@@ -2,6 +2,14 @@
 
 Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), versions: [Semantic Versioning](https://semver.org/). The "What's new" window in the app and the GitHub Release notes read the Turkish file, [CHANGELOG.md](CHANGELOG.md); this file is its translation.
 
+## [1.0.4] - 2026-10-04
+
+### Fixed
+- A freshly started api pod could take traffic before its Redis Pub/Sub subscription was in place. Live events published in that window never reached that pod: connected browsers missed them and the map silently stayed stale, with no error anywhere because the request itself succeeded. The pod is now not considered ready until the subscription exists (`sseFanout` readiness check), so Kubernetes keeps it out of the Service until then. The race was caught by a test that failed in CI (23 September, `TransitionSweeperTest`).
+
+### Note
+- Version numbers run on a single line for all services: each service ships under its own tag (`api-vX.Y.Z`) but the number comes from the single sequence in this file. That is why the api went from 1.0.1 to 1.0.4; 1.0.2 and 1.0.3 were collector releases.
+
 ## [1.0.3] - 2026-10-04
 
 ### Fixed

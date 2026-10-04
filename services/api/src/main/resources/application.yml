@@ -32,7 +32,9 @@ management:
       group:
         # Veritabani ya da Redis yoksa trafik alma; ama canli (liveness) say, pod yeniden baslamasin.
         readiness:
-          include: readinessState,db,redis
+          # sseFanout: Pub/Sub aboneligi kurulmadan trafik alinmasin, yoksa o aralikta
+          # yayinlanan canli olaylar bagli istemcilere hic ulasmiyor (SseFanoutHealthIndicator).
+          include: readinessState,db,redis,sseFanout
   metrics:
     tags:
       application: ${spring.application.name}

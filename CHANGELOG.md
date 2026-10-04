@@ -2,6 +2,14 @@
 
 Biçim [Keep a Changelog](https://keepachangelog.com/tr-TR/1.1.0/), sürümler [Semantic Versioning](https://semver.org/lang/tr/). Uygulamadaki "Yenilikler" penceresi bu dosyadan okunuyor. GitHub Release notları da buradan, sürümün bölümünden alınıyor. İngilizcesi: [CHANGELOG.en.md](CHANGELOG.en.md).
 
+## [1.0.4] - 2026-10-04
+
+### Düzeltildi
+- Yeni açılan bir api pod'u, Redis Pub/Sub aboneliği kurulmadan trafik alabiliyordu. O aralıkta yayınlanan canlı olaylar o pod'a hiç ulaşmıyor, bağlı tarayıcılar olayı kaçırıyor ve harita sessizce eski kalıyordu (istek başarılı sayıldığı için hiçbir yerde hata görünmüyordu). Pod artık abonelik kurulana kadar hazır sayılmıyor (`sseFanout` readiness kontrolü), Kubernetes de o süre boyunca Service'e eklemiyor. Bu yarışı CI'da kırılan bir test yakaladı (23 Eylül, `TransitionSweeperTest`).
+
+### Not
+- Sürüm numarası bütün servisler için tek hat: her servis kendi tag'iyle (`api-vX.Y.Z`) çıkıyor ama sürüm numarası bu dosyadaki tek sıralamadan geliyor. Bu yüzden api 1.0.1'den 1.0.4'e geçti; arada çıkan 1.0.2 ve 1.0.3 collector sürümleriydi.
+
 ## [1.0.3] - 2026-10-04
 
 ### Düzeltildi

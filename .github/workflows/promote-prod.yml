@@ -78,3 +78,24 @@ jobs:
             echo "::error::Actions'in PR acmasina izin vermek icin: Settings > Actions > General > Workflow permissions > Allow GitHub Actions to create and approve pull requests"
             exit 1
           fi
+          echo "dal=$dal" >> "$GITHUB_ENV"
+
+      - name: Kontroller bitsin, sonra birlestir
+        if: steps.tasi.outputs.degisti == 'true'
+        # PR'i kontroller bitmeden birlestirirsek o dalda baslamis kosu iptal oluyor ve Actions
+        # listesinde "failure" olarak kaliyor (1.0.2 ve 1.0.3 terfilerinde boyle oldu). Once
+        # kontrollerin bitmesini bekliyoruz, sonra auto-merge ile birlestiriyoruz; dal korumasi
+        # eklenirse --auto onu da bekler.
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set +e
+          gh pr checks "$dal" --watch --interval 15
+          kod=$?
+          set -e
+          case "$kod" in
+            0) echo "kontroller yesil" ;;
+            8) echo "::notice::bu dalda kontrol yok, birlestiriliyor" ;;
+            *) echo "::error::kontroller gecmedi (cikis $kod), PR birlestirilmedi: $dal"; exit 1 ;;
+          esac
+          gh pr merge "$dal" --squash --delete-branch --auto
