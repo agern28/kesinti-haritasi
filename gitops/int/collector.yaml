@@ -6,4 +6,4 @@ scheduling:
 redis:
   database: 0
 image:
-  tag: "1.0.2"
+  tag: "1.0.3"
