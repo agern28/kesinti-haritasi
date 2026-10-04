@@ -126,7 +126,11 @@ telegram_bot_token = "123456:ABC..."
 telegram_chat_id   = "-1001234567890"
 ```
 
-Then `make bootstrap` (or `terraform apply`). While both are empty, Alertmanager routes alerts to the "bos" (empty) receiver: they show up in the Alertmanager UI and in `make alerts`, and go nowhere else. Monitoring works without Telegram; only the notification is missing.
+Then `make bootstrap` (or `terraform apply`).
+
+Decided (2026-10-04): Telegram was left unconnected for this local project. Having the alerts visible in the Alertmanager UI and in `make alerts` was judged enough; the receiver and the tfvars fields are in place and the notification works as soon as a token is added.
+
+While both are empty, Alertmanager routes alerts to the "bos" (empty) receiver: they show up in the Alertmanager UI and in `make alerts`, and go nowhere else. Monitoring works without Telegram; only the notification is missing.
 
 ## Where I got stuck
 

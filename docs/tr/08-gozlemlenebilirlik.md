@@ -126,7 +126,11 @@ telegram_bot_token = "123456:ABC..."
 telegram_chat_id   = "-1001234567890"
 ```
 
-Sonra `make bootstrap` (ya da `terraform apply`). İkisi boşken Alertmanager alarmları "bos" alıcıya gönderiyor: alarmlar Alertmanager arayüzünde ve `make alerts` çıktısında görünüyor, hiçbir yere iletilmiyor. Yani izleme Telegram olmadan da çalışıyor, sadece bildirim gelmiyor.
+Sonra `make bootstrap` (ya da `terraform apply`).
+
+Karar (2026-10-04): lokal projede Telegram bağlanmadı. Alarmların Alertmanager arayüzünde ve `make alerts` çıktısında görünmesi yeterli bulundu; alıcı kodu ve tfvars alanları hazır, token girilince bildirim çalışıyor.
+
+İkisi boşken Alertmanager alarmları "bos" alıcıya gönderiyor: alarmlar Alertmanager arayüzünde ve `make alerts` çıktısında görünüyor, hiçbir yere iletilmiyor. Yani izleme Telegram olmadan da çalışıyor, sadece bildirim gelmiyor.
 
 ## Takıldığım yerler
 
