@@ -19,7 +19,9 @@ Faz 1'de doğalgaz kaynağı bulunamamıştı. Bu fazın başında hepsini yenid
 | BUSKİ (su, Bursa) | Ad çözülüyor | Bağlantı kurulamıyor (TLS/timeout), sayfa alınamadı |
 | ADM, MEDAŞ | Denediğim host adları yok | A kaydı yok |
 
-Sonuç: harita altı kaynakta kalıyor (BEDAŞ, AEDAŞ, ÇEDAŞ, KCETAŞ, İZSU ve İBB Açık Veri üzerinden İSKİ). Elenme sebepleri teknik değil, hepsi aynı yerde buluşuyor: ya site tarama izni vermiyor (robots, captcha) ya da veri ancak form doldurup sorgulayarak geliyor; ikincisi tarama başına onlarca isteğe çıkıyor ve CLAUDE.md'deki nezaket kuralına aykırı.
+**Açık ipucu (2026-10-04, araştırma yarıda kaldı):** doğalgaz tarafında İGDAŞ dışındaki dağıtım şirketlerine bakmaya başladım ve biri umut verici çıktı. **Palgaz** (Kocaeli/Gebze bölgesi) sitesinde `https://online.palgaz.com.tr/planli-plansiz-kesintiler` adresinde "Planlı / Plansız Kesintiler" sayfası var ve `robots.txt` taramayı engellemiyor. **Esgaz**'ın (Eskişehir) ana sayfasında da kesinti duyurusu metni geçiyor ama menüde bağlantısını bulamadım. Kayserigaz, Enerya, Çorumgaz ve Aksa'da kesinti listesi göremedim (Aksa'nın duyurular sayfası kesintiyle ilgili değil). Sıradaki adım: Palgaz sayfasının HTML'ini alıp liste yapısını (tarih, ilçe, mahalle, saat) incelemek; liste doğrudan HTML'de geliyorsa fixture + parser + test ile yeni bir collector ve `GAS` türü eklenebilir. Frontend'de doğalgaz filtresi zaten duruyor, sadece `disabled` işareti kaldırılacak.
+
+Sonuç: harita şimdilik altı kaynakta kalıyor (BEDAŞ, AEDAŞ, ÇEDAŞ, KCETAŞ, İZSU ve İBB Açık Veri üzerinden İSKİ). Elenme sebepleri teknik değil, hepsi aynı yerde buluşuyor: ya site tarama izni vermiyor (robots, captcha) ya da veri ancak form doldurup sorgulayarak geliyor; ikincisi tarama başına onlarca isteğe çıkıyor ve CLAUDE.md'deki nezaket kuralına aykırı.
 
 Bu yüzden v1.1 yeni kaynakla değil, dayanıklılık ve işletme tarafıyla çıktı.
 

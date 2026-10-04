@@ -19,7 +19,9 @@ Phase 1 found no natural gas source. At the start of this phase I re-checked all
 | BUSKİ (water, Bursa) | The name resolves | The connection fails (TLS/timeout), the page could not be fetched |
 | ADM, MEDAŞ | The hostnames I tried do not exist | No A record |
 
-So the map stays at six sources (BEDAŞ, AEDAŞ, ÇEDAŞ, KCETAŞ, İZSU, and İSKİ through İBB Open Data). None of the reasons are about parsing difficulty; they all land in the same place: either the site refuses crawling (robots, captcha) or the data only comes out of a query form, and the second means dozens of requests per scan, which the politeness rule in CLAUDE.md rules out.
+**An open lead (2026-10-04, the search was cut short):** I started looking at gas distributors other than İGDAŞ and one looks promising. **Palgaz** (the Kocaeli/Gebze area) has a "Planlı / Plansız Kesintiler" page at `https://online.palgaz.com.tr/planli-plansiz-kesintiler` and its `robots.txt` does not block crawling. **Esgaz** (Eskişehir) has outage-notice text on its home page but I could not find the link in the menu. Kayserigaz, Enerya, Çorumgaz and Aksa showed no outage list (Aksa's announcements page is not about outages). Next step: fetch the Palgaz page and look at the list structure (date, district, neighbourhood, hours); if the list is in the HTML itself, a new collector plus the `GAS` type can be added with a fixture, parser and tests. The gas filter is already in the frontend, it only needs its `disabled` flag removed.
+
+So the map stays at six sources for now (BEDAŞ, AEDAŞ, ÇEDAŞ, KCETAŞ, İZSU, and İSKİ through İBB Open Data). None of the reasons are about parsing difficulty; they all land in the same place: either the site refuses crawling (robots, captcha) or the data only comes out of a query form, and the second means dozens of requests per scan, which the politeness rule in CLAUDE.md rules out.
 
 So v1.1 ships resilience and operations work rather than a new source.
 
