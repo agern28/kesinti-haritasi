@@ -78,6 +78,28 @@ Measured (2026-10-02):
 
 My first attempt measured the wrong thing: I checked "target version ready" with `readyReplicas >= 1`, which is also true in the middle of a rollout, and the old pods were still answering, so the behaviour looked like the new version even on the old one. The right check is that every pod of the deployment runs the target image and `rollout status` has completed.
 
+## Map matching: 174 outages were invisible
+
+At the end of the phase, while clicking through the app, I noticed district names in the summary endpoint like "ANTALYA / KONYAALTI / KEPEZ" and "İSTANBUL / ZİNCİRLİKUYU". Zincirlikuyu is not a district, it is a neighbourhood. If those names do not match a polygon in the boundary data, those outages are never coloured on the map.
+
+I measured it: **174 of the 19,285 rows (0.9%)** in the database, in 14 groups, matched no polygon. The frontend matches on an `ilKey|ilceKey` id (`lib/districts.js`) and already maps a bare "MERKEZ" to the province name; the remaining four causes were not covered:
+
+| Cause | Example | Rows |
+|---|---|---|
+| Combined districts | AEDAŞ: "KONYAALTI / KEPEZ" | 46 |
+| A neighbourhood instead of a district | BEDAŞ: Yenibosna, Zincirlikuyu, Kumburgaz, Beyazıt, Çağlayan, Kilyos, Kemerburgaz, Hadımköy | 110 |
+| A province-name prefix | ÇEDAŞ: "SİVAS (MERKEZ)", "TOKAT MERKEZ" | 16 |
+| A district with the province prefixed | AEDAŞ: "BURDUR KEMER", ÇEDAŞ: "SİVAS KIRSAL" | 2 |
+
+The fix lives in one place: `normalize/Districts.java`, applied to every source inside `ScanRunner` after the scan and before the diff. In order, the rules drop a parenthetical suffix, drop a province-name prefix, turn "MERKEZ"/"KIRSAL" into the province name, map a neighbourhood to its district through an alias table, and split districts written with a separator into separate outages.
+
+Two details mattered:
+
+- **The dedup key of split records.** The key is `source:external_id`, so giving the same id to two rows would have made the second overwrite the first; split records get the district appended to the id (`42#KONYAALTI`).
+- **Not losing information.** When a neighbourhood becomes a district, the name the source wrote is added to the front of the neighbourhood list; otherwise "the outage in Yenibosna" would have been lost.
+
+The alias table is maintained by hand, so the report became a script too: `make map-match` compares the names in the database against the boundary file, lists anything unmatched with its source, and exits 1 if there is any. It will speak up when a new source arrives or an existing one changes how it writes names.
+
 ## Demo runbook
 
 [demo-runbook.md](demo-runbook.md): a 15-20 minute walkthrough, command by command. Preparation checklist, showing the app, the two environments, GitOps (including a hand-made cluster change being reverted), the release path, the Grafana dashboards, the alert drill, the load test, the rollback and a closing checklist. The FAQ covers the certificate warning, the `*.localhost` addresses and why INT is empty.

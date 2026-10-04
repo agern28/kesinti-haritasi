@@ -78,6 +78,28 @@ Geri alma da ileri alma gibi bir commit: `gitops/prod/api.yaml` içindeki imaj e
 
 İlk denemede yanlış ölçtüm: "hedef sürüm hazır" kontrolünü `readyReplicas >= 1` ile yapmıştım, bu rollout'un ortasında da doğru oluyor ve eski pod'lar cevap vermeye devam ettiği için davranış eski sürümde de 400 görünüyordu. Doğru kontrol, deployment'ın bütün pod'larının hedef imajda olması ve `rollout status`'un tamamlanması.
 
+## Harita eşleşmesi: 174 kesinti görünmüyordu
+
+Fazın sonunda uygulamayı elle gezerken özet uçta "ANTALYA / KONYAALTI / KEPEZ" ve "İSTANBUL / ZİNCİRLİKUYU" gibi ilçe adları gördüm. Zincirlikuyu bir ilçe değil, semt. Bu adlar sınır verisindeki poligonlarla eşleşmiyorsa o kesintiler haritada hiç renklenmiyor demek.
+
+Ölçtüm: veritabanındaki 19.285 kaydın **174'ü (%0,9)**, 14 grupta, hiçbir poligona düşmüyordu. Frontend `ilKey|ilceKey` kimliğiyle eşliyor (`lib/districts.js`) ve zaten yalın "MERKEZ"i ilin adına çeviriyor; geri kalan dört sebep açıkta kalmış:
+
+| Sebep | Örnek | Kayıt |
+|---|---|---|
+| Birleşik ilçe | AEDAŞ: "KONYAALTI / KEPEZ" | 46 |
+| İlçe yerine semt | BEDAŞ: Yenibosna, Zincirlikuyu, Kumburgaz, Beyazıt, Çağlayan, Kilyos, Kemerburgaz, Hadımköy | 110 |
+| İl adı öneki | ÇEDAŞ: "SİVAS (MERKEZ)", "TOKAT MERKEZ" | 16 |
+| İl adı önekli ilçe | AEDAŞ: "BURDUR KEMER", ÇEDAŞ: "SİVAS KIRSAL" | 2 |
+
+Düzeltme tek yerde: `normalize/Districts.java`, taramadan sonra diff'ten önce `ScanRunner` içinde bütün kaynaklara uygulanıyor. Kurallar sırayla parantezli eki atmak, il adı önekini atmak, "MERKEZ"/"KIRSAL"ı ilin adına çevirmek, takma ad tablosundan semti ilçeye çevirmek ve ayraçla yazılmış ilçeleri ayrı kayıtlara bölmek.
+
+İki ayrıntı önemliydi:
+
+- **Bölünen kayıtların dedup anahtarı.** Anahtar `source:external_id` olduğu için aynı id'yi iki kayda verseydim ikincisi birincinin üzerine yazardı; bölünen kayıtlarda id'ye ilçe ekleniyor (`42#KONYAALTI`).
+- **Bilgi kaybetmemek.** Semt ilçeye çevrilirken kaynağın yazdığı semt adı mahalle listesinin başına ekleniyor, yoksa "Yenibosna'daki kesinti" bilgisi kayboluyordu.
+
+Takma ad tablosu elle tutuluyor, bu yüzden raporu da script'e çevirdim: `make map-match` veritabanındaki adları sınır dosyasıyla karşılaştırıp eşleşmeyenleri kaynağıyla listeliyor ve varsa 1 ile çıkıyor. Yeni bir kaynak eklenince ya da bir kaynak ad biçimini değiştirince bu rapor söyleyecek.
+
 ## Demo runbook
 
 [demo-runbook.md](demo-runbook.md): 15-20 dakikalık demo akışı, komut komut. Hazırlık listesi, uygulamanın gösterilmesi, iki ortam, GitOps (kümede elle yapılan değişikliğin geri alınması dahil), sürüm hattı, Grafana panoları, alarm denemesi, yük testi, geri alma ve kapanış kontrol listesi. Sık sorulan sorular bölümünde sertifika uyarısı, `*.localhost` adresleri ve INT'in neden boş olduğu var.

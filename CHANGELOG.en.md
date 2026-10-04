@@ -2,6 +2,18 @@
 
 Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), versions: [Semantic Versioning](https://semver.org/). The "What's new" window in the app and the GitHub Release notes read the Turkish file, [CHANGELOG.md](CHANGELOG.md); this file is its translation.
 
+## [1.0.2] - 2026-10-04
+
+### Fixed
+- Some outages landed on no district at all on the map: when the name a source wrote into the district field did not match the district name in the boundary data, that outage was never coloured. 174 of the 19,285 rows in the database (0.9%) were in that state. All four causes are fixed:
+  - Combined districts: records where AEDAŞ writes "KONYAALTI / KEPEZ" are split into two outages (46 rows).
+  - A neighbourhood instead of a district: some BEDAŞ records carried a neighbourhood in the district field (Yenibosna, Zincirlikuyu, Kumburgaz, Beyazıt, Çağlayan, Kilyos, Kemerburgaz, Hadımköy; 110 rows). They now go to the right district, with the neighbourhood name added to the front of the neighbourhood list.
+  - A province-name prefix: names like ÇEDAŞ's "SİVAS (MERKEZ)" and "TOKAT MERKEZ" lose the prefix (16 rows).
+  - "MERKEZ" and "KIRSAL" become the province name, since the central district carries the province's name in the boundary data.
+
+### Added
+- `make map-match`: compares the district names in the database against the map boundary file and lists anything unmatched together with its source. It warns when a new source arrives or an existing one changes how it writes names.
+
 ## [1.0.1] - 2026-10-02
 
 The app behaves the same; this release is about resilience and operations. It was cut so the images deployed to Kubernetes carry the fixes made after 1.0.0.

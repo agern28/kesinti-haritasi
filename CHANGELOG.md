@@ -2,6 +2,18 @@
 
 Biçim [Keep a Changelog](https://keepachangelog.com/tr-TR/1.1.0/), sürümler [Semantic Versioning](https://semver.org/lang/tr/). Uygulamadaki "Yenilikler" penceresi bu dosyadan okunuyor. GitHub Release notları da buradan, sürümün bölümünden alınıyor. İngilizcesi: [CHANGELOG.en.md](CHANGELOG.en.md).
 
+## [1.0.2] - 2026-10-04
+
+### Düzeltildi
+- Bazı kesintiler haritada hiçbir ilçeye düşmüyordu: kaynakların ilçe alanına yazdığı ad, sınır verisindeki ilçe adıyla eşleşmediğinde o kesinti renklendirilmiyordu. Veritabanındaki 19.285 kaydın 174'ü (%0,9) bu durumdaydı. Dört sebep de düzeltildi:
+  - Birleşik ilçe: AEDAŞ'ın "KONYAALTI / KEPEZ" yazdığı kayıtlar iki ayrı kesintiye bölünüyor (46 kayıt).
+  - İlçe yerine semt: BEDAŞ'ın bazı kayıtlarında ilçe alanında semt vardı (Yenibosna, Zincirlikuyu, Kumburgaz, Beyazıt, Çağlayan, Kilyos, Kemerburgaz, Hadımköy; 110 kayıt). Artık doğru ilçeye yazılıyor, semt adı mahalle listesinin başına ekleniyor.
+  - İl adı öneki: ÇEDAŞ'ın "SİVAS (MERKEZ)", "TOKAT MERKEZ" gibi yazdığı adlardaki önek atılıyor (16 kayıt).
+  - "MERKEZ" ve "KIRSAL" ilin adına çevriliyor; sınır verisinde merkez ilçe ilin adını taşıyor.
+
+### Eklendi
+- `make map-match`: veritabanındaki ilçe adlarını harita sınır dosyasıyla karşılaştırır, eşleşmeyen varsa kaynağıyla birlikte listeler. Yeni kaynak eklenince ya da bir kaynak ad biçimini değiştirince bu rapor uyarır.
+
 ## [1.0.1] - 2026-10-02
 
 Uygulamanın görünen davranışı aynı; bu sürüm dayanıklılık ve işletme tarafı. Kubernetes'e kurulan imajların 1.0.0'dan sonraki düzeltmeleri içermesi için çıkarıldı.

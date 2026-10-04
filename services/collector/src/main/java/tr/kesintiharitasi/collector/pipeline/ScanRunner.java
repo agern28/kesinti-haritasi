@@ -3,11 +3,14 @@ package tr.kesintiharitasi.collector.pipeline;
 import java.time.Clock;
 import java.time.Duration;
 import java.time.Instant;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ThreadLocalRandom;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import tr.kesintiharitasi.collector.model.FeedId;
+import tr.kesintiharitasi.collector.model.Outage;
+import tr.kesintiharitasi.collector.normalize.Districts;
 import tr.kesintiharitasi.collector.source.CollectResult;
 import tr.kesintiharitasi.collector.source.SourceCollector;
 
@@ -63,16 +66,19 @@ public class ScanRunner {
                 log.info("{}: kaynak degismemis, diff yapilmadi", feed);
                 return true;
             }
-            Differ.DiffResult diff = differ.diff(feed, snapshots.load(feed), result.outages(), now);
+            // Ilce adlari sinir verisine uydurulur ve birlesik ilceler ayri kayitlara bolunur;
+            // yoksa o kesintiler haritada hicbir poligona dusmuyor (bkz. Districts).
+            List<Outage> outages = Districts.fix(result.outages());
+            Differ.DiffResult diff = differ.diff(feed, snapshots.load(feed), outages, now);
             if (!diff.events().isEmpty()) {
                 publisher.publish(diff.events());
                 snapshots.save(feed, diff.snapshot());
             }
             result.afterCommit().run();
             Map<EventType, Integer> counts = diff.counts();
-            metrics.success(feed, result.outages().size(), counts, elapsed(t0), now);
-            recordStatus(() -> status.succeeded(feed, now, result.outages().size()));
-            log.info("{}: {} kayit, NEW={} UPDATED={} GONE={}{} ({} ms)", feed, result.outages().size(),
+            metrics.success(feed, outages.size(), counts, elapsed(t0), now);
+            recordStatus(() -> status.succeeded(feed, now, outages.size()));
+            log.info("{}: {} kayit, NEW={} UPDATED={} GONE={}{} ({} ms)", feed, outages.size(),
                     counts.get(EventType.NEW), counts.get(EventType.UPDATED), counts.get(EventType.GONE),
                     diff.duplicates() > 0 ? ", tekrar eden " + diff.duplicates() : "", elapsed(t0).toMillis());
             return true;
