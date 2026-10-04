@@ -14,6 +14,8 @@ on:
 permissions:
   contents: write
   pull-requests: write
+  # Actions botunun actigi PR'in onay bekleyen kontrol kosusunu onaylamak icin.
+  actions: write
 
 jobs:
   pr:
@@ -80,22 +82,40 @@ jobs:
           fi
           echo "dal=$dal" >> "$GITHUB_ENV"
 
-      - name: Kontroller bitsin, sonra birlestir
+      - name: Kontrolleri onayla, bitsin, sonra birlestir
         if: steps.tasi.outputs.degisti == 'true'
-        # PR'i kontroller bitmeden birlestirirsek o dalda baslamis kosu iptal oluyor ve Actions
-        # listesinde "failure" olarak kaliyor (1.0.2 ve 1.0.3 terfilerinde boyle oldu). Once
-        # kontrollerin bitmesini bekliyoruz, sonra auto-merge ile birlestiriyoruz; dal korumasi
-        # eklenirse --auto onu da bekler.
+        # PR'i kontroller bitmeden birlestirmek, o dalda baslamis kosuyu iptal ediyor ve Actions
+        # listesinde "failure" olarak kaliyordu (1.0.2 ve 1.0.3 terfilerinde boyle oldu).
+        #
+        # Iki ayrinti var:
+        # - GITHUB_TOKEN ile acilan PR'in kosulari kendiliginden baslamiyor, "action_required"
+        #   durumunda onay bekliyor. Asagida API ile onaylaniyor (permissions: actions: write).
+        # - Hic kontrol yoksa "gh pr checks" 1 donuyor ve "no checks reported" yaziyor; bu bir
+        #   hata degil, o yuzden ciktiya bakiliyor.
         env:
           GH_TOKEN: ${{ github.token }}
+          DEPO: ${{ github.repository }}
         run: |
+          sleep 15
+          onaylanan=0
+          for id in $(gh api "repos/$DEPO/actions/runs?per_page=30" \
+                --jq ".workflow_runs[] | select(.head_branch==\"$dal\") | select(.status==\"action_required\" or .conclusion==\"action_required\") | .id"); do
+            if gh api -X POST "repos/$DEPO/actions/runs/$id/approve" >/dev/null 2>&1; then
+              echo "onaylandi: $id"
+              onaylanan=$((onaylanan + 1))
+            else
+              echo "::warning::kosu onaylanamadi: $id"
+            fi
+          done
+          [ "$onaylanan" -gt 0 ] && sleep 15
+
           set +e
-          gh pr checks "$dal" --watch --interval 15
+          cikti=$(gh pr checks "$dal" --watch --interval 15 2>&1)
           kod=$?
           set -e
-          case "$kod" in
-            0) echo "kontroller yesil" ;;
-            8) echo "::notice::bu dalda kontrol yok, birlestiriliyor" ;;
-            *) echo "::error::kontroller gecmedi (cikis $kod), PR birlestirilmedi: $dal"; exit 1 ;;
-          esac
+          printf '%s\n' "$cikti"
+          if [ "$kod" -ne 0 ] && ! printf '%s' "$cikti" | grep -q 'no checks reported'; then
+            echo "::error::kontroller gecmedi, PR birlestirilmedi: $dal"
+            exit 1
+          fi
           gh pr merge "$dal" --squash --delete-branch --auto

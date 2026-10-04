@@ -115,7 +115,14 @@ Takma ad tablosu elle tutuluyor, bu yüzden raporu da script'e çevirdim: `make 
 - **Alarm testinden sonra düzelme hemen olmuyor.** NetworkPolicy 07:58:42'de kalktı, ilk başarılı taramalar 08:01:50'de geldi: aradaki fark tarama aralığı (5 dakika), robots cache'i değil. Faz 5'teki "robots alınamazsa geçerli kopyayı kullan" düzeltmesi sayesinde robots tarafı sorun çıkarmadı.
 - **k6 kurulumu.** Depoda paket yok, binary'yi GitHub release'inden aldım ve resmi checksum listesiyle doğruladım (`~/.local/bin/k6`, sudo gerekmiyor).
 - **Terfi hattında sıralama hatası.** 1.0.2'yi çıkarırken gördüm: `promote-int` tag atıldığı anda tetikleniyor ve servis workflow'uyla **aynı anda** çalışıyor. Values dosyası imaj derlenmeden güncellendiği için Argo CD henüz GHCR'da olmayan etiketi aramaya başladı ve yeni pod `ErrImagePull` verdi. Kesinti olmadı (Kubernetes eski pod'u ayakta tutuyor, rollout bekliyor) ama rollout imaj gelene kadar takıldı. `promote-int` artık values'i güncellemeden önce imajın GHCR'da görünmesini bekliyor (anonim manifest sorgusu, en fazla 20 dakika); gelmezse hata veriyor.
-- **Terfi PR'ını hemen birleştirmek koşuyu iptal ettiriyor.** `promote-prod`'un açtığı PR'ı saniyeler içinde birleştirince, o dalda başlamış olan `infra` koşusu iptal ediliyor ve Actions listesinde "failure" olarak kalıyordu (1.0.2 ve 1.0.3 terfilerinde ikisi de böyle; koşular 40 saniye yaşadı, logları yok). Düzeltildi: workflow artık `gh pr checks --watch` ile kontrollerin bitmesini bekliyor, sonra `gh pr merge --auto` ile birleştiriyor. Depoda auto-merge ve birleşince dalı silme açıldı. Kontroller kırmızıysa PR birleşmiyor ve workflow hata veriyor.
+- **Terfi PR'ını hemen birleştirmek koşuyu iptal ettiriyor.** `promote-prod`'un açtığı PR'ı saniyeler içinde birleştirince, o dalda başlamış olan `infra` koşusu iptal ediliyor ve Actions listesinde "failure" olarak kalıyordu (1.0.2 ve 1.0.3 terfilerinde ikisi de böyle; koşular 40 saniye yaşadı, logları yok). Düzeltmenin ilk hali çalışmadı ve iki şey öğretti (api 1.0.4 terfisinde görüldü):
+
+1. **Actions botunun açtığı PR'ın kontrolleri kendiliğinden başlamıyor.** GitHub, `GITHUB_TOKEN` ile açılan PR'larda koşuyu `action_required` durumunda bırakıyor, yani onay bekliyor. Kontrolü bekleyen adım bu yüzden hiç tamamlanmayacak bir şeyi bekledi.
+2. **`gh pr checks` hiç kontrol yokken 1 dönüyor** ("no checks reported"), 8 değil. Çıkış kodunu 8 varsaydığım için bu durum hata sayılmıştı.
+
+Son hal: workflow önce o dalın onay bekleyen koşularını API ile onaylıyor (`actions: write` izni), sonra kontrollerin bitmesini bekliyor, "kontrol yok" cevabını hata saymıyor ve `gh pr merge --auto` ile birleştiriyor. Depoda auto-merge ve birleşince dalı silme açıldı. 1.0.4'ü bitirmek için aynı adımları elle yaptım (onayla → `infra` yeşil → birleştir) ve PROD'a çıktı; akışın workflow içindeki hali bir sonraki terfide kendiliğinden denenecek.
+
+Bir de geçici bir ağ hatası: `gh pr merge` ilk denemede GitHub API'ye bağlanamadı (`i/o timeout`), ikinci denemede geçti. Bu yüzden script'lerde birleştirme tek denemeye bırakılmıyor.
 
 ## CI'daki tek kırmızı, aslında gerçek bir yarıştı
 
