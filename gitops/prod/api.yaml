@@ -3,7 +3,7 @@ postgres:
 redis:
   database: 1
 image:
-  tag: "1.0.1"
+  tag: "1.0.4"
 # PROD'da HPA acik: Faz 9'daki k6 senaryosu burayi deneyecek.
 autoscaling:
   enabled: true
