@@ -56,6 +56,30 @@ jobs:
           echo "surum=$surum" >> "$GITHUB_OUTPUT"
           echo "$servis -> $surum"
 
+      - name: Imaj GHCR'da hazir mi
+        # promote-int, servis workflow'uyla ayni anda basliyor: tag atildigi an values'i
+        # guncellersek Argo CD henuz derlenmemis imaji aramaya baslar (ErrImagePull; eski
+        # pod calismaya devam ettigi icin kesinti olmaz ama rollout takilir).
+        # Bu yuzden imaj GHCR'a gelene kadar bekliyoruz.
+        env:
+          SERVIS: ${{ steps.hedef.outputs.servis }}
+          SURUM: ${{ steps.hedef.outputs.surum }}
+        run: |
+          paket="${{ github.repository }}/$SERVIS"
+          for i in $(seq 1 60); do
+            token=$(curl -s "https://ghcr.io/token?scope=repository:$paket:pull&service=ghcr.io" | jq -r .token)
+            if curl -sfI -H "Authorization: Bearer $token" \
+                 -H 'Accept: application/vnd.oci.image.index.v1+json, application/vnd.docker.distribution.manifest.list.v2+json, application/vnd.oci.image.manifest.v1+json, application/vnd.docker.distribution.manifest.v2+json' \
+                 "https://ghcr.io/v2/$paket/manifests/$SURUM" >/dev/null; then
+              echo "imaj hazir: $paket:$SURUM"
+              exit 0
+            fi
+            echo "[$i] $paket:$SURUM henuz yok, 20 sn bekleniyor"
+            sleep 20
+          done
+          echo "::error::Imaj 20 dakikada GHCR'a gelmedi: $paket:$SURUM. Servis workflow'u basarili mi?"
+          exit 1
+
       - name: INT values dosyasini guncelle
         env:
           SURUM: ${{ steps.hedef.outputs.surum }}

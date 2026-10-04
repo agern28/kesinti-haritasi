@@ -11,7 +11,7 @@ CLUSTER := kesinti
 TF_DIR := infra/terraform/local
 
 .PHONY: help env up build down stop restart ps logs logs-collector logs-api check smoke reset test \
-	cluster-up cluster-down cluster-status cluster-check bootstrap wait-traefik \
+	cluster-up cluster-down cluster-status cluster-check cluster-fix-kubelet bootstrap wait-traefik \
 	argocd-password argocd-apps argocd-refresh \
 	grafana-password alerts prometheus alertmanager alarm-testi alarm-testi-bitir loadtest map-match
 
@@ -108,6 +108,9 @@ cluster-status: ## Kume durumu: dugumler, pod'lar, issuer'lar, Argo CD applicati
 
 cluster-check: ## Kumedeki kurulumu uctan uca dener (Argo CD, iki ortam, sertifikalar, SSE)
 	@bash scripts/cluster-check.sh
+
+cluster-fix-kubelet: ## Yeniden baslatmadan sonra "kubectl exec/logs" TLS hatasi veriyorsa
+	@bash scripts/fix-kubelet-cert.sh
 
 argocd-password: ## Argo CD admin parolasini yazdirir (ilk kurulum secret'i)
 	@kubectl -n argocd get secret argocd-initial-admin-secret \
