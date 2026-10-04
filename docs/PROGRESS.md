@@ -117,6 +117,7 @@ Durum: tamamlandı (2026-10-02). Not: [tr/08-gozlemlenebilirlik.md](tr/08-gozlem
 - [x] k6 ani trafik senaryosu (`loadtest/spike.js`, `make loadtest`), HPA ve cache ölçümü, sonuçlar docs'ta
 - [x] Rollback denemesi: git üzerinden 1.0.1 → 1.0.0 → 1.0.1, davranış farkıyla doğrulandı
 - [x] Demo runbook'u: [tr/demo-runbook.md](tr/demo-runbook.md) ve [en/demo-runbook.md](en/demo-runbook.md)
+- [x] Harita eşleşmesi düzeltildi (1.0.2): 19.285 kaydın 174'ü ilçe adı poligonlarla eşleşmediği için haritada görünmüyordu. `normalize/Districts.java` dört sebebi de düzeltiyor; `make map-match` raporu bunu izliyor
 
 Durum: tamamlandı (2026-10-02). Not: [tr/09-v11-ve-dayaniklilik.md](tr/09-v11-ve-dayaniklilik.md). Yük testi: 16.661 istek, 0 hata, 55 istek/sn, 100 sanal kullanıcı; özet ucu p95 6,73 ms (10 dakikalık Redis cache), ilçe listesi p95 7,15 ms (veritabanına giden uç, kısmi indekslerle). HPA sıçramadan 90 saniye sonra karar verdi, 21 saniye içinde 3 replikaya çıktı (tepe CPU %196), test sonrası tek replikaya döndü. Geri alma: push'tan 30 saniye sonra bütün pod'lar 1.0.0'da ve derin sayfa isteği 200 (eski davranış), geri dönüşte 34 saniye ve 400. Yeni kaynak çıkmadı: doğalgaz hâlâ `Disallow: /`, ASKİ ve UEDAŞ form tabanlı, Başkent EDAŞ reCAPTCHA'lı. Takıldığım yerler: `yq` lokalde yok (python ile düzenledim), kirli dizinde rebase (autostash), ilk geri alma ölçümü rollout ortasında yanlış sonuç verdi, ölü host adlarını DoH ile doğruladım.
 

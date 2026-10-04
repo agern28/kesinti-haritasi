@@ -116,6 +116,7 @@ make argocd-apps       # sync and health of the Applications
 make argocd-refresh    # make Argo CD check the repo right away
 make alerts            # state of the alert rules
 make prometheus        # Prometheus UI (localhost:9090)
+make map-match         # do the district names match the map polygons
 make loadtest          # k6 spike scenario and HPA measurement
 make alarm-testi       # alert drill (end it with: make alarm-testi-bitir)
 ```

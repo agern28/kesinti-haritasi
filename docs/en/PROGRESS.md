@@ -117,6 +117,7 @@ Status: done (2026-10-02). Notes: [08-observability.md](08-observability.md). No
 - [x] k6 spike scenario (`loadtest/spike.js`, `make loadtest`), HPA and cache measurements, results in docs
 - [x] Rollback exercise: 1.0.1 → 1.0.0 → 1.0.1 through git, verified by a behaviour difference
 - [x] Demo runbook: [demo-runbook.md](demo-runbook.md) and [../tr/demo-runbook.md](../tr/demo-runbook.md)
+- [x] Map matching fixed (1.0.2): 174 of 19,285 rows never appeared on the map because their district name matched no polygon. `normalize/Districts.java` fixes all four causes, and `make map-match` keeps watch
 
 Status: done (2026-10-02). Notes: [09-v11-and-resilience.md](09-v11-and-resilience.md). Load test: 16,661 requests, 0 errors, 55 req/s, 100 virtual users; summary endpoint p95 6.73 ms (10 minute Redis cache), district list p95 7.15 ms (the database-backed endpoint, with the partial indexes). The HPA decided 90 seconds after the spike and reached 3 replicas within 21 seconds (peak CPU 196%), then went back to one replica. Rollback: 30 seconds after the push every pod was on 1.0.0 and a deep-paging request returned 200 (the old behaviour); coming back took 34 seconds and returned 400. No new source: gas is still `Disallow: /`, ASKİ and UEDAŞ are form based, Başkent EDAŞ is behind reCAPTCHA. Where I got stuck: `yq` is not installed locally (edited with Python), rebase on a dirty tree (autostash), the first rollback measurement was wrong mid-rollout, and dead hostnames were confirmed over DoH.
 

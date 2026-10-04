@@ -116,6 +116,7 @@ make argocd-apps       # Application'ların sync ve sağlık durumu
 make argocd-refresh    # Argo CD'ye repoyu hemen kontrol ettir
 make alerts            # alarm kurallarının durumu
 make prometheus        # Prometheus arayüzü (localhost:9090)
+make map-match         # ilçe adları harita poligonlarıyla eşleşiyor mu
 make loadtest          # k6 ile ani trafik senaryosu ve HPA ölçümü
 make alarm-testi       # alarm denemesi (bitirmek için: make alarm-testi-bitir)
 ```
