@@ -98,6 +98,8 @@ Düzeltme tek yerde: `normalize/Districts.java`, taramadan sonra diff'ten önce 
 - **Bölünen kayıtların dedup anahtarı.** Anahtar `source:external_id` olduğu için aynı id'yi iki kayda verseydim ikincisi birincinin üzerine yazardı; bölünen kayıtlarda id'ye ilçe ekleniyor (`42#KONYAALTI`).
 - **Bilgi kaybetmemek.** Semt ilçeye çevrilirken kaynağın yazdığı semt adı mahalle listesinin başına ekleniyor, yoksa "Yenibosna'daki kesinti" bilgisi kayboluyordu.
 
+Düzeltme PROD'a çıktıktan sonra rapor 139'dan **1**'e indi ve kalan tek kayıt kuralın sınırını gösterdi: AEDAŞ o kaydı `BURDUR_KEMER` diye yazmış, yani il önekini alt çizgiyle bağlamış. Kuralım yalnızca boşlukla ayrılmış öneki atıyordu. 1.0.3'te alt çizgi de ayraç sayıldı ve rapor sıfıra indi. (CK Enerji'nin arıza API'si bu biçimi `CkCompany.resolve()` ile zaten çözüyordu; planlı kesinti verisinde aynı biçim normalleştirilmemiş geliyor.)
+
 Takma ad tablosu elle tutuluyor, bu yüzden raporu da script'e çevirdim: `make map-match` veritabanındaki adları sınır dosyasıyla karşılaştırıp eşleşmeyenleri kaynağıyla listeliyor ve varsa 1 ile çıkıyor. Yeni bir kaynak eklenince ya da bir kaynak ad biçimini değiştirince bu rapor söyleyecek.
 
 ## Demo runbook

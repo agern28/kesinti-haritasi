@@ -2,6 +2,11 @@
 
 Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), versions: [Semantic Versioning](https://semver.org/). The "What's new" window in the app and the GitHub Release notes read the Turkish file, [CHANGELOG.md](CHANGELOG.md); this file is its translation.
 
+## [1.0.3] - 2026-10-04
+
+### Fixed
+- A province prefix joined by an underscore was not stripped: for multi-province companies CK Enerji writes planned outages as "BURDUR_KEMER". That was the single row still unmatched on the map after 1.0.2; the underscore now counts as a separator.
+
 ## [1.0.2] - 2026-10-04
 
 ### Fixed

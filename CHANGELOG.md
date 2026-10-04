@@ -2,6 +2,11 @@
 
 Biçim [Keep a Changelog](https://keepachangelog.com/tr-TR/1.1.0/), sürümler [Semantic Versioning](https://semver.org/lang/tr/). Uygulamadaki "Yenilikler" penceresi bu dosyadan okunuyor. GitHub Release notları da buradan, sürümün bölümünden alınıyor. İngilizcesi: [CHANGELOG.en.md](CHANGELOG.en.md).
 
+## [1.0.3] - 2026-10-04
+
+### Düzeltildi
+- İlçe adındaki il öneki alt çizgiyle geldiğinde atılamıyordu: CK Enerji çok illi şirketlerde planlı kesinti verisini "BURDUR_KEMER" biçiminde veriyor. 1.0.2'den sonra haritada eşleşmeyen tek kayıt buydu; artık alt çizgi de ayraç sayılıyor.
+
 ## [1.0.2] - 2026-10-04
 
 ### Düzeltildi

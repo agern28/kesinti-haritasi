@@ -51,6 +51,16 @@ class DistrictsTest {
     }
 
     @Test
+    @DisplayName("alt cizgili il oneki de atilir: BURDUR_KEMER -> KEMER")
+    void altCizgiliOnek() {
+        // CK Enerji'nin planli kesinti verisi bu bicimde geliyor (canlida 1 kayit boyle kalmisti).
+        assertThat(Districts.fix(List.of(outage("BURDUR", "BURDUR_KEMER", "1"))))
+                .singleElement().extracting(Outage::ilce).isEqualTo("KEMER");
+        assertThat(Districts.fix(List.of(outage("SİVAS", "SİVAS_MERKEZ", "2"))))
+                .singleElement().extracting(Outage::ilce).isEqualTo("SİVAS");
+    }
+
+    @Test
     @DisplayName("MERKEZ ve KIRSAL il adina cevrilir")
     void merkezVeKirsal() {
         assertThat(Districts.fix(List.of(outage("BURDUR", "MERKEZ", "1"))))

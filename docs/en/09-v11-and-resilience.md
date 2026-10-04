@@ -98,6 +98,8 @@ Two details mattered:
 - **The dedup key of split records.** The key is `source:external_id`, so giving the same id to two rows would have made the second overwrite the first; split records get the district appended to the id (`42#KONYAALTI`).
 - **Not losing information.** When a neighbourhood becomes a district, the name the source wrote is added to the front of the neighbourhood list; otherwise "the outage in Yenibosna" would have been lost.
 
+Once the fix reached PROD the report went from 139 to **1**, and that last row showed the rule's limit: AEDAŞ had written it as `BURDUR_KEMER`, joining the province prefix with an underscore, while my rule only stripped a prefix separated by whitespace. 1.0.3 counts the underscore as a separator too and the report went to zero. (CK Enerji's fault API already hands this form to `CkCompany.resolve()`; in the planned-outage data the same form arrives unnormalised.)
+
 The alias table is maintained by hand, so the report became a script too: `make map-match` compares the names in the database against the boundary file, lists anything unmatched with its source, and exits 1 if there is any. It will speak up when a new source arrives or an existing one changes how it writes names.
 
 ## Demo runbook

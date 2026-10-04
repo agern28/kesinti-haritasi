@@ -84,7 +84,9 @@ public final class Districts {
     }
 
     private static String tekAd(String il, String parca) {
-        String ad = Names.ilce(PARANTEZ.matcher(parca).replaceAll(" "));
+        // CK Enerji cok illi sirketlerde ilce adini il onekiyle ve alt cizgiyle veriyor:
+        // "BURDUR_KEMER". Alt cizgi bosluk sayilmazsa onek atilamiyor ve ad poligonla eslesmiyor.
+        String ad = Names.ilce(PARANTEZ.matcher(parca.replace('_', ' ')).replaceAll(" "));
         if (ad == null) {
             return null;
         }
